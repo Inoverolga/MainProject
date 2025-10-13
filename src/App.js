@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainPage from "./page/mainPage/MainPage.js";
 import InventoryPage from "./page/InventoryPage/InventoryPage.js";
-import Header from "./components/header/Header";
+import Header from "./components/header/Header.js";
 import { SearchProvider } from "./contexts/SearchContext";
 
 function App() {
