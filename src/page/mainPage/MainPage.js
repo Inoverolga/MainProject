@@ -47,7 +47,8 @@ const MainPage = () => {
                 <span
                   key={tag}
                   className="badge bg-secondary text-decoration-none cursor-pointer rounded-pill px-3"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     setSearchTerm(tag);
                   }}
                   style={{ cursor: "pointer" }}

@@ -5,6 +5,7 @@ const Header = () => {
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
 
   const handleSearch = (e) => {
+    e.preventDefault();
     const value = e.target.value;
     setSearchTerm(value.toLowerCase());
   };
