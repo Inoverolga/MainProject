@@ -1,6 +1,8 @@
 import { useParams } from "react-router-dom";
 import useSWR from "swr";
 import { fetchInventoryItem } from "../../service/api";
+import Spinner from "../../components/spinner/Spinner";
+import Error from "../../components/error/Error";
 
 const InventoryPage = () => {
   const { id } = useParams();
@@ -8,26 +10,13 @@ const InventoryPage = () => {
     data: inventoryItem,
     error,
     isLoading,
-  } = useSWR(id ? `/inventories/${id}` : null, fetchInventoryItem);
+  } = useSWR(id ? `/inventories/${id}` : null, fetchInventoryItem, {
+    keepPreviousData: true, // ← СОХРАНЯЕМ ДАННЫЕ
+    revalidateOnFocus: false, // ← ОТКЛЮЧАЕМ ПЕРЕЗАГРУЗКУ);
+  });
 
-  if (error)
-    return (
-      <div className="container mt-4">
-        <div className="alert alert-danger">
-          Ошибка загрузки инвентаря: {error.message}
-        </div>
-      </div>
-    );
-
-  if (isLoading)
-    return (
-      <div className="container mt-4 text-center">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Загрузка...</span>
-        </div>
-      </div>
-    );
-
+  if (isLoading && !inventoryItem) return <Spinner />;
+  if (error) return <Error message={`Ошибка загрузки: ${error.message}`} />;
   if (!inventoryItem) return <div>Инвентарь не найден</div>;
 
   return (

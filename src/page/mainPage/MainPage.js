@@ -7,9 +7,11 @@ import {
 import { useContext } from "react";
 import { SearchContext } from "../../contexts/SearchContext";
 import { useNavigate } from "react-router-dom";
+import Spinner from "../../components/spinner/Spinner.js";
+import Error from "../../components/error/Error.js";
 
 const MainPage = () => {
-  const { searchTerm, setSearchTerm, clearSearch } = useContext(SearchContext);
+  const { searchTerm, setSearchTerm } = useContext(SearchContext);
   const navigate = useNavigate();
 
   const {
@@ -18,23 +20,19 @@ const MainPage = () => {
     isLoading,
   } = useSWR(
     searchTerm ? `/search?q=${searchTerm}` : "/inventories/public",
-    searchTerm ? fetchSearchAll : fetchInventoriesPublic
+    searchTerm ? fetchSearchAll : fetchInventoriesPublic,
+    {
+      keepPreviousData: true, // ← Сохраняет предыдущие данные
+      revalidateOnFocus: false, // ← Не перезагружать при фокусе
+    }
   );
-  const { data: tags } = useSWR(`/tags`, fetchTags);
+  const { data: tags } = useSWR(`/tags`, fetchTags, {
+    keepPreviousData: true,
+    revalidateOnFocus: false,
+  });
 
-  if (error)
-    return (
-      <div className="alert alert-danger">Ошибка загрузки: {error.message}</div>
-    );
-
-  if (isLoading)
-    return (
-      <div className="text-center">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Загрузка...</span>
-        </div>
-      </div>
-    );
+  if (error) return <Error message={`Ошибка загрузки: ${error.message}`} />;
+  if (isLoading && !inventoriesPublic) return <Spinner />;
 
   return (
     <>

@@ -5,7 +5,6 @@ const Header = () => {
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
 
   const handleSearch = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchTerm(value.toLowerCase());
   };
@@ -13,7 +12,11 @@ const Header = () => {
   return (
     <nav className="navbar bg-body-tertiary">
       <div className="container-fluid">
-        <form className="d-flex" role="search">
+        <form
+          className="d-flex"
+          role="search"
+          onSubmit={(e) => e.preventDefault()}
+        >
           <input
             className="form-control me-2"
             type="search"
