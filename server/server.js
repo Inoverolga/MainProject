@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import routerInventories from "../server/routes/routerInventories.js";
+import routerSearch from "./routes/routerSearch.js";
 
 const app = express();
 app.use(
@@ -11,6 +13,9 @@ app.use(
   })
 );
 app.use(express.json());
+
+app.use("/api/inventories", routerInventories);
+app.use("/api/search", routerSearch);
 
 app.get("/", (req, res) => {
   res.json({
