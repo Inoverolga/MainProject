@@ -4,6 +4,7 @@ import { inventoriesDemo } from "./routerInventories.js";
 const routerSearch = express.Router();
 
 routerSearch.get("/", (req, res) => {
+  //просто "/" так как "/search" уже есть в app.use()
   const querySearch = req.query.q?.toLowerCase() || ""; // получаем параметр ?q=
 
   const filtered = inventoriesDemo.filter(

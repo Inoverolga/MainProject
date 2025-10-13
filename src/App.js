@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import MainPage from "./mainPage/MainPage";
-import Header from "./Header/Header";
+import MainPage from "./page/mainPage/MainPage.js";
+import Header from "./components/Header/Header.js";
 import { SearchProvider } from "./contexts/SearchContext";
+import InventoryPage from "./page/InventoryPage/InventoryPage.js";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
           <Header />
           <Routes>
             <Route path="/" element={<MainPage />} />
+            <Route path="/inventory/:id" element={<InventoryPage />} />
           </Routes>
         </div>
       </Router>

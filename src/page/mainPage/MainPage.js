@@ -3,22 +3,24 @@ import {
   fetchInventoriesPublic,
   fetchSearchAll,
   fetchTags,
-} from "../service/api";
+} from "../../service/api";
 import { useContext } from "react";
-import { SearchContext } from "../contexts/SearchContext";
+import { SearchContext } from "../../contexts/SearchContext";
+import { useNavigate } from "react-router-dom";
 
 const MainPage = () => {
-  const { searchTerm, setSearchTerm } = useContext(SearchContext);
+  const { searchTerm, setSearchTerm, clearSearch } = useContext(SearchContext);
+  const navigate = useNavigate();
 
   const {
     data: inventoriesPublic,
     error,
     isLoading,
   } = useSWR(
-    searchTerm ? `/api/search?q=${searchTerm}` : "/api/inventories/public",
+    searchTerm ? `/search?q=${searchTerm}` : "/inventories/public",
     searchTerm ? fetchSearchAll : fetchInventoriesPublic
   );
-  const { data: tags } = useSWR(`/api/tags`, fetchTags);
+  const { data: tags } = useSWR(`/tags`, fetchTags);
 
   if (error)
     return (
@@ -45,7 +47,9 @@ const MainPage = () => {
                 <span
                   key={tag}
                   className="badge bg-secondary text-decoration-none cursor-pointer rounded-pill px-3"
-                  onClick={() => setSearchTerm(tag)}
+                  onClick={() => {
+                    setSearchTerm(tag);
+                  }}
                   style={{ cursor: "pointer" }}
                 >
                   {tag}
@@ -65,7 +69,11 @@ const MainPage = () => {
         </thead>
         <tbody>
           {inventoriesPublic.map((item) => (
-            <tr key={item.id}>
+            <tr
+              key={item.id}
+              onClick={() => navigate(`/inventory/${item.id}`)}
+              style={{ cursor: "pointer" }}
+            >
               <td>{item.name}</td>
               <td>{item.description}</td>
               <td>{item.createdBy}</td>
