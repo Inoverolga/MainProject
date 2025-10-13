@@ -27,3 +27,13 @@ export const fetchSearchAll = async (url) => {
     throw error;
   }
 };
+
+export const fetchTags = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/tags`, {});
+    return response.data;
+  } catch (error) {
+    console.error(`Ошибка отправки запроса`, error);
+    throw error;
+  }
+};

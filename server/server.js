@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import routerInventories from "../server/routes/routerInventories.js";
 import routerSearch from "./routes/routerSearch.js";
+import routerTag from "./routes/routerTags.js";
 
 const app = express();
 app.use(
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use("/api/inventories", routerInventories);
 app.use("/api/search", routerSearch);
+app.use("/api/tags", routerTag);
 
 app.get("/", (req, res) => {
   res.json({
