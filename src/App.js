@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainPage from "./page/mainPage/MainPage.js";
 import InventoryPage from "./page/inventoryPage/InventoryPage.js";
-import Header from "./components/Header/Header.js";
+import Header from "./components/header/Header.js";
 import { SearchProvider } from "./contexts/SearchContext";
 import RegistrationPage from "./page/registrationPage/RegistrationPage.js";
 
@@ -13,14 +13,21 @@ function App() {
           <Routes>
             <Route path="/auth/register" element={<RegistrationPage />} />
             <Route
-              path="*"
+              path="/"
               element={
                 <>
                   <Header />
-                  <Routes>
-                    <Route path="/" element={<MainPage />} />
-                    <Route path="/inventory/:id" element={<InventoryPage />} />
-                  </Routes>
+                  <MainPage />
+                </>
+              }
+            />
+
+            <Route
+              path="/inventory/:id"
+              element={
+                <>
+                  <Header />
+                  <InventoryPage />
                 </>
               }
             />
