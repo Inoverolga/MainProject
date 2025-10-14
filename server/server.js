@@ -4,6 +4,7 @@ import routerInventories from "../server/routes/routerInventories.js";
 import routerSearch from "./routes/routerSearch.js";
 import routerTag from "./routes/routerTags.js";
 import routerRegister from "./routes/routerRegister.js";
+import { prisma } from "./lib/prisma.js";
 
 const app = express();
 app.use(
@@ -27,6 +28,22 @@ app.get("/", (req, res) => {
     message: "Server is running!",
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const result = await prisma.$queryRaw`SELECT NOW() as current_time`;
+    res.json({
+      success: true,
+      message: "База данных подключена!",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3001;
