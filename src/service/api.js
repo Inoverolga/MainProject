@@ -49,3 +49,13 @@ export const fetchInventoryItem = async (url) => {
     throw error;
   }
 };
+
+export const fetchRegisterUser = async (url, userFormData) => {
+  try {
+    const response = await axios.post(`${API_BASE}${url}`, userFormData);
+    return response.data;
+  } catch (error) {
+    console.error("Ошибка регистрации:", error);
+    throw error;
+  }
+};
