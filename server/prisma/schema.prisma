@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"        // Используем PostgreSQL
+  url      = env("DATABASE_URL") // Берем URL из переменной окружения
+}
+
+
+model User {
+  id        String   @id @default(cuid())    
+  email     String   @unique                 
+  name      String?                          
+  createdAt DateTime @default(now())         
+  updatedAt DateTime @updatedAt              
+
+ 
+  inventories Inventory[]  
+
+  @@map("users")  
+}
+
+model Inventory {
+  id          String   @id @default(cuid())
+  name        String                      
+  description String?                     
+  createdBy   String                      
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isPublic    Boolean  @default(true)     
+
+
+  userId String                         
+  user   User   @relation(fields: [userId], references: [id]) // Связь с User
+                    
+
+  @@map("inventories")  
+  
+}
