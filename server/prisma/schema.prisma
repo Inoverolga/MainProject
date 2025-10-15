@@ -11,7 +11,8 @@ datasource db {
 model User {
   id        String   @id @default(cuid())    
   email     String   @unique                 
-  name      String?                          
+  name      String?   
+  password  String                       
   createdAt DateTime @default(now())         
   updatedAt DateTime @updatedAt              
 
@@ -32,9 +33,19 @@ model Inventory {
 
 
   userId String                         
-  user   User   @relation(fields: [userId], references: [id]) // Связь с User
-                    
-
+  user   User   @relation(fields: [userId], references: [id]) // Связь с User                 
+  tags Tag[]
   @@map("inventories")  
+  
+}
+
+
+model Tag {
+  id          String   @id @default(cuid())
+  name        String                                          
+  isPublic    Boolean  @default(true)     
+
+ inventories Inventory[]
+  @@map("tags")  
   
 }

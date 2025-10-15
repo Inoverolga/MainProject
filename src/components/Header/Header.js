@@ -12,6 +12,11 @@ const Header = () => {
   return (
     <nav className="navbar bg-body-tertiary">
       <div className="container-fluid">
+        <span className="navbar-brand fw-bold">
+          <i className="bi bi-inboxes me-2"></i>
+          Система управления запасами
+        </span>
+
         <form
           className="d-flex"
           role="search"

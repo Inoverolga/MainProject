@@ -21,6 +21,7 @@ const InventoryPage = () => {
 
   return (
     <div className="container mt-4">
+      {/* <i className="bi bi-list-ul me-2"></i> */}
       <h2>{inventoryItem.name}</h2>
       <p className="text-muted">Краткое описание:{inventoryItem.description}</p>
       <p>
