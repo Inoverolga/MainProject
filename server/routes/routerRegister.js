@@ -4,8 +4,6 @@ import { prisma } from "../lib/prisma.js";
 
 const routerRegister = express.Router();
 
-//const usersInMemory = [];
-
 routerRegister.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
@@ -27,21 +25,8 @@ routerRegister.post("/register", async (req, res) => {
       },
     });
 
-    //     const newUser = {
-    //       id: Date.now(),
-    //       name: name,
-    //       email: email,
-    //       password: hashedPassword,
-    //     };
-
-    //  usersInMemory.push(newUser);
     console.log(newUser);
 
-    //     const responseNewUser = {
-    //       id: newUser.id,
-    //       name: newUser.name,
-    //       email: newUser.email,
-    //     };
     res.status(201).json(newUser);
   } catch (error) {
     console.error("Ошибка регистрации:", error);

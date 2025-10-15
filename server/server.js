@@ -4,6 +4,7 @@ import routerInventories from "../server/routes/routerInventories.js";
 import routerSearch from "./routes/routerSearch.js";
 import routerTag from "./routes/routerTags.js";
 import routerRegister from "./routes/routerRegister.js";
+import routerLogin from "./routes/routerLogin.js";
 
 const app = express();
 app.use(
@@ -20,6 +21,7 @@ app.use("/api/inventories", routerInventories);
 app.use("/api/search", routerSearch);
 app.use("/api/tags", routerTag);
 app.use("/api/auth", routerRegister);
+app.use("/api/auth", routerLogin);
 
 app.get("/", (req, res) => {
   res.json({

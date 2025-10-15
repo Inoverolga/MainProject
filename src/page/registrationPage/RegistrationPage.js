@@ -9,7 +9,7 @@ const RegistrationPage = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     reset: resetForm,
   } = useForm({ mode: "onChange" }); // валидация при изменении
 
@@ -18,9 +18,7 @@ const RegistrationPage = () => {
     isMutating,
     data: newUser,
     error,
-  } = useSWRMutation("/auth/register", (url, { arg: formData }) =>
-    fetchRegisterUser(url, formData)
-  );
+  } = useSWRMutation("/auth/register", fetchRegisterUser);
 
   const onSubmit = async (formData) => {
     await trigger(formData);
@@ -111,7 +109,7 @@ const RegistrationPage = () => {
             <button
               type="submit"
               className="btn btn-primary w-100"
-              disabled={isMutating}
+              disabled={!isValid || isMutating}
             >
               {isMutating ? "Регистрация..." : "Зарегистрироваться"}
             </button>
