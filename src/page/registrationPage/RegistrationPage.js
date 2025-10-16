@@ -54,10 +54,6 @@ const RegistrationPage = () => {
                 {...register("name", {
                   required: "Обязательное поле",
                   minLength: { value: 2, message: "Минимум 2 символа" },
-                  pattern: {
-                    value: /^[A-Za-zА-Яа-яЁё\s]+$/,
-                    message: "Только буквы",
-                  },
                 })}
               />
               {errors.name && (

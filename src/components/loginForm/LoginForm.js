@@ -3,9 +3,17 @@ import { useForm } from "react-hook-form";
 import { useEffect } from "react";
 import useSWRMutation from "swr/mutation";
 import { fetchLoginUser } from "../../service/api";
+import { useContext } from "react";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const LoginForm = () => {
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const API_BASE = process.env.REACT_APP_API_URL
+    ? `${process.env.REACT_APP_API_URL}`
+    : "http://localhost:3001";
+
   const {
     register,
     handleSubmit,
@@ -24,12 +32,10 @@ const LoginForm = () => {
     if (dataUser) {
       console.log("✅ Успешный вход! Пользователь:", dataUser);
 
-      localStorage.setItem("accessToken", dataUser.token);
-      localStorage.setItem("user", JSON.stringify(dataUser.user));
-
+      login(dataUser.user, dataUser.token);
       navigate("/");
     }
-  }, [dataUser, navigate]); // ← зависимость от dataUser
+  }, [dataUser, navigate, login]); // ← зависимость от dataUser
 
   const onSubmit = async (formData) => {
     try {
@@ -99,6 +105,21 @@ const LoginForm = () => {
         {error && (
           <div className="alert alert-danger mt-3">{error.message}</div>
         )}
+
+        <div className="mt-3 d-flex gap-2">
+          <a
+            href={`${API_BASE}/api/auth/google`}
+            className="btn btn-outline-danger btn-sm flex-fill"
+          >
+            <i className="bi bi-google"></i> Войти через Google
+          </a>
+          <a
+            href={`${API_BASE}/api/auth/facebook`}
+            className="btn btn-outline-primary btn-sm flex-fill"
+          >
+            <i className="bi bi-facebook"></i> Войти через Facebook
+          </a>
+        </div>
 
         <div className="mt-3">
           <small>

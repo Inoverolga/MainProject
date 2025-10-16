@@ -3,17 +3,20 @@ import useSWR from "swr";
 import { fetchInventoryItem } from "../../service/api";
 import Spinner from "../../components/spinner/Spinner";
 import Error from "../../components/error/Error";
+import { useContext } from "react";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const InventoryPage = () => {
   const { id } = useParams();
+  const { isAuthenticated } = useContext(AuthContext);
+
   const {
     data: inventoryItem,
     error,
     isLoading,
   } = useSWR(id ? `/inventories/${id}` : null, fetchInventoryItem, {
-    keepPreviousData: true, // ← СОХРАНЯЕМ ДАННЫЕ
-    revalidateOnFocus: false, // ← ОТКЛЮЧАЕМ ПЕРЕЗАГРУЗКУ);
-  });
+    revalidateOnFocus: false,
+  }); // ← ОТКЛЮЧАЕМ ПЕРЕЗАГРУЗКУ;
 
   if (isLoading && !inventoryItem) return <Spinner />;
   if (error) return <Error message={`Ошибка загрузки: ${error.message}`} />;
@@ -28,7 +31,7 @@ const InventoryPage = () => {
         <small>Создатель: {inventoryItem.createdBy}</small>
       </p>
       <h5>Товары ({inventoryItem.items?.length || 0}):</h5>
-      {/* Таблица товаров будет здесь для библиотеки */}
+
       <table className="table table-hover">
         <thead>
           <tr>
@@ -59,6 +62,18 @@ const InventoryPage = () => {
           )}
         </tbody>
       </table>
+      {isAuthenticated && (
+        <div className="mt-3">
+          <button className="btn btn-success me-2">
+            <i className="bi bi-plus-circle me-1"></i>
+            Добавить товар
+          </button>
+          <button className="btn btn-outline-primary">
+            <i className="bi bi-pencil me-1"></i>
+            Редактировать инвентарь
+          </button>
+        </div>
+      )}
     </div>
   );
 };

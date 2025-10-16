@@ -5,6 +5,7 @@ import routerSearch from "./routes/routerSearch.js";
 import routerTag from "./routes/routerTags.js";
 import routerRegister from "./routes/routerRegister.js";
 import routerLogin from "./routes/routerLogin.js";
+import routerAuthO from "./routes/routerAuthO.js";
 
 const app = express();
 app.use(
@@ -22,6 +23,7 @@ app.use("/api/search", routerSearch);
 app.use("/api/tags", routerTag);
 app.use("/api/auth", routerRegister);
 app.use("/api/auth", routerLogin);
+app.use("/api/auth", routerAuthO);
 
 app.get("/", (req, res) => {
   res.json({
