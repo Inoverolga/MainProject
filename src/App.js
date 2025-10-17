@@ -5,22 +5,32 @@ import Header from "./components/Header/Header.js";
 import { SearchProvider } from "./contexts/SearchContext";
 import { AuthProvider } from "./contexts/AuthContext.js";
 import RegistrationPage from "./page/registrationPage/RegistrationPage.js";
+import { ToastContainer } from "react-toastify";
 //import ProtectedRoute from "./components/protectedRoute/ProtectedRoute.js";
 
 function App() {
   return (
-    <AuthProvider>
-      <SearchProvider>
-        <Router>
-          <div className="container-lg mt-4">
-            <Routes>
-              <Route path="/auth/register" element={<RegistrationPage />} />
-              <Route path="*" element={<WithHeaderLayout />} />
-            </Routes>
-          </div>
-        </Router>
-      </SearchProvider>
-    </AuthProvider>
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={true}
+        draggable
+        pauseOnHover
+      />
+      <AuthProvider>
+        <SearchProvider>
+          <Router>
+            <div className="container-lg mt-4">
+              <Routes>
+                <Route path="/auth/register" element={<RegistrationPage />} />
+                <Route path="*" element={<WithHeaderLayout />} />
+              </Routes>
+            </div>
+          </Router>
+        </SearchProvider>
+      </AuthProvider>
+    </>
   );
 }
 

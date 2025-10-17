@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_API_URL
+export const API_BASE = process.env.REACT_APP_API_URL
   ? `${process.env.REACT_APP_API_URL}/api`
   : "http://localhost:3001/api";
 
@@ -43,7 +43,11 @@ export const fetchTags = (url) => getData(url);
 
 export const fetchInventoryItem = (url) => getData(url);
 
-export const fetchRegisterUser = async (url, { arg: userFormData }) => {
+// export const fetchRegisterUser = async (url, { arg: userFormData }) => {
+//   return postData(url, userFormData);
+// };
+
+export const fetchMagicLink = async (url, { arg: userFormData }) => {
   return postData(url, userFormData);
 };
 

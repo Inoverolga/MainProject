@@ -1,10 +1,22 @@
-import { useState, createContext } from "react";
-
+import { useState, createContext, useEffect } from "react";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const API_BASE = process.env.REACT_APP_API_URL
+    ? process.env.REACT_APP_API_URL
+    : "http://localhost:3001";
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  //   useEffect(() => {
+  //     const token = localStorage.getItem("accessToken");
+  //     const userData = localStorage.getItem("user");
+
+  //     if (token && userData) {
+  //       setAuthUser(JSON.parse(userData));
+  //     }
+  //     setLoading(false);
+  //   }, []);
 
   const login = (userData, token) => {
     localStorage.setItem("accessToken", token);
@@ -18,6 +30,14 @@ export const AuthProvider = ({ children }) => {
     setAuthUser(null);
   };
 
+  const openOAuthPopup = (provider) => {
+    window.open(
+      `${API_BASE}/api/auth/${provider}`,
+      "AuthPopup",
+      "width=500,height=400"
+    );
+  };
+
   const value = {
     authUser,
     login,
@@ -25,6 +45,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     isAuthenticated: !!authUser,
     setLoading,
+    openOAuthPopup,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

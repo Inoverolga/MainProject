@@ -3,16 +3,11 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy } from "passport-facebook";
 import { prisma } from "../lib/prisma.js";
 
-const baseURL =
+export const baseURL =
   process.env.NODE_ENV === "production"
     ? "https://mainproject-back.onrender.com"
     : "http://localhost:3001";
 
-console.log("=== DEBUG OAuth URLs ===");
-console.log("Google Callback URL:", `${baseURL}/auth/google/callback`);
-console.log("Full Google OAuth URL will use this callback");
-
-// Настройка Google стратегии
 passport.use(
   new GoogleStrategy(
     {
@@ -22,16 +17,23 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Ищем или создаем пользователя в вашей БД
-        const user = await prisma.user.upsert({
-          where: { email: profile.emails[0].value },
-          create: {
-            email: profile.emails[0].value,
+        const email = profile.emails[0].value.toLowerCase().trim();
+
+        const checkUser = await prisma.user.findUnique({
+          where: { email: email },
+        });
+        if (checkUser) {
+          return done(
+            new Error("Пользователь с таким email уже существует"),
+            null
+          );
+        }
+
+        const user = await prisma.user.create({
+          data: {
+            email: email,
             name: profile.displayName,
-            password: "oauth-user",
-          },
-          update: {
-            name: profile.displayName,
+            password: "oauth-google-user",
           },
         });
         return done(null, user);
@@ -52,17 +54,26 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const email =
-          profile.emails?.[0]?.value || `${profile.id}@facebook.com`;
-        const user = await prisma.user.upsert({
-          where: { email },
-          create: {
-            email,
+        const email = (
+          profile.emails?.[0]?.value || `${profile.id}@facebook.com`
+        )
+          .toLowerCase()
+          .trim();
+
+        const checkUser = await prisma.user.findUnique({
+          where: { email: email },
+        });
+        if (checkUser) {
+          return done(
+            new Error("Пользователь с таким email уже существует"),
+            null
+          );
+        }
+        const user = await prisma.user.create({
+          data: {
+            email: email,
             name: profile.displayName,
-            password: "oauth-user",
-          },
-          update: {
-            name: profile.displayName,
+            password: "oauth-facebook-user",
           },
         });
         return done(null, user);
