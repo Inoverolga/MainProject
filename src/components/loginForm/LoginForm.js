@@ -25,6 +25,13 @@ const LoginForm = () => {
     error,
   } = useSWRMutation("/auth/login", fetchLoginUser);
 
+  const onSubmit = async (formData) => {
+    try {
+      await trigger(formData);
+      resetForm();
+    } catch (error) {}
+  };
+
   useEffect(() => {
     const handleLogin = (user, token) => {
       toast.success(`${user.name}, добро пожаловать в систему!`);
@@ -48,13 +55,6 @@ const LoginForm = () => {
     window.addEventListener("message", handleOAuthMessage);
     return () => window.removeEventListener("message", handleOAuthMessage);
   }, [dataUser, navigate, login]);
-
-  const onSubmit = async (formData) => {
-    try {
-      await trigger(formData);
-      resetForm();
-    } catch (error) {}
-  };
 
   return (
     <>
