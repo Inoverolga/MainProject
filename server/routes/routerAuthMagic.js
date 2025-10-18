@@ -1,13 +1,14 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import jwt from "jsonwebtoken";
 import { baseURL } from "../config/passport.js";
 import bcryptjs from "bcryptjs";
 
 const routerAuthMagic = express.Router();
 
-const FRONTEND_URL = "http://localhost:3000" || process.env.FRONTEND_URL;
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 routerAuthMagic.post("/magic", async (req, res) => {
   try {
@@ -44,32 +45,25 @@ routerAuthMagic.post("/magic", async (req, res) => {
 
     const magicLink = `${baseURL}/api/auth/magic/verify?token=${token}`;
 
-    await nodemailer
-      .createTransport({
-        host: "smtp.mail.ru",
-        port: 587,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD,
-        },
-        tls: {
-          rejectUnauthorized: false, // ← Добавьте эту строку
-        },
-        connectionTimeout: 10000, // ← Увеличьте таймаут
-        greetingTimeout: 10000,
-        socketTimeout: 10000,
-        debug: true,
-      })
-      .sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: isRegistration
-          ? "Подтверждение регистрации"
-          : "Вход в систему",
-        html: `<a href="${magicLink}">Войти</a>`,
-      });
+    // ✅ ОТПРАВКА ЧЕРЕЗ RESEND
 
+    const { data, error } = await resend.emails.send({
+      from: "onboarding@resend.dev", // Используйте верифицированный домен
+      to: email,
+      subject: isRegistration ? "Подтверждение регистрации" : "Вход в систему",
+      html: `
+        <h2>${isRegistration ? "Завершение регистрации" : "Вход в систему"}</h2>
+        <p>Нажмите на ссылку ниже:</p>
+        <a href="${magicLink}" style="padding: 10px 20px; background: blue; color: white; text-decoration: none;">
+          ${isRegistration ? "Завершить регистрацию" : "Войти"}
+        </a>
+        <p>Ссылка действительна 15 минут</p>
+      `,
+    });
+    if (error) {
+      console.error("Resend error:", error);
+      throw new Error("Ошибка отправки email");
+    }
     res.json({ success: true, message: "Ссылка отправлена" });
   } catch (error) {
     console.error("Magic link error:", error);
