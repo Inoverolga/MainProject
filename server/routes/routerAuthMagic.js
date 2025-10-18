@@ -2,12 +2,12 @@ import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { Resend } from "resend";
 import jwt from "jsonwebtoken";
-import { baseURL } from "../config/passport.js";
 import bcryptjs from "bcryptjs";
 
 const routerAuthMagic = express.Router();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 routerAuthMagic.post("/magic", async (req, res) => {
@@ -43,7 +43,7 @@ routerAuthMagic.post("/magic", async (req, res) => {
       expiresIn: "15m",
     });
 
-    const magicLink = `${baseURL}/api/auth/magic/verify?token=${token}`;
+    const magicLink = `${BACKEND_URL}/api/auth/magic/verify?token=${token}`;
 
     // ✅ ОТПРАВКА ЧЕРЕЗ RESEND
 
