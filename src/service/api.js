@@ -1,61 +1,59 @@
 import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_API_URL
+export const API_BASE = process.env.REACT_APP_API_URL
   ? `${process.env.REACT_APP_API_URL}/api`
   : "http://localhost:3001/api";
 
-export const fetchInventoriesPublic = async (url) => {
-  try {
-    const response = await axios.get(`${API_BASE}${url}`, {});
-    return response.data;
-  } catch (error) {
-    console.error(`Ошибка отправки запроса`, error);
-    throw error;
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-};
+  return config;
+});
 
-export const fetchSearchAll = async (url) => {
+// Общая функция для GET запросов
+const getData = async (url) => {
   try {
     const response = await axios.get(`${API_BASE}${url}`);
     return response.data;
-
-    // const query = url.split("?q=")[1]; //url.split('?q=') => ["/api/search", "библиотека"], затем обращаемся к первому элементу
-    // const response = await axios.get(`${API_BASE}/search`, {
-    // params: { q: query },
-    // }); // ← axios сам encodeURIComponent - декодирует;
-    //return response.data;
   } catch (error) {
-    console.error(`Ошибка отправки данных для поиска совпадения`, error);
+    console.error(`Ошибка при запросе ${url}:`, error);
     throw error;
   }
 };
 
-export const fetchTags = async (url) => {
+// Общая функция для POST запросов
+const postData = async (url, data) => {
   try {
-    const response = await axios.get(`${API_BASE}${url}`, {});
+    const response = await axios.post(`${API_BASE}${url}`, data);
     return response.data;
   } catch (error) {
-    console.error(`Ошибка отправки запроса`, error);
+    console.error(`Ошибка при отправке данных на ${url}:`, error);
     throw error;
   }
 };
 
-export const fetchInventoryItem = async (url) => {
-  try {
-    const response = await axios.get(`${API_BASE}${url}`, {});
-    return response.data;
-  } catch (error) {
-    console.error(`Ошибка отправки запроса`, error);
-    throw error;
-  }
+// Экспортируемые функции
+export const fetchInventoriesPublic = (url) => getData(url);
+
+export const fetchSearchAll = (url) => getData(url);
+
+export const fetchTags = (url) => getData(url);
+
+export const fetchInventoryItem = (url) => getData(url);
+
+export const fetchMagicLink = async (url, { arg: userFormData }) => {
+  return postData(url, userFormData);
 };
 
-export const fetchRegisterUser = async (url, userFormData) => {
+export const fetchLoginUser = async (url, { arg: userFormData }) => {
   try {
-    const response = await axios.post(`${API_BASE}${url}`, userFormData);
-    return response.data;
+    return await postData(url, userFormData);
   } catch (error) {
-    console.error("Ошибка регистрации:", error);
+    if (error.response?.status === 401) {
+      throw new Error("Неверный email или пароль");
+    }
     throw error;
   }
 };

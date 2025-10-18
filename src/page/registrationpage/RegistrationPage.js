@@ -1,48 +1,64 @@
-import { fetchRegisterUser } from "../../service/api";
+import { fetchMagicLink } from "../../service/api";
 import { useForm } from "react-hook-form";
 import useSWRMutation from "swr/mutation";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 const RegistrationPage = () => {
   const navigate = useNavigate();
-
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     reset: resetForm,
   } = useForm({ mode: "onChange" }); // валидация при изменении
 
   const {
-    trigger,
-    isMutating,
-    data: newUser,
-    error,
-  } = useSWRMutation("/auth/register", (url, { arg: formData }) =>
-    fetchRegisterUser(url, formData)
-  );
+    trigger: magicTrigger,
+    isMutating: isSendingMagicLink,
+    error: magicError,
+  } = useSWRMutation("/auth/magic", fetchMagicLink);
 
   const onSubmit = async (formData) => {
-    await trigger(formData);
-    resetForm();
-  };
+    try {
+      console.log("📤 Отправляемые данные:", formData);
+      await magicTrigger({
+        email: formData.email,
+        name: formData.name,
+        password: String(formData.password),
+        isRegistration: true,
+      });
 
-  if (newUser) {
-    setTimeout(() => navigate("/"), 2000);
-    return (
-      <div className="container mt-5">
-        <div className="alert alert-success">
-          ✅ Регистрация успешна! Добро пожаловать, {newUser.name}
-        </div>
-      </div>
-    );
-  }
+      resetForm();
+
+      toast.success(
+        `Регистрация успешна!
+         Ссылка для входа
+         отправлена на
+         ${formData.email}`
+      );
+    } catch (error) {
+      if (error.response?.status === 400) {
+        toast.error(
+          error.response.data.error ||
+            "Пользователь с таким email уже существует"
+        );
+        setTimeout(() => navigate("/"), 2000);
+      } else {
+        toast.error("Ошибка отправки ссылки");
+        console.error("Ошибка регистрации:", error);
+      }
+    }
+  };
 
   return (
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-6">
-          <h2 className="mb-4">Регистрация нового пользователя</h2>
+          <h2 className="mb-4">
+            <i className="bi bi-person-plus me-2"></i>
+            Регистрация нового пользователя
+          </h2>
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="mb-3">
@@ -53,10 +69,6 @@ const RegistrationPage = () => {
                 {...register("name", {
                   required: "Обязательное поле",
                   minLength: { value: 2, message: "Минимум 2 символа" },
-                  pattern: {
-                    value: /^[A-Za-zА-Яа-яЁё\s]+$/,
-                    message: "Только буквы",
-                  },
                 })}
               />
               {errors.name && (
@@ -99,18 +111,18 @@ const RegistrationPage = () => {
               )}
             </div>
 
-            {error && (
+            {magicError && (
               <div className="alert alert-danger">
-                {error.response?.data?.error || "Ошибка регистрации"}
+                {magicError.response?.data?.error || "Ошибка регистрации"}
               </div>
             )}
 
             <button
               type="submit"
               className="btn btn-primary w-100"
-              disabled={isMutating}
+              disabled={!isValid || isSendingMagicLink}
             >
-              {isMutating ? "Регистрация..." : "Зарегистрироваться"}
+              {isSendingMagicLink ? "Регистрация..." : "Зарегистрироваться"}
             </button>
           </form>
         </div>

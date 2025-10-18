@@ -7,6 +7,7 @@ import {
 import { useContext } from "react";
 import { SearchContext } from "../../contexts/SearchContext";
 import { useNavigate } from "react-router-dom";
+import LoginForm from "../../components/loginForm/LoginForm.js";
 import Spinner from "../../components/spinner/Spinner.js";
 import Error from "../../components/error/Error.js";
 
@@ -57,6 +58,8 @@ const MainPage = () => {
           </div>
         </div>
       </div>
+
+      <LoginForm />
 
       <table className="table table-hover">
         <thead>
