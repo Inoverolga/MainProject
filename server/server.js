@@ -7,6 +7,7 @@ import routerLogin from "./routes/routerLogin.js";
 import routerAuthO from "./routes/routerAuthO.js";
 import routerAuthMagic from "./routes/routerAuthMagic.js";
 import { prisma } from "./lib/prisma.js";
+import routerUserInventories from "./routes/routerUserInventories.js";
 
 const app = express();
 app.use(
@@ -25,6 +26,7 @@ app.use("/api/tags", routerTag);
 app.use("/api/auth", routerLogin);
 app.use("/api/auth", routerAuthO);
 app.use("/api/auth", routerAuthMagic);
+app.use("/api/users", routerUserInventories);
 
 app.get("/", (req, res) => {
   res.json({
@@ -47,38 +49,6 @@ app.get("/api/test-db", async (req, res) => {
       success: false,
       error: error.message,
     });
-  }
-});
-
-app.get("/debug-ip", async (req, res) => {
-  try {
-    // Пробуем несколько сервисов
-    const services = [
-      "https://api.ipify.org?format=json",
-      "https://ipinfo.io/json",
-      "http://ip-api.com/json",
-    ];
-
-    for (const service of services) {
-      try {
-        const response = await fetch(service);
-        const data = await response.json();
-        if (data.ip) {
-          return res.json({
-            serverIp: data.ip,
-            service: service,
-            fullInfo: data,
-          });
-        }
-      } catch (e) {
-        console.log(`Service ${service} failed:`, e.message);
-        continue;
-      }
-    }
-
-    res.json({ error: "Cannot determine IP" });
-  } catch (error) {
-    res.json({ error: error.message });
   }
 });
 

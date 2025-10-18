@@ -55,10 +55,7 @@ const RegistrationPage = () => {
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-6">
-          <h2 className="mb-4">
-            <i className="bi bi-person-plus me-2"></i>
-            Регистрация нового пользователя
-          </h2>
+          <h2 className="mb-4">📋 Регистрация нового пользователя</h2>
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="mb-3">
@@ -122,7 +119,7 @@ const RegistrationPage = () => {
               className="btn btn-primary w-100"
               disabled={!isValid || isSendingMagicLink}
             >
-              {isSendingMagicLink ? "Регистрация..." : "Зарегистрироваться"}
+              📝 {isSendingMagicLink ? "Регистрация..." : "Зарегистрироваться"}
             </button>
           </form>
         </div>

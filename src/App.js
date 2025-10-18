@@ -6,7 +6,8 @@ import Header from "./components/header/Header.js";
 import { SearchProvider } from "./contexts/SearchContext";
 import { AuthProvider } from "./contexts/AuthContext.js";
 import { ToastContainer } from "react-toastify";
-//import ProtectedRoute from "./components/protectedRoute/ProtectedRoute.js";
+import ProtectedRoute from "./components/protectedRoute/ProtectedRoute.js";
+import ProfilePage from "./page/profilePage/ProfilePage.js";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <div className="container-lg mt-4">
               <Routes>
                 <Route path="/auth/register" element={<RegistrationPage />} />
+
                 <Route path="*" element={<WithHeaderLayout />} />
               </Routes>
             </div>
@@ -40,6 +42,14 @@ function WithHeaderLayout() {
       <Header />
       <Routes>
         <Route path="/" element={<MainPage />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/inventory/:id" element={<InventoryPage />} />
         {/* <Route
           path="/create-inventory"
@@ -50,14 +60,7 @@ function WithHeaderLayout() {
           }
         />
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        /> */}
+         */}
       </Routes>
     </>
   );

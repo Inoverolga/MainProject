@@ -29,7 +29,7 @@ routerInventories.post("/test", async (req, res) => {
 
     const testInventory = await prisma.inventory.create({
       data: {
-        name: "Мой первый публичный инвентарь",
+        name: "Мой инвентарь",
         description: "Это тестовый инвентарь из БД",
         createdBy: user.name || "Тестовый пользователь",
         isPublic: true,

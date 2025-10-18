@@ -34,15 +34,15 @@ const postData = async (url, data) => {
   }
 };
 
-// Экспортируемые функции
+// Главная страница - публичные инвентари, поиск, теги
 export const fetchInventoriesPublic = (url) => getData(url);
-
 export const fetchSearchAll = (url) => getData(url);
-
 export const fetchTags = (url) => getData(url);
 
+// Просмотр инвентаря
 export const fetchInventoryItem = (url) => getData(url);
 
+// Аутентификация (по ссылке)
 export const fetchMagicLink = async (url, { arg: userFormData }) => {
   return postData(url, userFormData);
 };
@@ -57,3 +57,6 @@ export const fetchLoginUser = async (url, { arg: userFormData }) => {
     throw error;
   }
 };
+// Личный кабинет - инвентари пользователя
+export const fetchMyInventories = (url) => getData(url);
+export const fetchAccessibleInventories = (url) => getData(url);

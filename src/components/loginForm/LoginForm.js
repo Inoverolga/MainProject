@@ -36,7 +36,7 @@ const LoginForm = () => {
     const handleLogin = (user, token) => {
       toast.success(`${user.name}, добро пожаловать в систему!`);
       login(user, token);
-      navigate("/");
+      navigate("/profile");
     };
 
     if (dataUser) {
@@ -60,10 +60,7 @@ const LoginForm = () => {
     <>
       <div className="card mb-4">
         <div className="card-body">
-          <h5 className="card-title">
-            <i className="bi bi-box-seam me-2"></i>
-            Вход в систему
-          </h5>
+          <h5 className="card-title">🔐 Вход в систему</h5>
           <form
             className="row g-3 align-items-end pt-4"
             onSubmit={handleSubmit(onSubmit)}

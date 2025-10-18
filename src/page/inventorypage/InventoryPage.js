@@ -16,7 +16,7 @@ const InventoryPage = () => {
     isLoading,
   } = useSWR(id ? `/inventories/${id}` : null, fetchInventoryItem, {
     revalidateOnFocus: false,
-  }); // ← ОТКЛЮЧАЕМ ПЕРЕЗАГРУЗКУ;
+  });
 
   if (isLoading && !inventoryItem) return <Spinner />;
   if (error) return <Error message={`Ошибка загрузки: ${error.message}`} />;
@@ -25,8 +25,10 @@ const InventoryPage = () => {
   return (
     <div className="container mt-4">
       {/* <i className="bi bi-list-ul me-2"></i> */}
-      <h2>{inventoryItem.name}</h2>
-      <p className="text-muted">Краткое описание:{inventoryItem.description}</p>
+      <h2 className="fs-5">{inventoryItem.name}</h2>
+      <p className="text-muted">
+        Краткое описание: {inventoryItem.description}
+      </p>
       <p>
         <small>Создатель: {inventoryItem.createdBy}</small>
       </p>

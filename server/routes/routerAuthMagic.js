@@ -132,7 +132,7 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
             email: user.email,
             name: user.name,
           })}');
-          window.location.href = '${FRONTEND_URL}';
+          window.location.href = '${FRONTEND_URL}/profile';
         </script>
       </html>
     `);

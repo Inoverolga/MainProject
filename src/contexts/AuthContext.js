@@ -8,15 +8,15 @@ export const AuthProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  //   useEffect(() => {
-  //     const token = localStorage.getItem("accessToken");
-  //     const userData = localStorage.getItem("user");
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    const userData = localStorage.getItem("user");
 
-  //     if (token && userData) {
-  //       setAuthUser(JSON.parse(userData));
-  //     }
-  //     setLoading(false);
-  //   }, []);
+    if (token && userData) {
+      setAuthUser(JSON.parse(userData));
+    }
+    setLoading(false);
+  }, []);
 
   const login = (userData, token) => {
     localStorage.setItem("accessToken", token);
