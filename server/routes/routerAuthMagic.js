@@ -47,12 +47,19 @@ routerAuthMagic.post("/magic", async (req, res) => {
     await nodemailer
       .createTransport({
         host: "smtp.mail.ru",
-        port: 465,
+        port: 587,
         secure: true,
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASSWORD,
         },
+        tls: {
+          rejectUnauthorized: false, // ← Добавьте эту строку
+        },
+        connectionTimeout: 10000, // ← Увеличьте таймаут
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
+        debug: true,
       })
       .sendMail({
         from: process.env.EMAIL_USER,
