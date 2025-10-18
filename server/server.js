@@ -6,7 +6,7 @@ import routerTag from "./routes/routerTags.js";
 import routerLogin from "./routes/routerLogin.js";
 import routerAuthO from "./routes/routerAuthO.js";
 import routerAuthMagic from "./routes/routerAuthMagic.js";
-import { prisma } from "@prisma/client";
+import prisma from "./lib/prisma.js";
 
 const app = express();
 app.use(
