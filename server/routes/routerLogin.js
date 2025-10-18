@@ -1,5 +1,5 @@
 import express from "express";
-import bcrypt from "bcrypt";
+import bcryptjs from "bcryptjs";
 import { prisma } from "../lib/prisma.js";
 import jwt from "jsonwebtoken";
 import { checkToken } from "../middleware/checkToken.js";
@@ -36,7 +36,7 @@ routerLogin.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Неверный email или пароль" });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, chekUser.password);
+    const isPasswordValid = await bcryptjs.compare(password, chekUser.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Неверный email или пароль" });

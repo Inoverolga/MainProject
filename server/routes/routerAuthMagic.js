@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma.js";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 import { baseURL } from "../config/passport.js";
-import bcrypt from "bcrypt";
+import bcryptjs from "bcryptjs";
 
 const routerAuthMagic = express.Router();
 
@@ -88,10 +88,10 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
     let user;
 
     if (isRegistration) {
-      //  const bcrypt = await import("bcrypt");
+      //  const bcryptjs = await import("bcryptjs");
       // const actualPassword = userPassword || "default_password_123";
       const actualPassword = userPassword;
-      const hashedPassword = await bcrypt.hash(actualPassword, 12);
+      const hashedPassword = await bcryptjs.hash(actualPassword, 12);
 
       user = await prisma.user.create({
         data: {
