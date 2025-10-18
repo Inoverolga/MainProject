@@ -14,7 +14,7 @@ const createAuthResponse = (req, res) => {
         token: jwt.sign({ userId: user.id }, process.env.JWT_ACCESS_SECRET, {
           expiresIn: "7d",
         }),
-        user: JSON.stringify(user),
+        user: user,
       };
 
   res.send(`
