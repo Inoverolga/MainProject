@@ -89,4 +89,31 @@ routerUserInventories.get(
   }
 );
 
+//создание инвентаря
+// routerUserInventories.post("/inventories", checkToken, async (req, res) => {
+//   try {
+//       const { name, description, isPublic = false } = req.body;
+//     const newInventory = await prisma.inventory.create({
+//       data: {
+//         name: "Мой инвентарь",
+//         description: "Это тестовый инвентарь из БД",
+//         createdBy: user.name || "Тестовый пользователь",
+//         isPublic: true,
+//         userId: user.id,
+//       },
+//       include: {
+//         user: true,
+//       },
+//     });
+
+//     res.json({
+//       message: "Тестовые данные созданы!",
+//       inventory: testInventory,
+//     });
+//   } catch (error) {
+//     console.error("Ошибка создания тестовых данных:", error);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
 export default routerUserInventories;

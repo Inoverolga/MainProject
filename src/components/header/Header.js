@@ -14,6 +14,7 @@ const Header = () => {
   };
 
   const isHomePage = location.pathname === "/";
+
   return (
     <nav className="navbar bg-body-tertiary">
       <div className="container-fluid">
