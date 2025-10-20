@@ -16,7 +16,7 @@ const MainPage = () => {
   const navigate = useNavigate();
 
   const {
-    data: inventoriesPublic,
+    data: inventoriesPublic = [],
     error,
     isLoading,
   } = useSWR(

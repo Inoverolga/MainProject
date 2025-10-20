@@ -3,86 +3,83 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"        // Используем PostgreSQL
-  url      = env("DATABASE_URL") // Берем URL из переменной окружения
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id        String   @id @default(cuid())    
-  email     String   @unique                 
-  name      String?   
-  password  String                       
-  createdAt DateTime @default(now())         
-  updatedAt DateTime @updatedAt              
+  id                String            @id @default(cuid())
+  email             String            @unique
+  name              String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  password          String
+  inventories       Inventory[]
+  inventoryAccesses InventoryAccess[]
 
- 
-  inventories Inventory[] 
-  inventoryAccesses InventoryAccess[]  
-
-  @@map("users")  
+  @@map("users")
 }
 
 model Inventory {
-  id          String   @id @default(cuid())
-  name        String                      
-  description String?                     
-  createdBy   String                      
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isPublic    Boolean  @default(true)     
-
-
-  userId String                         
-  user   User   @relation(fields: [userId], references: [id]) // Связь с User                 
-  tags Tag[]
+  id                String            @id @default(cuid())
+  name              String
+  description       String?
+  createdBy         String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  isPublic          Boolean           @default(true)
+  userId            String
+  categoryId        String?
+  category          Category?         @relation(fields: [categoryId], references: [id])
+  user              User              @relation(fields: [userId], references: [id])
   inventoryAccesses InventoryAccess[]
-   items Item[]
+  items             Item[]
+  tags              Tag[]             @relation("InventoryToTag")
 
-  @@map("inventories")  
-  
+  @@map("inventories")
 }
-
 
 model Tag {
-  id          String   @id @default(cuid())
-  name        String                                          
-  isPublic    Boolean  @default(true)     
+  id          String      @id @default(cuid())
+  name        String
+  isPublic    Boolean     @default(true)
+  inventories Inventory[] @relation("InventoryToTag")
 
- inventories Inventory[]
-  @@map("tags")  
-  
+  @@map("tags")
 }
 
-
-//для управления доступом
 model InventoryAccess {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   inventoryId String
-  accessLevel String   @default("WRITE") // WRITE, READ, ADMIN
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Связи
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  accessLevel String    @default("WRITE")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, inventoryId])
   @@map("inventory_accesses")
 }
 
-
-
 model Item {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   inventoryId String
   inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
 
   @@map("items")
+}
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  inventories Inventory[]
+
+  @@map("categories")
 }

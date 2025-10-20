@@ -60,3 +60,6 @@ export const fetchLoginUser = async (url, { arg: userFormData }) => {
 // Личный кабинет - инвентари пользователя
 export const fetchMyInventories = (url) => getData(url);
 export const fetchAccessibleInventories = (url) => getData(url);
+export const fetchCreateInventories = (url, formData) =>
+  postData(url, formData);
+export const fetchCreateInventoryItems = (url) => getData(url);

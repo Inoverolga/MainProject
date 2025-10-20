@@ -5,10 +5,20 @@ const routerInventories = express.Router();
 
 routerInventories.get("/public", async (req, res) => {
   try {
-    console.log(`Данные о публичных инвенторях отправлены с сервера`);
     const inventoriesPublic = await prisma.inventory.findMany({
       where: { isPublic: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdBy: true, // ← Простое текстовое поле
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
+
     res.json(inventoriesPublic);
   } catch (error) {
     console.error(`Ошибка отправки данных:`, error);
@@ -18,21 +28,45 @@ routerInventories.get("/public", async (req, res) => {
 
 routerInventories.get("/:id", async (req, res) => {
   try {
-    const inventoryId = req.params.id;
-    console.log(inventoryId);
-    const inventaryItem = await prisma.inventory.findUnique({
-      where: {
-        id: inventoryId,
+    const inventoryItem = await prisma.inventory.findUnique({
+      where: { id: req.params.id },
+      include: {
+        user: {
+          select: { name: true, email: true },
+        },
+        category: true,
+        tags: true,
+        _count: {
+          select: {
+            items: true,
+          },
+        },
       },
     });
 
-    inventaryItem
-      ? res.json(inventaryItem)
-      : res.status(404).json({ error: "Инвентарь не найден" });
+    if (!inventoryItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Инвентарь не найден",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Инвентарь загружен",
+      data: inventoryItem,
+    });
   } catch (error) {
     console.error(`ошибка отправки данных`);
-    res.status(500).json({ error: "Failed" });
+    res.status(500).json({ message: "Ошибка загрузки инвентаря" });
   }
 });
 
+//загружает товары только когда нужны ????
+routerInventories.get("/:id/items", async (req, res) => {
+  const items = await prisma.item.findMany({
+    where: { inventoryId: req.params.id },
+  });
+  res.json({ success: true, data: items });
+});
 export default routerInventories;

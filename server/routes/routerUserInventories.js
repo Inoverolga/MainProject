@@ -90,30 +90,67 @@ routerUserInventories.get(
 );
 
 //создание инвентаря
-// routerUserInventories.post("/inventories", checkToken, async (req, res) => {
-//   try {
-//       const { name, description, isPublic = false } = req.body;
-//     const newInventory = await prisma.inventory.create({
-//       data: {
-//         name: "Мой инвентарь",
-//         description: "Это тестовый инвентарь из БД",
-//         createdBy: user.name || "Тестовый пользователь",
-//         isPublic: true,
-//         userId: user.id,
-//       },
-//       include: {
-//         user: true,
-//       },
-//     });
+routerUserInventories.post(
+  "/inventories-create",
+  checkToken,
+  async (req, res) => {
+    try {
+      console.log("🔍 Headers:", req.headers);
+      console.log("🔍 Полный req.body:", req.body);
+      console.log("🔍 User from token:", req.user);
+      const {
+        name,
+        description,
+        category,
+        tags = [],
+        isPublic,
+      } = req.body.arg || req.body;
 
-//     res.json({
-//       message: "Тестовые данные созданы!",
-//       inventory: testInventory,
-//     });
-//   } catch (error) {
-//     console.error("Ошибка создания тестовых данных:", error);
-//     res.status(500).json({ error: error.message });
-//   }
-// });
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+        select: { name: true },
+      });
+
+      const categoryRecord = await prisma.category.findFirst({
+        where: { name: category },
+      });
+
+      if (!categoryRecord) {
+        return res.status(400).json({
+          success: false,
+          message: "Категория не найдена",
+        });
+      }
+
+      const newInventory = await prisma.inventory.create({
+        data: {
+          name: name,
+          description: description,
+          categoryId: categoryRecord.id,
+          createdBy: user?.name || "Неизвестный пользователь",
+          isPublic: Boolean(isPublic),
+          userId: req.user.userId,
+          tags: {
+            connectOrCreate: tags.map((tagName) => ({
+              where: { name: tagName }, // если не нашли (null), то след.строка (создаем)
+              create: { name: tagName },
+            })),
+          },
+        },
+      });
+
+      res.json({
+        success: true,
+        message: "Инвентарь успешно создан!",
+        data: newInventory,
+      });
+    } catch (error) {
+      console.error("Ошибка создания инвенторя:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Ошибка при создании инвентаря" });
+    }
+  }
+);
 
 export default routerUserInventories;

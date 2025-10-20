@@ -54,7 +54,7 @@ const Toolbar = ({
 };
 
 const CreateButton = () => (
-  <Button as={Link} to="/inventory/create" variant="secondary" size="sm">
+  <Button as={Link} to="/inventories-create" variant="secondary" size="sm">
     ＋ Создать инвентарь
   </Button>
 );

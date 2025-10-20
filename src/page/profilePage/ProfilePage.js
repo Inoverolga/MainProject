@@ -4,7 +4,7 @@ import {
   fetchMyInventories,
   fetchAccessibleInventories,
   fetchSearchAll,
-} from "../../service/api";
+} from "../../service/api.js";
 import { Container } from "react-bootstrap";
 //import { toast } from "react-toastify";
 import Error from "../../components/error/Error.js";

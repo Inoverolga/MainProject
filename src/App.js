@@ -1,13 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { SearchProvider } from "./contexts/SearchContext";
+import { AuthProvider } from "./contexts/AuthContext.js";
+import { ToastContainer } from "react-toastify";
 import MainPage from "./page/mainpage/MainPage.js";
 import InventoryPage from "./page/inventorypage/InventoryPage.js";
 import RegistrationPage from "./page/registrationpage/RegistrationPage.js";
 import Header from "./components/header/Header.js";
-import { SearchProvider } from "./contexts/SearchContext";
-import { AuthProvider } from "./contexts/AuthContext.js";
-import { ToastContainer } from "react-toastify";
 import ProtectedRoute from "./components/protectedRoute/ProtectedRoute.js";
 import ProfilePage from "./page/profilePage/ProfilePage.js";
+import CreateInventoryPage from "./page/createinventorypage/CreateInventoryPage.js";
 
 function App() {
   return (
@@ -51,16 +52,14 @@ function WithHeaderLayout() {
           }
         />
         <Route path="/inventory/:id" element={<InventoryPage />} />
-        {/* <Route
-          path="/create-inventory"
+        <Route
+          path="/inventories-create"
           element={
             <ProtectedRoute>
               <CreateInventoryPage />
             </ProtectedRoute>
           }
         />
-
-         */}
       </Routes>
     </>
   );
