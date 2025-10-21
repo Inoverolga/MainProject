@@ -9,6 +9,7 @@ axios.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
@@ -62,4 +63,36 @@ export const fetchMyInventories = (url) => getData(url);
 export const fetchAccessibleInventories = (url) => getData(url);
 export const fetchCreateInventories = (url, formData) =>
   postData(url, formData);
-export const fetchCreateInventoryItems = (url) => getData(url);
+export const fetchDeleteInventories = async (url) => {
+  try {
+    const response = await axios.delete(`${API_BASE}${url}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Ошибка при отправке данных на ${url}:`, error);
+    throw error;
+  }
+};
+
+export const fetchEditInventories = (url) => getData(url);
+export const fetchUpdateInventories = async (url, { arg: formData }) => {
+  try {
+    const response = await axios.put(`${API_BASE}${url}`, formData);
+    return response.data;
+  } catch (error) {
+    console.error(`Ошибка при отправке данных на ${url}:`, error);
+    throw error;
+  }
+};
+export const fetchExportInventories = async (url) => {
+  try {
+    const response = await axios.get(`${API_BASE}${url}`, {
+      responseType: "blob",
+    });
+    return response;
+  } catch (error) {
+    console.error("❌ Ошибка экспорта инвентаря:");
+    throw error;
+  }
+};
+
+//export const fetchCreateInventoryItems = (url) => getData(url);

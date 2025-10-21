@@ -11,7 +11,7 @@ routerInventories.get("/public", async (req, res) => {
         id: true,
         name: true,
         description: true,
-        createdBy: true, // ← Простое текстовое поле
+        createdBy: true,
         createdAt: true,
       },
       orderBy: {

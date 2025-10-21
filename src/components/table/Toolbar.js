@@ -9,8 +9,6 @@ const Toolbar = ({
   onDelete,
   showDelete = true,
 }) => {
-  if (selectedRows.length === 0) return null;
-
   const buttonStyle = {
     color: "#000",
     backgroundColor: "transparent",
@@ -20,21 +18,22 @@ const Toolbar = ({
     <div className="mb-3 p-3 bg-light rounded d-flex justify-content-between align-items-center">
       <span className="text-muted">Выбрано: {selectedRows.length}</span>
       <div className="d-flex gap-2">
-        {selectedRows.length === 1 && (
-          <Button
-            variant="outline-secondary"
-            style={buttonStyle}
-            size="sm"
-            onClick={onEdit}
-          >
-            ✏️ Редактировать
-          </Button>
-        )}
+        <Button
+          variant="outline-secondary"
+          style={buttonStyle}
+          size="sm"
+          onClick={onEdit}
+          disabled={selectedRows.length === 0}
+        >
+          ✏️ Редактировать
+        </Button>
+
         <Button
           variant="outline-secondary"
           style={buttonStyle}
           size="sm"
           onClick={onExport}
+          disabled={selectedRows.length === 0}
         >
           📤 Экспорт
         </Button>
@@ -44,6 +43,7 @@ const Toolbar = ({
             style={buttonStyle}
             size="sm"
             onClick={onDelete}
+            disabled={selectedRows.length === 0}
           >
             🗑️ Удалить
           </Button>

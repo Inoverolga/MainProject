@@ -22,20 +22,20 @@ passport.use(
         const checkUser = await prisma.user.findUnique({
           where: { email: email },
         });
-        if (checkUser) {
-          return done(
-            new Error("Пользователь с таким email уже существует"),
-            null
-          );
+
+        let user;
+        if (!checkUser) {
+          user = await prisma.user.create({
+            data: {
+              email: email,
+              name: profile.displayName,
+              password: "oauth-google-user",
+            },
+          });
+        } else {
+          user = checkUser;
         }
 
-        const user = await prisma.user.create({
-          data: {
-            email: email,
-            name: profile.displayName,
-            password: "oauth-google-user",
-          },
-        });
         return done(null, user);
       } catch (error) {
         return done(error, null);
@@ -63,19 +63,20 @@ passport.use(
         const checkUser = await prisma.user.findUnique({
           where: { email: email },
         });
-        if (checkUser) {
-          return done(
-            new Error("Пользователь с таким email уже существует"),
-            null
-          );
+
+        let user;
+        if (!checkUser) {
+          user = await prisma.user.create({
+            data: {
+              email: email,
+              name: profile.displayName,
+              password: "oauth-facebook-user",
+            },
+          });
+        } else {
+          user = checkUser;
         }
-        const user = await prisma.user.create({
-          data: {
-            email: email,
-            name: profile.displayName,
-            password: "oauth-facebook-user",
-          },
-        });
+
         return done(null, user);
       } catch (error) {
         return done(error, null);

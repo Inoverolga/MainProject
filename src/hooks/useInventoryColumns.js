@@ -13,7 +13,7 @@ export const useInventoryColumns = (data = [], type = "my") => {
         flex: 1,
         renderCell: (params) => (
           <Link
-            to={`/inventory/${params?.row?.id}`}
+            to={`/inventory/${params.row.id}`}
             style={{
               textDecoration: "none",
               color: "#007bff",
@@ -31,18 +31,17 @@ export const useInventoryColumns = (data = [], type = "my") => {
       width: 120,
       align: "center",
       headerAlign: "center",
-      valueGetter: (params) => params?.row?._count?.items ?? 0,
-      renderCell: (params) => <span>{params.value || 0}</span>,
+      valueGetter: (_, row) => row?._count?.items ?? 0,
     });
 
     baseColumns.push({
       field: "createdAt",
-      headerName: " Дата создания",
+      headerName: "Дата создания",
       width: 150,
       align: "center",
       headerAlign: "center",
-      valueFormatter: (params) =>
-        params.value ? new Date(params.value).toLocaleDateString("ru-RU") : "-",
+      valueFormatter: (value) =>
+        value ? new Date(value).toLocaleDateString("ru-RU") : "-",
     });
 
     if (type === "accessible") {
@@ -52,7 +51,7 @@ export const useInventoryColumns = (data = [], type = "my") => {
         align: "center",
         headerAlign: "center",
         width: 150,
-        valueGetter: (params) => params?.row?.user?.name || "-",
+        valueGetter: (_, row) => row?.user?.name || "-",
       });
     }
 

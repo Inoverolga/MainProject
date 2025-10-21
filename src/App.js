@@ -9,6 +9,7 @@ import Header from "./components/header/Header.js";
 import ProtectedRoute from "./components/protectedRoute/ProtectedRoute.js";
 import ProfilePage from "./page/profilePage/ProfilePage.js";
 import CreateInventoryPage from "./page/createinventorypage/CreateInventoryPage.js";
+import EditInventoryPage from "./page/createinventorypage/EditInventoryPage.js";
 
 function App() {
   return (
@@ -57,6 +58,14 @@ function WithHeaderLayout() {
           element={
             <ProtectedRoute>
               <CreateInventoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-inventory/:id"
+          element={
+            <ProtectedRoute>
+              <EditInventoryPage />
             </ProtectedRoute>
           }
         />

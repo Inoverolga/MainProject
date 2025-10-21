@@ -89,8 +89,6 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
     let user;
 
     if (isRegistration) {
-      //  const bcryptjs = await import("bcryptjs");
-      // const actualPassword = userPassword || "default_password_123";
       const actualPassword = userPassword;
       const hashedPassword = await bcryptjs.hash(actualPassword, 12);
 

@@ -41,10 +41,11 @@ model Inventory {
 
 model Tag {
   id          String      @id @default(cuid())
-  name        String
+  name        String     @unique
   isPublic    Boolean     @default(true)
   inventories Inventory[] @relation("InventoryToTag")
 
+  items       Item[]      @relation("ItemToTag")
   @@map("tags")
 }
 
@@ -71,6 +72,7 @@ model Item {
   inventoryId String
   inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
 
+  tags    Tag[]     @relation("ItemToTag")
   @@map("items")
 }
 
@@ -83,3 +85,4 @@ model Category {
 
   @@map("categories")
 }
+
