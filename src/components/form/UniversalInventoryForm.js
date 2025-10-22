@@ -31,13 +31,10 @@ const UniversalInventoryForm = ({
     defaultValues: { isPublic: "true" },
   });
 
-  const hasChanges = useMemo(() => {
-    if (mode !== "edit") return true;
-    const currentTags = selectedTags.map((tag) => tag.value);
-    return (
-      JSON.stringify(currentTags) !== JSON.stringify(initialTagsRef.current)
-    );
-  }, [selectedTags, mode]);
+  const hasChanges =
+    mode === "create" ||
+    JSON.stringify(selectedTags.map((tag) => tag.value)) !==
+      JSON.stringify(initialTagsRef.current);
 
   const canSubmit = mode === "create" ? isValid : hasChanges;
 
