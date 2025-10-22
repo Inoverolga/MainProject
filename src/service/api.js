@@ -64,35 +64,19 @@ export const fetchAccessibleInventories = (url) => getData(url);
 export const fetchCreateInventories = (url, formData) =>
   postData(url, formData);
 export const fetchDeleteInventories = async (url) => {
-  try {
-    const response = await axios.delete(`${API_BASE}${url}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Ошибка при отправке данных на ${url}:`, error);
-    throw error;
-  }
+  const response = await axios.delete(`${API_BASE}${url}`);
+  return response.data;
 };
-
 export const fetchEditInventories = (url) => getData(url);
 export const fetchUpdateInventories = async (url, { arg: formData }) => {
-  try {
-    const response = await axios.put(`${API_BASE}${url}`, formData);
-    return response.data;
-  } catch (error) {
-    console.error(`Ошибка при отправке данных на ${url}:`, error);
-    throw error;
-  }
+  const response = await axios.put(`${API_BASE}${url}`, formData);
+  return response.data;
 };
 export const fetchExportInventories = async (url) => {
-  try {
-    const response = await axios.get(`${API_BASE}${url}`, {
-      responseType: "blob",
-    });
-    return response;
-  } catch (error) {
-    console.error("❌ Ошибка экспорта инвентаря:");
-    throw error;
-  }
+  const response = await axios.get(`${API_BASE}${url}`, {
+    responseType: "blob",
+  });
+  return response;
 };
 
 //export const fetchCreateInventoryItems = (url) => getData(url);

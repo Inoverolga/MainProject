@@ -15,7 +15,7 @@ routerTag.get("/autocompletion", async (req, res) => {
     const tags = await prisma.tag.findMany({
       where: {
         name: {
-          contains: q,
+          startsWith: q,
           mode: "insensitive",
         },
       },

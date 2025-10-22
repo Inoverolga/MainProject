@@ -9,7 +9,7 @@ import UniversalInventoryForm from "../../components/form/UniversalInventoryForm
 const EditInventoryPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  console.log("📋 EditInventoryPage - ID:", id); // ← ДОБАВЬТЕ ЭТОТ LOG
+
   const { mutate: mutateMyInventories } = useSWR(
     "/users/me/inventories",
     fetchMyInventories,
@@ -20,7 +20,7 @@ const EditInventoryPage = () => {
     id ? `/users/inventories-edit/${id}` : null,
     fetchEditInventories
   );
-  console.log("📋 EditInventoryPage - данные:", data); // ← ДОБАВЬТЕ ЭТОТ LOG
+
   const handleSuccess = () => {
     navigate("/profile");
   };

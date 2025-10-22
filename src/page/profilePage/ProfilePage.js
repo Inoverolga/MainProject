@@ -50,8 +50,8 @@ const ProfilePage = () => {
     ? accessData
     : accessData?.data || [];
 
-  console.log("📊 Мои инвентари:", myInventories);
-  console.log("📊 Доступные инвентари:", accessInventories);
+  //   console.log("📊 Мои инвентари:", myInventories);
+  //   console.log("📊 Доступные инвентари:", accessInventories);
 
   const myColumns = useInventoryColumns(myInventories, "my");
   const accessColumns = useInventoryColumns(accessInventories, "accessible");

@@ -12,17 +12,6 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 routerAuthMagic.post("/magic", async (req, res) => {
   try {
-    console.log("🔐 Проверка переменных окружения:");
-    console.log(
-      "RESEND_API_KEY:",
-      process.env.RESEND_API_KEY ? "✅ есть" : "❌ нет"
-    );
-    console.log(
-      "JWT_ACCESS_SECRET:",
-      process.env.JWT_ACCESS_SECRET ? "✅ есть" : "❌ нет"
-    );
-    console.log("BACKEND_URL:", process.env.BACKEND_URL);
-    console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
     const { email, name, password: userPassword, isRegistration } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -55,7 +44,7 @@ routerAuthMagic.post("/magic", async (req, res) => {
     });
 
     const magicLink = `${BACKEND_URL}/api/auth/magic/verify?token=${token}`;
-    console.log("📧 Отправка email через Resend...");
+
     // ✅ ОТПРАВКА ЧЕРЕЗ RESEND
 
     const { data, error } = await resend.emails.send({
@@ -75,7 +64,6 @@ routerAuthMagic.post("/magic", async (req, res) => {
       console.error("Resend error:", error);
       throw new Error("Ошибка отправки email");
     }
-    console.log("✅ Email отправлен успешно");
     res.json({ success: true, message: "Ссылка отправлена" });
   } catch (error) {
     console.error("Magic link error:", error);

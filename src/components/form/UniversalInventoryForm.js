@@ -6,6 +6,7 @@ import { fetchTags } from "../../service/api";
 import { useState, useEffect } from "react";
 import CreatableSelect from "react-select/creatable";
 import { useInventoryOperations } from "../../hooks/useInventoryOperations";
+import { useMemo, useRef } from "react";
 
 const UniversalInventoryForm = ({
   mode = "create",
@@ -17,30 +18,43 @@ const UniversalInventoryForm = ({
   const navigate = useNavigate();
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagSearchInput, setTagSearchInput] = useState("");
+  const initialTagsRef = useRef([]);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
-    reset: resetForm,
+    reset,
     setValue,
   } = useForm({
     mode: "onChange",
-    defaultValues: {
-      isPublic: "true",
-    },
+    defaultValues: { isPublic: "true" },
   });
+
+  const hasChanges = useMemo(() => {
+    if (mode !== "edit") return true;
+    const currentTags = selectedTags.map((tag) => tag.value);
+    return (
+      JSON.stringify(currentTags) !== JSON.stringify(initialTagsRef.current)
+    );
+  }, [selectedTags, mode]);
+
+  const canSubmit = mode === "create" ? isValid : hasChanges;
 
   const { handleCreate, handleUpdate, isCreating, isUpdating } =
     useInventoryOperations(mutateMyInventories, inventoryId);
 
-  const { data: tags = [], isLoading: tagsLoading } = useSWR(
-    tagSearchInput ? `/tags/autocompletion?q=${tagSearchInput}` : null,
+  const { data: allTags = [] } = useSWR("/tags", fetchTags, {
+    revalidateOnFocus: false,
+    dedupingInterval: 60000,
+  });
+
+  const { data: searchedTags = [], isLoading: isSearching } = useSWR(
+    tagSearchInput
+      ? `/tags/autocompletion?q=${encodeURIComponent(tagSearchInput)}`
+      : null,
     fetchTags,
-    {
-      keepPreviousData: true,
-      revalidateOnFocus: false,
-    }
+    { keepPreviousData: true, revalidateOnFocus: false }
   );
 
   // Заполняем форму данными при редактировании
@@ -48,7 +62,7 @@ const UniversalInventoryForm = ({
     if (mode === "edit" && initialData) {
       setValue("name", initialData.name);
       setValue("description", initialData.description);
-      setValue("category", initialData.category);
+      setValue("category", initialData.category?.name || "");
       setValue("isPublic", initialData.isPublic?.toString() || "true");
 
       if (initialData.tags) {
@@ -59,14 +73,15 @@ const UniversalInventoryForm = ({
           return { value: tag, label: tag };
         });
         setSelectedTags(formattedTags);
+        initialTagsRef.current = formattedTags.map((tag) => tag.value);
       }
     }
   }, [mode, initialData, setValue]);
 
-  const tagOptions = tags.map((tag, index) => ({
-    value: tag,
-    label: tag,
-  }));
+  const tagOptions = useMemo(() => {
+    const options = tagSearchInput ? searchedTags : allTags;
+    return options.map((tag) => ({ value: tag, label: tag }));
+  }, [allTags, searchedTags, tagSearchInput]);
 
   const isMutating = isCreating || isUpdating;
 
@@ -79,13 +94,13 @@ const UniversalInventoryForm = ({
         tags: tagValues,
         isPublic: formData.isPublic === "true",
       };
-      console.log("📤 Отправляемые данные:", dataWithTags);
+
       if (mode === "create") {
         const result = await handleCreate(dataWithTags);
         if (result) {
           toast.success("Инвентарь успешно создан!");
           setSelectedTags([]);
-          resetForm();
+          reset();
         }
       } else {
         const success = await handleUpdate(dataWithTags);
@@ -167,7 +182,8 @@ const UniversalInventoryForm = ({
             value={selectedTags}
             onChange={setSelectedTags}
             onInputChange={setTagSearchInput}
-            placeholder={tagsLoading ? "Загрузка тегов..." : "Поиск тегов..."}
+            isLoading={isSearching}
+            placeholder={isSearching ? "Поиск тегов..." : "Выберите теги..."}
             formatCreateLabel={(inputValue) => `Создать "${inputValue}"`}
             onCreateOption={(inputValue) => {
               setSelectedTags((prev) => [
@@ -181,9 +197,10 @@ const UniversalInventoryForm = ({
             }
             noOptionsMessage={({ inputValue }) =>
               inputValue
-                ? `"${inputValue}" не найден`
-                : "Введите текст для поиска"
+                ? `Тег "${inputValue}" не найден. Нажмите Enter чтобы создать.`
+                : "Введите текст для поиска тегов"
             }
+            loadingMessage={() => "Поиск тегов..."}
           />
         </div>
 
@@ -225,7 +242,7 @@ const UniversalInventoryForm = ({
           <button
             type="submit"
             className="btn btn-secondary"
-            disabled={isMutating || !isValid}
+            disabled={isMutating || !canSubmit}
           >
             {isMutating
               ? mode === "create"

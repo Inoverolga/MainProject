@@ -8,7 +8,6 @@ import {
   fetchExportInventories,
   fetchCreateInventories,
   fetchUpdateInventories,
-  fetchEditInventories,
 } from "../service/api.js";
 import { saveAs } from "file-saver";
 
@@ -36,19 +35,13 @@ export const useInventoryOperations = (
   );
 
   const handleCreate = async (formData) => {
-    try {
-      const result = await createInventory(formData);
-      if (result.success) {
-        mutateMyInventories?.();
-        return result.data;
-      } else {
-        toast.error(result.message || "Ошибка создания инвентаря");
-        return null;
-      }
-    } catch (error) {
-      toast.error("Ошибка создания инвентаря");
-      return null;
+    const result = await createInventory(formData);
+    if (result.success) {
+      mutateMyInventories?.();
+      return result.data;
     }
+    toast.error(result.message || "Ошибка создания инвентаря");
+    return null;
   };
 
   const handleDelete = async (selectedRows, setSelectedRows) => {
@@ -77,24 +70,18 @@ export const useInventoryOperations = (
 
   const handleUpdate = useCallback(
     async (formData) => {
-      try {
-        if (!inventoryId) {
-          toast.error("ID инвентаря не найден");
-          return false;
-        }
-
-        const result = await updateInventory(formData);
-        if (result.success) {
-          mutateMyInventories?.();
-          return true;
-        } else {
-          toast.error(result.message || "Ошибка обновления инвентаря");
-          return false;
-        }
-      } catch (error) {
-        toast.error("Ошибка обновления инвентаря");
+      if (!inventoryId) {
+        toast.error("ID инвентаря не найден");
         return false;
       }
+      const result = await updateInventory(formData);
+      if (result.success) {
+        mutateMyInventories?.();
+        return true;
+      }
+
+      toast.error(result.message || "Ошибка обновления инвентаря");
+      return false;
     },
     [inventoryId, updateInventory, mutateMyInventories]
   );
