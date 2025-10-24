@@ -1,24 +1,42 @@
 import { useForm } from "react-hook-form";
 import useSWR from "swr";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { fetchTags } from "../../service/api";
-import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect } from "react";
 import CreatableSelect from "react-select/creatable";
 import { useInventoryOperations } from "../../hooks/useInventoryOperations";
-import { useMemo, useRef } from "react";
+import { useTags } from "../../hooks/useTags";
+import { Spinner } from "react-bootstrap";
+import { fetchEditInventories, fetchMyInventories } from "../../service/api";
 
-const UniversalInventoryForm = ({
-  mode = "create",
-  initialData = null,
-  inventoryId = null,
-  onSuccess = null,
-  mutateMyInventories,
-}) => {
+const UniversalInventoryForm = ({ mode = "create" }) => {
   const navigate = useNavigate();
-  const [selectedTags, setSelectedTags] = useState([]);
-  const [tagSearchInput, setTagSearchInput] = useState("");
-  const initialTagsRef = useRef([]);
+  const { id: inventoryId } = useParams();
+
+  const { mutate: mutateMyInventories } = useSWR(
+    "/users/me/inventories",
+    fetchMyInventories,
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  const { data: inventoryData, isLoading } = useSWR(
+    mode === "edit" && inventoryId
+      ? `/users/inventories-edit/${inventoryId}`
+      : null,
+    fetchEditInventories
+  );
+
+  const {
+    selectedTags,
+    setSelectedTags,
+    setTagSearchInput,
+    tagOptions,
+    tagValues,
+    isSearching,
+    hasChanges,
+  } = useTags(inventoryData?.data?.tags || [], mode);
 
   const {
     register,
@@ -31,61 +49,27 @@ const UniversalInventoryForm = ({
     defaultValues: { isPublic: "true" },
   });
 
-  const hasChanges =
-    mode === "create" ||
-    JSON.stringify(selectedTags.map((tag) => tag.value)) !==
-      JSON.stringify(initialTagsRef.current);
-
   const canSubmit = mode === "create" ? isValid : hasChanges;
 
   const { handleCreate, handleUpdate, isCreating, isUpdating } =
     useInventoryOperations(mutateMyInventories, inventoryId);
 
-  const { data: allTags = [] } = useSWR("/tags", fetchTags, {
-    revalidateOnFocus: false,
-    dedupingInterval: 60000,
-  });
-
-  const { data: searchedTags = [], isLoading: isSearching } = useSWR(
-    tagSearchInput
-      ? `/tags/autocompletion?q=${encodeURIComponent(tagSearchInput)}`
-      : null,
-    fetchTags,
-    { keepPreviousData: true, revalidateOnFocus: false }
-  );
-
   // Заполняем форму данными при редактировании
   useEffect(() => {
-    if (mode === "edit" && initialData) {
-      setValue("name", initialData.name);
-      setValue("description", initialData.description);
-      setValue("category", initialData.category?.name || "");
-      setValue("isPublic", initialData.isPublic?.toString() || "true");
-
-      if (initialData.tags) {
-        const formattedTags = initialData.tags.map((tag) => {
-          if (typeof tag === "object" && tag.name) {
-            return { value: tag.name, label: tag.name };
-          }
-          return { value: tag, label: tag };
-        });
-        setSelectedTags(formattedTags);
-        initialTagsRef.current = formattedTags.map((tag) => tag.value);
-      }
+    if (mode === "edit" && inventoryData?.data) {
+      const data = inventoryData.data;
+      console.log("Filling form with data:", data);
+      setValue("name", data.name);
+      setValue("description", data.description);
+      setValue("category", data.category?.name || "");
+      setValue("isPublic", data.isPublic?.toString() || "true");
     }
-  }, [mode, initialData, setValue]);
-
-  const tagOptions = useMemo(() => {
-    const options = tagSearchInput ? searchedTags : allTags;
-    return options.map((tag) => ({ value: tag, label: tag }));
-  }, [allTags, searchedTags, tagSearchInput]);
+  }, [mode, inventoryData, setValue]);
 
   const isMutating = isCreating || isUpdating;
 
   const onSubmit = async (formData) => {
     try {
-      const tagValues = selectedTags.map((tag) => tag.value);
-
       const dataWithTags = {
         ...formData,
         tags: tagValues,
@@ -103,7 +87,6 @@ const UniversalInventoryForm = ({
         const success = await handleUpdate(dataWithTags);
         if (success) {
           toast.success("Инвентарь успешно обновлен!");
-          onSuccess?.();
         }
       }
     } catch (error) {
@@ -112,6 +95,8 @@ const UniversalInventoryForm = ({
       );
     }
   };
+
+  if (mode === "edit" && isLoading) return <Spinner />;
 
   return (
     <div className="container mt-4">
@@ -163,6 +148,7 @@ const UniversalInventoryForm = ({
             <option value="Оборудование">Оборудование</option>
             <option value="Мебель">Мебель</option>
             <option value="Книги">Книги</option>
+            <option value="Канцелярия">Канцелярия</option>
             <option value="Другое">Другое</option>
           </select>
           {errors.category && (

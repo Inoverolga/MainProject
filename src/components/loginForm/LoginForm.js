@@ -27,25 +27,22 @@ const LoginForm = () => {
 
   const onSubmit = async (formData) => {
     try {
-      await trigger(formData);
-      resetForm();
+      const result = await trigger(formData);
+      if (result) {
+        toast.success(`${result.user.name}, добро пожаловать в систему!`);
+        login(result.user, result.token);
+        resetForm();
+        navigate("/profile");
+      }
     } catch (error) {}
   };
 
   useEffect(() => {
-    const handleLogin = (user, token) => {
-      toast.success(`${user.name}, добро пожаловать в систему!`);
-      login(user, token);
-      navigate("/profile");
-    };
-
-    if (dataUser) {
-      handleLogin(dataUser.user, dataUser.token);
-    }
-
     const handleOAuthMessage = (event) => {
       if (event.data.type === "OAUTH_SUCCESS") {
-        handleLogin(event.data.user, event.data.token);
+        toast.success(`${event.data.user.name}, добро пожаловать в систему!`);
+        login(event.data.user, event.data.token);
+        navigate("/profile");
       }
       if (event.data.type === "OAUTH_ERROR") {
         toast.error(event.data.error);
@@ -54,7 +51,7 @@ const LoginForm = () => {
 
     window.addEventListener("message", handleOAuthMessage);
     return () => window.removeEventListener("message", handleOAuthMessage);
-  }, [dataUser, navigate, login]);
+  }, [navigate, login]);
 
   return (
     <>

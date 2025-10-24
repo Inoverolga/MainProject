@@ -11,7 +11,7 @@ import Error from "../../components/error/Error.js";
 import Spinner from "../../components/spinner/Spinner.js";
 import { useInventoryColumns } from "../../hooks/useInventoryColumns.js";
 import { SearchContext } from "../../contexts/SearchContext.js";
-import { InventorySection } from "../../components/table/Toolbar.js";
+import { InventorySection } from "../../components/table/ToolbarForProfilePage.js";
 import { useInventoryOperations } from "../../hooks/useInventoryOperations.js";
 
 const ProfilePage = () => {

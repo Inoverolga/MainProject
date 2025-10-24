@@ -16,7 +16,7 @@ const Header = () => {
   const isHomePage = location.pathname === "/";
 
   return (
-    <nav className="navbar bg-body-tertiary">
+    <nav className="navbar bg-body-tertiary sticky-top">
       <div className="container-fluid">
         <span className="navbar-brand fw-bold">
           🗃️ Система управления запасами

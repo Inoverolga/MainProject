@@ -60,6 +60,7 @@ routerAuthMagic.post("/magic", async (req, res) => {
         <p>Ссылка действительна 15 минут</p>
       `,
     });
+    console.log("📧 Resend Response:", { data, error });
     if (error) {
       console.error("Resend error:", error);
       throw new Error("Ошибка отправки email");

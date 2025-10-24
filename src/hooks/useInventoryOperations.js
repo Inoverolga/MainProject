@@ -1,4 +1,3 @@
-// hooks/useInventoryOperations.js
 import { toast } from "react-toastify";
 import useSWRMutation from "swr/mutation";
 import { useCallback } from "react";
@@ -32,6 +31,7 @@ export const useInventoryOperations = (
   const { trigger: updateInventory, isMutating: isUpdating } = useSWRMutation(
     inventoryId ? `/users/inventories-update/${inventoryId}` : null,
     fetchUpdateInventories
+    //(url, { arg }) => fetchUpdateInventories(url, { arg })
   );
 
   const handleCreate = async (formData) => {
@@ -46,6 +46,8 @@ export const useInventoryOperations = (
 
   const handleDelete = async (selectedRows, setSelectedRows) => {
     if (selectedRows.length === 0) return;
+
+    if (!window.confirm(`Удалить ${selectedRows.length} инвентарей?`)) return;
 
     try {
       for (const id of selectedRows) {
@@ -64,8 +66,7 @@ export const useInventoryOperations = (
       toast.info("Выберите один инвентарь для редактирования");
       return;
     }
-    // Простая навигация - данные загрузит EditInventoryPage
-    navigate(`/edit-inventory/${selectedRows[0]}`);
+    navigate(`/inventory-edit/${selectedRows[0]}`);
   };
 
   const handleUpdate = useCallback(

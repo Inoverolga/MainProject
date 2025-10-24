@@ -32,7 +32,7 @@ routerTag.get("/autocompletion", async (req, res) => {
   }
 });
 
-//если получаем все тэги, и фильтруем  на стороне клиента (не использую...)
+//если получаем все тэги, и фильтруем  на стороне клиента
 routerTag.get("/", async (req, res) => {
   try {
     const tags = await prisma.tag.findMany({

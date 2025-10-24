@@ -28,6 +28,7 @@ model Inventory {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   isPublic          Boolean           @default(true)
+  
   userId            String
   categoryId        String?
   category          Category?         @relation(fields: [categoryId], references: [id])
@@ -35,6 +36,7 @@ model Inventory {
   inventoryAccesses InventoryAccess[]
   items             Item[]
   tags              Tag[]             @relation("InventoryToTag")
+  fieldConfigs      InventoryFieldConfig[]
 
   @@map("inventories")
 }
@@ -48,6 +50,19 @@ model Tag {
   items       Item[]      @relation("ItemToTag")
   @@map("tags")
 }
+
+
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  inventories Inventory[]
+
+  @@map("categories")
+}
+
 
 model InventoryAccess {
   id          String    @id @default(cuid())
@@ -63,26 +78,64 @@ model InventoryAccess {
   @@map("inventory_accesses")
 }
 
+
+
 model Item {
   id          String    @id @default(cuid())
   name        String
   description String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  version     Int       @default(1)  
+
   inventoryId String
   inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
 
+  customString1  String?
+  customString2  String?
+  customString3  String?
+  
+  customText1    String?   @db.Text
+  customText2    String?   @db.Text
+  customText3    String?   @db.Text
+  
+  customInt1     Int?
+  customInt2     Int?
+  customInt3     Int?
+  
+  customBool1    Boolean?
+  customBool2    Boolean?
+  customBool3    Boolean?
+  
+
   tags    Tag[]     @relation("ItemToTag")
   @@map("items")
+  @@unique([inventoryId, id])
 }
 
-model Category {
-  id          String      @id @default(cuid())
-  name        String      @unique
+
+model InventoryFieldConfig {
+  id          String    @id @default(cuid())
+  inventoryId String
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  
+  fieldType   String
+  
+  position    Int
+  
+  name        String
   description String?
-  createdAt   DateTime    @default(now())
-  inventories Inventory[]
-
-  @@map("categories")
+  isVisibleInTable Boolean @default(true)
+  isRequired  Boolean @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([inventoryId, fieldType, position])
+  @@map("inventory_field_configs")
 }
+
+
+
+
 

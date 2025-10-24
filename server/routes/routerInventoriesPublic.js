@@ -28,14 +28,19 @@ routerInventories.get("/public", async (req, res) => {
 
 routerInventories.get("/:id", async (req, res) => {
   try {
+    const { id } = req.params;
     const inventoryItem = await prisma.inventory.findUnique({
-      where: { id: req.params.id },
+      where: { id },
       include: {
         user: {
           select: { name: true, email: true },
         },
         category: true,
         tags: true,
+        items: {
+          include: { tags: true },
+          orderBy: { createdAt: "desc" },
+        },
         _count: {
           select: {
             items: true,
@@ -57,16 +62,11 @@ routerInventories.get("/:id", async (req, res) => {
       data: inventoryItem,
     });
   } catch (error) {
-    console.error(`ошибка отправки данных`);
-    res.status(500).json({ message: "Ошибка загрузки инвентаря" });
+    console.error("Ошибка загрузки инвентаря:", error);
+    res.status(500).json({
+      success: false,
+      message: "Ошибка загрузки инвентаря",
+    });
   }
-});
-
-//загружает товары только когда нужны ????
-routerInventories.get("/:id/items", async (req, res) => {
-  const items = await prisma.item.findMany({
-    where: { inventoryId: req.params.id },
-  });
-  res.json({ success: true, data: items });
 });
 export default routerInventories;

@@ -13,35 +13,16 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-// Общая функция для GET запросов
-const getData = async (url) => {
-  try {
-    const response = await axios.get(`${API_BASE}${url}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Ошибка при запросе ${url}:`, error);
-    throw error;
-  }
-};
-
-// Общая функция для POST запросов
-const postData = async (url, data) => {
-  try {
-    const response = await axios.post(`${API_BASE}${url}`, data);
-    return response.data;
-  } catch (error) {
-    console.error(`Ошибка при отправке данных на ${url}:`, error);
-    throw error;
-  }
-};
-
-// Главная страница - публичные инвентари, поиск, теги
-export const fetchInventoriesPublic = (url) => getData(url);
-export const fetchSearchAll = (url) => getData(url);
-export const fetchTags = (url) => getData(url);
+// База
+const getData = (url) => axios.get(`${API_BASE}${url}`).then((res) => res.data);
+const postData = (url, data) =>
+  axios.post(`${API_BASE}${url}`, data).then((res) => res.data);
+const putData = (url, data) =>
+  axios.put(`${API_BASE}${url}`, data).then((res) => res.data);
+const deleteData = (url) =>
+  axios.delete(`${API_BASE}${url}`).then((res) => res.data);
 
 // Просмотр инвентаря
-export const fetchInventoryItem = (url) => getData(url);
 
 // Аутентификация (по ссылке)
 export const fetchMagicLink = async (url, { arg: userFormData }) => {
@@ -58,25 +39,28 @@ export const fetchLoginUser = async (url, { arg: userFormData }) => {
     throw error;
   }
 };
-// Личный кабинет - инвентари пользователя
-export const fetchMyInventories = (url) => getData(url);
-export const fetchAccessibleInventories = (url) => getData(url);
-export const fetchCreateInventories = (url, formData) =>
-  postData(url, formData);
-export const fetchDeleteInventories = async (url) => {
-  const response = await axios.delete(`${API_BASE}${url}`);
-  return response.data;
-};
-export const fetchEditInventories = (url) => getData(url);
-export const fetchUpdateInventories = async (url, { arg: formData }) => {
-  const response = await axios.put(`${API_BASE}${url}`, formData);
-  return response.data;
-};
-export const fetchExportInventories = async (url) => {
-  const response = await axios.get(`${API_BASE}${url}`, {
-    responseType: "blob",
-  });
-  return response;
-};
 
-//export const fetchCreateInventoryItems = (url) => getData(url);
+// Главная страница - публичные инвентари, поиск, теги
+export const fetchInventoriesPublic = (url) => getData(url); //api/inventories/public
+export const fetchInventoryWithItems = (url) => getData(url); //api/inventories/:id (публичный доступ)
+export const fetchSearchAll = (url) => getData(url); //api/search?q=${searchTerm}
+export const fetchTags = (url) => getData(url); //api/tags - без query-парметра
+//api/tags/auto/autocompletion?q=${encodeURIComponent(tagSearchInput)}` - с query-парметров (для автодополнения)
+
+// Личный кабинет - инвентари пользователя
+export const fetchMyInventories = (url) => getData(url); //api/users/me/inventories
+export const fetchAccessibleInventories = (url) => getData(url); //api/users/me/accessible-inventories
+export const fetchCreateInventories = (url, { arg }) => postData(url, arg); //api/users/inventories-create
+export const fetchDeleteInventories = deleteData; //api/users/inventories-delete
+export const fetchEditInventories = (url) => getData(url); //api/users/inventories-edit/${id}
+export const fetchUpdateInventories = (url, { arg }) => putData(url, arg); //api/users/inventories-update/${inventoryId}
+export const fetchExportInventories = (
+  url //api/users/inventories-export/${selectedRows[0]}
+) => axios.get(`${API_BASE}${url}`, { responseType: "blob" });
+
+//товары пользователя
+export const fetchItemsPublic = (url) => getData(url); //api/users/inventories/:inventoryId/items
+export const fetchItem = (url) => getData(url); //api/users/items-adit/:id
+export const fetchCreateItem = (url, formData) => postData(url, formData); //api/users/inventories/:inventoryId/items-create
+export const fetchDeleteItem = (url) => deleteData(url); //api/users/items-delete/:id
+export const fetchUpdateItem = (url, { arg }) => putData(url, arg); //api/users/items-update/:id

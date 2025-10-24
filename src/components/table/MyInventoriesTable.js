@@ -43,7 +43,6 @@ const MyInventoriesTable = ({
         }}
         sx={{
           border: 0,
-          border: 0,
           "& .MuiDataGrid-cell": {
             borderBottom: "1px solid #f0f0f0",
             "&:hover, &:focus-within": { bgcolor: "transparent" },

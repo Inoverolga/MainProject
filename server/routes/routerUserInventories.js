@@ -2,6 +2,11 @@ import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { checkToken } from "../middleware/checkToken.js";
 import { Parser } from "json2csv";
+import {
+  isInventoryOwner,
+  hasWriteAccess,
+  hasReadAccess,
+} from "../utils/accessUtils.js";
 
 const routerUserInventories = express.Router();
 
@@ -13,7 +18,7 @@ const findCategoryId = async (categoryName) => {
   return categoryRecord?.id || null;
 };
 
-const inventoryInclude = {
+export const inventoryInclude = {
   _count: { select: { items: true } },
 };
 
@@ -65,6 +70,55 @@ routerUserInventories.get(
   }
 );
 
+// Защищенный роут с правами доступа
+routerUserInventories.get(
+  "/inventories/:id/items-with-access",
+  checkToken,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.userId;
+
+      const inventoryItem = await prisma.inventory.findUnique({
+        where: { id },
+        include: {
+          user: { select: { name: true, email: true, id: true } },
+          category: true,
+          tags: true,
+          items: {
+            include: { tags: true },
+            orderBy: { createdAt: "desc" },
+          },
+          _count: { select: { items: true } },
+        },
+      });
+
+      if (!inventoryItem) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Инвентарь не найден" });
+      }
+
+      let canWrite = false;
+      if (userId) {
+        canWrite =
+          inventoryItem.userId === userId || (await hasWriteAccess(id, userId));
+      }
+
+      res.json({
+        success: true,
+        message: "Инвентарь загружен",
+        data: { ...inventoryItem, canWrite },
+      });
+    } catch (error) {
+      console.error("Ошибка загрузки инвентаря:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Ошибка загрузки инвентаря" });
+    }
+  }
+);
+
 //создание инвентаря
 routerUserInventories.post(
   "/inventories-create",
@@ -77,6 +131,7 @@ routerUserInventories.post(
         category,
         tags = [],
         isPublic,
+        ...rest
       } = req.body.arg || req.body;
 
       const user = await prisma.user.findUnique({
@@ -128,9 +183,7 @@ routerUserInventories.delete(
   checkToken,
   async (req, res) => {
     try {
-      const isOwner = await prisma.inventory.findFirst({
-        where: { id: req.params.id, userId: req.user.userId },
-      });
+      const isOwner = await isInventoryOwner(req.params.id, req.user.userId);
 
       if (!isOwner) {
         return res.status(403).json({
@@ -156,18 +209,17 @@ routerUserInventories.get(
   checkToken,
   async (req, res) => {
     try {
+      const hasAccess = await hasWriteAccess(req.params.id, req.user.userId);
+
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: "Инвентарь не найден или нет доступа",
+        });
+      }
+
       const inventory = await prisma.inventory.findFirst({
-        where: {
-          id: req.params.id,
-          OR: [
-            { userId: req.user.userId },
-            {
-              inventoryAccesses: {
-                some: { userId: req.user.userId, accessLevel: "WRITE" },
-              },
-            },
-          ],
-        },
+        where: { id: req.params.id },
         select: {
           id: true,
           name: true,
@@ -181,7 +233,7 @@ routerUserInventories.get(
       if (!inventory) {
         return res.status(404).json({
           success: false,
-          message: "Инвентарь не найден или нет доступа",
+          message: "Инвентарь не найден",
         });
       }
 
@@ -212,9 +264,7 @@ routerUserInventories.put(
         });
       }
 
-      const isOwner = await prisma.inventory.findFirst({
-        where: { id: req.params.id, userId: req.user.userId },
-      });
+      const isOwner = await isInventoryOwner(req.params.id, req.user.userId);
 
       if (!isOwner) {
         return res.status(403).json({
@@ -262,27 +312,24 @@ routerUserInventories.get(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const userId = req.user.userId;
+      const hasAccess = await hasReadAccess(id, req.user.userId);
+
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: "Инвентарь не найден или нет доступа",
+        });
+      }
 
       const inventory = await prisma.inventory.findFirst({
-        where: {
-          id,
-          OR: [
-            { userId },
-            {
-              inventoryAccesses: {
-                some: { userId, accessLevel: { in: ["READ", "WRITE"] } },
-              },
-            },
-          ],
-        },
+        where: { id },
         include: { items: { include: { tags: true } } },
       });
 
       if (!inventory) {
         return res.status(404).json({
           success: false,
-          message: "Инвентарь не найден или нет доступа",
+          message: "Инвентарь не найден",
         });
       }
 

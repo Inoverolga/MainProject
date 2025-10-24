@@ -8,8 +8,8 @@ import RegistrationPage from "./page/registrationpage/RegistrationPage.js";
 import Header from "./components/header/Header.js";
 import ProtectedRoute from "./components/protectedRoute/ProtectedRoute.js";
 import ProfilePage from "./page/profilePage/ProfilePage.js";
-import CreateInventoryPage from "./page/createinventorypage/CreateInventoryPage.js";
-import EditInventoryPage from "./page/createinventorypage/EditInventoryPage.js";
+import UniversalItemForm from "./components/form/UniversalItemForm.js";
+import UniversalInventoryForm from "./components/form/UniversalInventoryForm.js";
 
 function App() {
   return (
@@ -27,7 +27,38 @@ function App() {
             <div className="container-lg mt-4">
               <Routes>
                 <Route path="/auth/register" element={<RegistrationPage />} />
-
+                <Route
+                  path="/inventory-create"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalInventoryForm mode="create" />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/inventory-edit/:id"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalInventoryForm mode="edit" />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/create-item/:id"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalItemForm mode="create" />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/edit-item/:itemId"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalItemForm mode="edit" />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="*" element={<WithHeaderLayout />} />
               </Routes>
             </div>
@@ -53,22 +84,6 @@ function WithHeaderLayout() {
           }
         />
         <Route path="/inventory/:id" element={<InventoryPage />} />
-        <Route
-          path="/inventories-create"
-          element={
-            <ProtectedRoute>
-              <CreateInventoryPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/edit-inventory/:id"
-          element={
-            <ProtectedRoute>
-              <EditInventoryPage />
-            </ProtectedRoute>
-          }
-        />
       </Routes>
     </>
   );
