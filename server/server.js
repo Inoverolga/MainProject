@@ -1,14 +1,15 @@
 import express from "express";
 import cors from "cors";
+import { prisma } from "./lib/prisma.js";
 import routerInventories from "./routes/routerInventoriesPublic.js";
 import routerSearch from "./routes/routerSearch.js";
 import routerTag from "./routes/routerTags.js";
 import routerLogin from "./routes/routerLogin.js";
 import routerAuthO from "./routes/routerAuthO.js";
 import routerAuthMagic from "./routes/routerAuthMagic.js";
-import { prisma } from "./lib/prisma.js";
 import routerUserInventories from "./routes/routerUserInventories.js";
 import routerUserItem from "./routes/routerUserItem.js";
+import routerCustomFields from "./routes/routerCustomFields.js";
 
 const app = express();
 app.use(
@@ -29,6 +30,7 @@ app.use("/api/auth", routerAuthO);
 app.use("/api/auth", routerAuthMagic);
 app.use("/api/users", routerUserInventories);
 app.use("/api/users", routerUserItem);
+app.use("/api/users", routerCustomFields);
 
 app.get("/", (req, res) => {
   res.json({

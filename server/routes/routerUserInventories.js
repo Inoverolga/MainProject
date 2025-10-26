@@ -1,6 +1,7 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { checkToken } from "../middleware/checkToken.js";
+import { handleError } from "../utils/handleError.js";
 import { Parser } from "json2csv";
 import {
   isInventoryOwner,
@@ -18,7 +19,14 @@ const findCategoryId = async (categoryName) => {
   return categoryRecord?.id || null;
 };
 
-export const inventoryInclude = {
+export const inventorySelect = {
+  id: true,
+  name: true,
+  description: true,
+  createdAt: true,
+  updatedAt: true,
+  isPublic: true,
+  version: true,
   _count: { select: { items: true } },
 };
 
@@ -26,14 +34,13 @@ routerUserInventories.get("/me/inventories", checkToken, async (req, res) => {
   try {
     const inventories = await prisma.inventory.findMany({
       where: { userId: req.user.userId },
-      include: inventoryInclude,
+      select: inventorySelect,
       orderBy: { createdAt: "desc" },
     });
+
     res.json({ success: true, data: inventories });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Ошибка при загрузке инвентарей" });
+    handleError(error, res);
   }
 });
 
@@ -46,8 +53,8 @@ routerUserInventories.get(
         where: { userId: req.user.userId, accessLevel: "WRITE" },
         include: {
           inventory: {
-            include: {
-              ...inventoryInclude,
+            select: {
+              ...inventorySelect,
               user: { select: { id: true, name: true, email: true } },
             },
           },
@@ -62,10 +69,7 @@ routerUserInventories.get(
 
       res.json({ success: true, data: inventories });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Ошибка при загрузке доступных инвентарей",
-      });
+      handleError(error, res);
     }
   }
 );
@@ -85,6 +89,7 @@ routerUserInventories.get(
           user: { select: { name: true, email: true, id: true } },
           category: true,
           tags: true,
+          version: true,
           items: {
             include: { tags: true },
             orderBy: { createdAt: "desc" },
@@ -111,10 +116,7 @@ routerUserInventories.get(
         data: { ...inventoryItem, canWrite },
       });
     } catch (error) {
-      console.error("Ошибка загрузки инвентаря:", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Ошибка загрузки инвентаря" });
+      handleError(error, res);
     }
   }
 );
@@ -170,9 +172,7 @@ routerUserInventories.post(
         data: newInventory,
       });
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Ошибка при создании инвентаря" });
+      handleError(error, res);
     }
   }
 );
@@ -183,22 +183,34 @@ routerUserInventories.delete(
   checkToken,
   async (req, res) => {
     try {
-      const isOwner = await isInventoryOwner(req.params.id, req.user.userId);
+      const { id } = req.params;
+      const { version } = req.query;
 
-      if (!isOwner) {
-        return res.status(403).json({
+      if (!version) {
+        return res.status(400).json({
           success: false,
-          message: "Только владелец может удалить инвентарь",
+          message: "Версия обязательна",
         });
       }
 
-      await prisma.inventory.delete({ where: { id: req.params.id } });
+      // const hasAccess = await hasWriteAccess(id, req.user.userId);
+      // if (!hasAccess) {
+      //   return res.status(403).json({
+      //     success: false,
+      //     message: "Нет прав для удаления инвентаря",
+      //   });
+      // }
+
+      await prisma.inventory.delete({
+        where: {
+          id: id,
+          version: parseInt(version),
+        },
+      });
 
       res.json({ success: true, message: "Инвентарь удален" });
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Ошибка при удалении инвентаря" });
+      handleError(error, res);
     }
   }
 );
@@ -225,6 +237,7 @@ routerUserInventories.get(
           name: true,
           description: true,
           isPublic: true,
+          version: true,
           category: { select: { id: true, name: true } },
           tags: { select: { id: true, name: true } },
         },
@@ -239,7 +252,7 @@ routerUserInventories.get(
 
       res.json({ success: true, data: inventory });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Ошибка загрузки" });
+      handleError(error, res);
     }
   }
 );
@@ -249,7 +262,20 @@ routerUserInventories.put(
   checkToken,
   async (req, res) => {
     try {
-      const { name, description, category, tags = [], isPublic } = req.body;
+      const {
+        name,
+        description,
+        category,
+        tags = [],
+        isPublic,
+        version,
+      } = req.body.arg || req.body;
+
+      if (!version) {
+        return res.status(400).json({
+          success: false,
+        });
+      }
 
       if (!name?.trim()) {
         return res
@@ -276,12 +302,13 @@ routerUserInventories.put(
       const categoryId = await findCategoryId(category);
 
       const updatedInventory = await prisma.inventory.update({
-        where: { id: req.params.id },
+        where: { id: req.params.id, version: parseInt(version) },
         data: {
           name: name.trim(),
           description: description.trim(),
           categoryId,
           isPublic: Boolean(isPublic),
+          version: { increment: 1 },
           tags: {
             set: [],
             connectOrCreate: tags.map((tagName) => ({
@@ -299,9 +326,7 @@ routerUserInventories.put(
         data: updatedInventory,
       });
     } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Ошибка при обновлении инвентаря" });
+      handleError(error, res);
     }
   }
 );
@@ -357,8 +382,8 @@ routerUserInventories.get(
         `attachment; filename="inventory-${id}.csv"`
       );
       res.send(csv);
-    } catch {
-      res.status(500).json({ success: false, message: "Ошибка экспорта" });
+    } catch (error) {
+      handleError(error, res);
     }
   }
 );

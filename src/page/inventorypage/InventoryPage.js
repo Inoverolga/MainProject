@@ -1,48 +1,66 @@
 import { useNavigate, useParams } from "react-router-dom";
 import useSWR from "swr";
-import { fetchInventoryWithItems } from "../../service/api";
+import { Container, Card, Tabs, Tab } from "react-bootstrap";
+import ReactMarkdown from "react-markdown";
 import Spinner from "../../components/spinner/Spinner";
 import Error from "../../components/error/Error";
-import { useContext, useState } from "react";
+import {
+  fetchInventoryWithItems,
+  fetchFieldsPublic,
+  fetchItemsWithFieldsPublic,
+} from "../../service/api";
+import { useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
-import ReactMarkdown from "react-markdown";
-import { useItemColumns } from "../../hooks/useItemColumns";
-import { useItemsOperations } from "../../hooks/useItemsOperations.js";
-import MyInventoriesTable from "../../components/table/MyInventoriesTable.js";
-import ItemToolbar from "../../components/table/ToolbarForInventoryPage";
-import { Container, Card } from "react-bootstrap";
+import ItemsTabs from "../../components/tabs/ItemsTabs.js";
+import FieldSettingTabs from "../../components/tabs/FieldsSettingsTabs.js";
 
 const InventoryPage = () => {
   const { id } = useParams();
   const { isAuthenticated, authUser } = useContext(AuthContext);
-  const [selectedRows, setSelectedRows] = useState([]);
   const navigate = useNavigate();
 
+  // 1. Загружаем инвентарь публичный (название, описание, создатель)
   const {
-    data: response,
-    error,
-    isLoading,
+    data: dataInventory,
+    error: inventoryError,
+    isLoading: inventoryLoading,
+  } = useSWR(`/inventories/${id}`, fetchInventoryWithItems, {
+    revalidateOnFocus: false,
+  });
+
+  // 2. Загружаем поля для колонок (только для авторизованных)
+  const { data: dataConfigFields, mutate: mutateFieldsPublic } = useSWR(
+    isAuthenticated ? `/users/inventories/${id}/fields-public` : null,
+    fetchFieldsPublic
+  );
+
+  // 3. Загружаем товары (только для авторизованных)
+  const {
+    data: dataItemsWithField,
+    error: itemsError,
+    isLoading: itemsLoading,
     mutate: mutateMyItems,
   } = useSWR(
-    isAuthenticated
-      ? `/users/inventories/${id}/items-with-access`
-      : `/inventories/${id}`,
-    fetchInventoryWithItems,
+    isAuthenticated ? `/users/inventories/${id}/items` : null,
+    fetchItemsWithFieldsPublic,
     {
       revalidateOnFocus: false,
     }
   );
 
-  const { handleDelete, handleEdit, isCreating, isUpdating } =
-    useItemsOperations(mutateMyItems, id);
+  const inventory = dataInventory?.data;
+  const fields = dataConfigFields?.data || [];
 
-  const columns = useItemColumns();
-  const inventory = response?.data || null;
-  const items = inventory?.items || [];
-  const hasWriteAccess = inventory?.canWrite || false;
+  const items = isAuthenticated
+    ? dataItemsWithField?.data || []
+    : inventory?.items || [];
 
-  if (isLoading) return <Spinner />;
-  if (error) return <Error message={`Ошибка загрузки: ${error.message}`} />;
+  const isOwner = inventory?.userId === authUser?.id;
+  const hasWriteAccess = isOwner || inventory?.canWrite || false;
+
+  if (inventoryLoading) return <Spinner />;
+  if (inventoryError)
+    return <Error message={`Ошибка загрузки: ${inventoryError.message}`} />;
   if (!inventory) return <div>Инвентарь не найден</div>;
 
   return (
@@ -85,73 +103,43 @@ const InventoryPage = () => {
         </Card.Body>
       </Card>
 
-      {/* Информация об инвентаре */}
-      <Card className="border-0 shadow-sm mb-4">
-        <Card.Body className="p-3">
-          <div className="row">
-            <div className="col-md-6">
-              <div className="d-flex align-items-center text-muted mb-2">
-                <i className="bi bi-person-circle me-2 fs-5"></i>
-                <span className="small">
-                  <strong>Создатель:</strong>{" "}
-                  <span className="text-dark">
-                    {inventory.user?.name || "-"}
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="col-md-6 text-md-end">
-              <div className="d-flex align-items-center justify-content-md-end text-muted">
-                <span className="small">
-                  <strong>Товаров:</strong>{" "}
-                  <span className="text-dark fw-semibold">{items.length}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </Card.Body>
-      </Card>
-
-      <Card className="border-0 shadow-sm">
-        <Card.Header className="bg-light border-0 py-3">
-          <div className="d-flex justify-content-between align-items-center">
-            <h5 className="card-title mb-0 fs-5 fw-semibold">🗃️ Товары</h5>
-          </div>
-        </Card.Header>
-        <Card.Body className="p-0">
-          <ItemToolbar
-            selectedRows={selectedRows}
-            hasWriteAccess={hasWriteAccess}
-            inventoryId={id}
-            onEdit={() => handleEdit(selectedRows, navigate)}
-            onDelete={() => handleDelete(selectedRows, setSelectedRows)}
-            isMutating={isCreating || isUpdating}
-          />
-
-          <MyInventoriesTable
+      <Tabs defaultActiveKey="items" className="mb-3">
+        <Tab eventKey="items" title="🗃️ Товары">
+          <ItemsTabs
+            inventory={inventory}
             data={items}
-            columns={columns}
-            loading={isLoading}
-            height={500}
-            enableSelection={hasWriteAccess}
-            enablePagination={true}
-            pageSize={10}
-            onSelectionChange={setSelectedRows}
+            fields={fields}
+            hasWriteAccess={hasWriteAccess}
+            mutateMyItems={mutateMyItems}
+            itemsLoading={isAuthenticated ? itemsLoading : false}
+            itemsError={itemsError}
+            isAuthenticated={isAuthenticated}
           />
+        </Tab>
 
-          {items.length === 0 && !isLoading && (
-            <div className="text-center text-muted py-5">
-              <i className="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-              <p className="mb-0">Товары отсутствуют</p>
-              {hasWriteAccess && (
-                <small className="text-muted">
-                  Нажмите "Добавить товар" чтобы создать первый товар
-                </small>
-              )}
-            </div>
-          )}
-        </Card.Body>
-      </Card>
+        {hasWriteAccess && (
+          <Tab eventKey="fields" title="🛠️ Поля">
+            <FieldSettingTabs
+              inventoryId={id}
+              fields={fields}
+              mutateFields={mutateFieldsPublic}
+              isOwner={isOwner}
+            />
+          </Tab>
+        )}
+        {/* Остальные вкладки (пока disabled) */}
+        <Tab eventKey="discussion" title="💬 Обсуждение" disabled>
+          {/* DiscussionTab - будет создан */}
+        </Tab>
+
+        <Tab eventKey="settings" title="⚙️ Настройки" disabled>
+          {/* BasicSettings - будет создан */}
+        </Tab>
+
+        <Tab eventKey="access" title="👥 Доступ" disabled>
+          {/* AccessSettings - будет создан */}
+        </Tab>
+      </Tabs>
     </Container>
   );
 };

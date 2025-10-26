@@ -1,5 +1,6 @@
 import { DataGrid } from "@mui/x-data-grid";
 import { GridColumnMenu } from "@mui/x-data-grid";
+import { ruRU } from "@mui/x-data-grid/locales";
 
 const CustomColumnMenu = (props) => (
   <GridColumnMenu
@@ -14,26 +15,32 @@ const CustomColumnMenu = (props) => (
 const MyInventoriesTable = ({
   data,
   columns,
-  loading = false,
-  height = 400,
-  enableSelection = false,
+  loading,
+  height,
+  hasWriteAccess,
   enablePagination = true,
   pageSize = 10,
   onSelectionChange,
+  onEdit,
   ...props
 }) => {
   return (
-    <div style={{ height, width: "100%" }}>
+    <div style={{ width: "100%" }}>
       <DataGrid
         rows={data || []}
-        columns={columns}
+        onRowClick={(params) => {
+          if (hasWriteAccess) {
+            onEdit(params.row.id);
+          }
+        }}
+        columns={columns || []}
         loading={loading}
         pagination={enablePagination}
         initialState={{
           pagination: { paginationModel: { pageSize } },
         }}
         pageSizeOptions={[5, 10, 25, 50]}
-        checkboxSelection={enableSelection}
+        checkboxSelection={hasWriteAccess}
         onRowSelectionModelChange={(selectionModel) =>
           onSelectionChange?.(Array.from(selectionModel?.ids || []))
         }
@@ -41,6 +48,8 @@ const MyInventoriesTable = ({
         slots={{
           columnMenu: CustomColumnMenu,
         }}
+        localeText={ruRU.components.MuiDataGrid.defaultProps.localeText}
+        getRowHeight={() => "auto"}
         sx={{
           border: 0,
           "& .MuiDataGrid-cell": {

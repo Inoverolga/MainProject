@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
-export const useItemColumns = () => {
+export const useItemColumns = (fields = []) => {
   return useMemo(() => {
     const baseColumns = [
       {
@@ -40,14 +40,21 @@ export const useItemColumns = () => {
       {
         field: "tags",
         headerName: "Теги",
-        width: 150,
+        flex: 1,
+        minWidth: 150,
         headerAlign: "center",
         renderCell: ({ value }) => (
-          <div className="text-center">
+          <div
+            className="d-flex flex-wrap gap-1"
+            style={{
+              maxWidth: "100%",
+              padding: "8px 0 8px 0",
+            }}
+          >
             {value?.map((tag) => (
               <span
                 key={tag.id}
-                className="badge bg-secondary me-1"
+                className="badge bg-secondary "
                 style={{ fontSize: "0.7rem" }}
               >
                 {tag.name}
@@ -58,6 +65,21 @@ export const useItemColumns = () => {
       },
     ];
 
-    return baseColumns;
-  }, []);
+    const customColumns = fields
+      .filter((field) => field.isVisibleInTable)
+      .map((field) => ({
+        field: field.targetField,
+        headerName: field.name.charAt(0).toUpperCase() + field.name.slice(1),
+        width: 150,
+        align: "center",
+        headerAlign: "center",
+        valueFormatter: (value) => {
+          if (value === null || value === undefined || value === "") return "-";
+          if (field.fieldType === "BOOLEAN") return value ? "✅" : "❌";
+          return String(value);
+        },
+      }));
+
+    return [...baseColumns, ...customColumns];
+  }, [fields]);
 };

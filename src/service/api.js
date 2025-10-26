@@ -50,17 +50,30 @@ export const fetchTags = (url) => getData(url); //api/tags - без query-пар
 // Личный кабинет - инвентари пользователя
 export const fetchMyInventories = (url) => getData(url); //api/users/me/inventories
 export const fetchAccessibleInventories = (url) => getData(url); //api/users/me/accessible-inventories
-export const fetchCreateInventories = (url, { arg }) => postData(url, arg); //api/users/inventories-create
-export const fetchDeleteInventories = deleteData; //api/users/inventories-delete
+export const fetchCreateInventories = (url, formData) =>
+  postData(url, formData); //api/users/inventories-create
+export const fetchDeleteInventories = (url, version = null) => {
+  //api/users/inventories-delete/:id
+  return deleteData(version ? `${url}?version=${version}` : url);
+};
 export const fetchEditInventories = (url) => getData(url); //api/users/inventories-edit/${id}
-export const fetchUpdateInventories = (url, { arg }) => putData(url, arg); //api/users/inventories-update/${inventoryId}
+export const fetchUpdateInventories = (url, formData) => putData(url, formData); //api/users/inventories-update/${inventoryId}
 export const fetchExportInventories = (
   url //api/users/inventories-export/${selectedRows[0]}
 ) => axios.get(`${API_BASE}${url}`, { responseType: "blob" });
 
 //товары пользователя
-export const fetchItemsPublic = (url) => getData(url); //api/users/inventories/:inventoryId/items
+export const fetchItemsWithFieldsPublic = (url) => getData(url); //api/users/inventories/:inventoryId/items
 export const fetchItem = (url) => getData(url); //api/users/items-adit/:id
 export const fetchCreateItem = (url, formData) => postData(url, formData); //api/users/inventories/:inventoryId/items-create
-export const fetchDeleteItem = (url) => deleteData(url); //api/users/items-delete/:id
-export const fetchUpdateItem = (url, { arg }) => putData(url, arg); //api/users/items-update/:id
+export const fetchDeleteItem = (url, version = null) => {
+  //api/users/items-delete/:id
+  return deleteData(version ? `${url}?version=${version}` : url);
+};
+export const fetchUpdateItem = (url, formData) => putData(url, formData); //api/users/items-update/:id
+
+//кастомные поля товаров
+export const fetchFieldsPublic = (url) => getData(url); //api/users/inventories/:inventoryId/fields-public
+export const fetchMyFieldCreate = (url, formData) => postData(url, formData); //api/users/inventories/:inventoryId/fields-create-access
+export const fetchMyFieldDelete = (url) => deleteData(url); //api/users/fields-delete-access/:fieldId
+export const fetchMyFieldUpdate = (url, fieldData) => putData(url, fieldData); //api/users/fields-update-access/:fieldId

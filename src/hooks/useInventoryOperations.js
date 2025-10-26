@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 import useSWRMutation from "swr/mutation";
 import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   fetchDeleteInventories,
@@ -12,13 +13,16 @@ import { saveAs } from "file-saver";
 
 export const useInventoryOperations = (
   mutateMyInventories,
+  mutateAccessInventories = null,
   inventoryId = null
 ) => {
+  const navigate = useNavigate();
+
   // Удаление
   const { trigger: deleteInventory } = useSWRMutation(
     "/users/inventories-delete",
-    (url, { arg: inventoryId }) =>
-      fetchDeleteInventories(`${url}/${inventoryId}`)
+    (url, { arg: { inventoryId, version } }) =>
+      fetchDeleteInventories(`${url}/${inventoryId}`, version)
   );
 
   // Создание
@@ -31,7 +35,6 @@ export const useInventoryOperations = (
   const { trigger: updateInventory, isMutating: isUpdating } = useSWRMutation(
     inventoryId ? `/users/inventories-update/${inventoryId}` : null,
     fetchUpdateInventories
-    //(url, { arg }) => fetchUpdateInventories(url, { arg })
   );
 
   const handleCreate = async (formData) => {
@@ -44,20 +47,39 @@ export const useInventoryOperations = (
     return null;
   };
 
-  const handleDelete = async (selectedRows, setSelectedRows) => {
+  const handleDelete = async (
+    selectedRows,
+    setSelectedRows,
+    inventories = []
+  ) => {
     if (selectedRows.length === 0) return;
 
     if (!window.confirm(`Удалить ${selectedRows.length} инвентарей?`)) return;
 
     try {
       for (const id of selectedRows) {
-        await deleteInventory(id);
+        const inventory = inventories.find((i) => i.id === id);
+
+        if (!inventory?.version) {
+          console.error(
+            "Не удалось выполнить удаление. Пожалуйста, обновите страницу"
+          );
+          return;
+        }
+        await deleteInventory({ inventoryId: id, version: inventory.version });
       }
       toast.success(`Инвентарь удален`);
       mutateMyInventories?.();
+      mutateAccessInventories?.();
       setSelectedRows([]);
     } catch (error) {
-      toast.error("Ошибка при удалении");
+      if (error?.response?.status === 409) {
+        toast.error(
+          "Данные были изменены другим пользователем. Пожалуйста, обновите страницу."
+        );
+      } else {
+        toast.error("Ошибка при удалении");
+      }
     }
   };
 
@@ -78,6 +100,7 @@ export const useInventoryOperations = (
       const result = await updateInventory(formData);
       if (result.success) {
         mutateMyInventories?.();
+        navigate("/profile");
         return true;
       }
 

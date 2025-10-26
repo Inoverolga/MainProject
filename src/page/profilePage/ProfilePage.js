@@ -29,29 +29,33 @@ const ProfilePage = () => {
   } = useSWR(
     searchTerm ? `/search?q=${searchTerm}` : "/users/me/inventories",
     searchTerm ? fetchSearchAll : fetchMyInventories,
-    { keepPreviousData: true, revalidateOnFocus: false }
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: false,
+    }
   );
 
   const {
     data: accessData,
     isLoading: accessLoading,
     error: accessError,
+    mutate: mutateAccessInventories,
   } = useSWR(
     searchTerm ? `/search?q=${searchTerm}` : "/users/me/accessible-inventories",
     searchTerm ? fetchSearchAll : fetchAccessibleInventories,
-    { keepPreviousData: true, revalidateOnFocus: false }
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: false,
+    }
   );
 
-  const { handleDelete, handleEdit, handleExport } =
-    useInventoryOperations(mutateMyInventories);
+  const { handleDelete, handleEdit, handleExport } = useInventoryOperations(
+    mutateMyInventories,
+    mutateAccessInventories
+  );
 
-  const myInventories = Array.isArray(myData) ? myData : myData?.data || [];
-  const accessInventories = Array.isArray(accessData)
-    ? accessData
-    : accessData?.data || [];
-
-  //   console.log("📊 Мои инвентари:", myInventories);
-  //   console.log("📊 Доступные инвентари:", accessInventories);
+  const myInventories = myData?.data || myData || [];
+  const accessInventories = accessData?.data || accessData || [];
 
   const myColumns = useInventoryColumns(myInventories, "my");
   const accessColumns = useInventoryColumns(accessInventories, "accessible");
@@ -73,8 +77,11 @@ const ProfilePage = () => {
         onSelectionChange={setSelectedMyRows}
         onEdit={() => handleEdit(selectedMyRows, navigate)}
         onExport={() => handleExport(selectedMyRows)}
-        onDelete={() => handleDelete(selectedMyRows, setSelectedMyRows)}
+        onDelete={() =>
+          handleDelete(selectedMyRows, setSelectedMyRows, myInventories)
+        }
         showDelete={true}
+        hasWriteAccess={true}
         createButtonVariant="secondary"
         emptyMessage="У вас пока нет инвентарей"
       />
@@ -89,6 +96,14 @@ const ProfilePage = () => {
         onEdit={() => handleEdit(selectedAccessRows, navigate)}
         onExport={() => handleExport(selectedAccessRows)}
         showDelete={false}
+        onDelete={() =>
+          handleDelete(
+            selectedAccessRows,
+            setSelectedAccessRows,
+            accessInventories
+          )
+        }
+        hasWriteAccess={false}
         createButtonVariant="secondary"
         emptyMessage="У вас нет доступа к чужим инвентарям"
       />

@@ -25,7 +25,12 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
     mode === "edit" && inventoryId
       ? `/users/inventories-edit/${inventoryId}`
       : null,
-    fetchEditInventories
+    fetchEditInventories,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 0,
+    }
   );
 
   const {
@@ -35,34 +40,65 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
     tagOptions,
     tagValues,
     isSearching,
-    hasChanges,
+    hasTagChanges,
   } = useTags(inventoryData?.data?.tags || [], mode);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isDirty },
     reset,
     setValue,
+    getValues,
   } = useForm({
     mode: "onChange",
     defaultValues: { isPublic: "true" },
   });
 
-  const canSubmit = mode === "create" ? isValid : hasChanges;
+  const hasFormChanges = mode === "create" ? isValid : isDirty || hasTagChanges;
+  const canSubmit = mode === "create" ? isValid : hasFormChanges;
 
   const { handleCreate, handleUpdate, isCreating, isUpdating } =
     useInventoryOperations(mutateMyInventories, inventoryId);
+
+  useEffect(() => {
+    if (mode !== "edit") return;
+
+    const interval = setInterval(async () => {
+      if (isDirty || hasTagChanges) {
+        try {
+          const formData = getValues();
+          const dataWithTags = {
+            ...formData,
+            tags: tagValues,
+            isPublic: formData.isPublic === "true",
+            version: formData.version,
+          };
+
+          await handleUpdate(dataWithTags);
+        } catch (error) {
+          if (error?.response?.status === 409) {
+            toast.error(
+              "Данные были изменены другим пользователем. Пожалуйста, обновите страницу."
+            );
+          }
+        }
+      }
+    }, 7000);
+
+    return () => clearInterval(interval);
+  }, [mode, isDirty, hasTagChanges, getValues, tagValues, handleUpdate]);
 
   // Заполняем форму данными при редактировании
   useEffect(() => {
     if (mode === "edit" && inventoryData?.data) {
       const data = inventoryData.data;
-      console.log("Filling form with data:", data);
+
       setValue("name", data.name);
       setValue("description", data.description);
       setValue("category", data.category?.name || "");
       setValue("isPublic", data.isPublic?.toString() || "true");
+      setValue("version", data.version);
     }
   }, [mode, inventoryData, setValue]);
 
@@ -74,6 +110,7 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
         ...formData,
         tags: tagValues,
         isPublic: formData.isPublic === "true",
+        version: formData.version,
       };
 
       if (mode === "create") {
@@ -90,9 +127,15 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
         }
       }
     } catch (error) {
-      toast.error(
-        `Ошибка ${mode === "create" ? "создания" : "обновления"} инвентаря`
-      );
+      if (error?.response?.status === 409) {
+        toast.error(
+          "Данные были изменены другим пользователем. Пожалуйста, обновите страницу."
+        );
+      } else {
+        toast.error(
+          `Ошибка ${mode === "create" ? "создания" : "обновления"} инвентаря`
+        );
+      }
     }
   };
 
@@ -105,6 +148,15 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
           ? "🧰 Создание инвентаря"
           : "✏️ Редактирование инвентаря"}
       </h2>
+
+      {mode === "edit" && (
+        <div className="alert alert-light mb-3">
+          {isDirty || hasTagChanges
+            ? "● Изменения сохранятся автоматически через 7 секунд"
+            : "✓ Все изменения сохранены"}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* Название */}
         <div className="mb-3">

@@ -33,16 +33,17 @@ export const useTags = (initialTags = [], mode = "create") => {
     }
   }, [mode, initialTags]);
 
-  const tagOptions = useMemo(() => {
-    const options = tagSearchInput ? searchedTags : allTags;
-    return options.map((tag) => ({ value: tag, label: tag }));
-  }, [allTags, searchedTags, tagSearchInput]);
+  const tagOptions = tagSearchInput
+    ? searchedTags.map((tag) => ({ value: tag, label: tag }))
+    : allTags.map((tag) => ({ value: tag, label: tag }));
 
   const tagValues = selectedTags.map((tag) => tag.value);
 
-  const hasChanges =
-    mode === "create" ||
-    JSON.stringify(tagValues) !== JSON.stringify(initialTagsRef.current);
+  const hasTagChanges =
+    mode === "create"
+      ? selectedTags.length > 0
+      : JSON.stringify(selectedTags.map((t) => t.value).sort()) !==
+        JSON.stringify(initialTagsRef.current.map((t) => t.value).sort());
 
   return {
     selectedTags,
@@ -52,6 +53,6 @@ export const useTags = (initialTags = [], mode = "create") => {
     tagOptions,
     tagValues,
     isSearching,
-    hasChanges,
+    hasTagChanges,
   };
 };

@@ -9,18 +9,13 @@ const Toolbar = ({
   onDelete,
   showDelete = true,
 }) => {
-  const buttonStyle = {
-    color: "#000",
-    backgroundColor: "transparent",
-  };
-
   return (
     <div className="mb-3 p-3 bg-light rounded d-flex justify-content-between align-items-center">
       <span className="text-muted">Выбрано: {selectedRows.length}</span>
       <div className="d-flex gap-2">
         <Button
           variant="outline-secondary"
-          style={buttonStyle}
+          className="btn-toolbar-style"
           size="sm"
           onClick={onEdit}
           disabled={selectedRows.length === 0}
@@ -30,7 +25,7 @@ const Toolbar = ({
 
         <Button
           variant="outline-secondary"
-          style={buttonStyle}
+          className="btn-toolbar-style"
           size="sm"
           onClick={onExport}
           disabled={selectedRows.length === 0}
@@ -40,7 +35,7 @@ const Toolbar = ({
         {showDelete && (
           <Button
             variant="outline-secondary"
-            style={buttonStyle}
+            className="btn-toolbar-style"
             size="sm"
             onClick={onDelete}
             disabled={selectedRows.length === 0}
@@ -70,6 +65,7 @@ export const InventorySection = ({
   onExport,
   onDelete,
   showDelete = true,
+  hasWriteAccess = true,
 }) => (
   <Card className="mb-5">
     <Card.Header className="d-flex justify-content-between align-items-center">
@@ -90,10 +86,12 @@ export const InventorySection = ({
         columns={columns}
         loading={loading}
         height={400}
+        hasWriteAccess={hasWriteAccess}
         enableSelection={true}
         enablePagination={true}
         pageSize={10}
         onSelectionChange={onSelectionChange}
+        onEdit={onEdit}
       />
 
       {data.length === 0 && !loading && (

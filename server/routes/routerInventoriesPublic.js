@@ -1,4 +1,5 @@
 import express from "express";
+import { handleError } from "../utils/handleError.js";
 import { prisma } from "../lib/prisma.js";
 
 const routerInventories = express.Router();
@@ -21,8 +22,7 @@ routerInventories.get("/public", async (req, res) => {
 
     res.json(inventoriesPublic);
   } catch (error) {
-    console.error(`Ошибка отправки данных:`, error);
-    res.status(500).json({ error: "Failed" });
+    handleError(error, res);
   }
 });
 
@@ -62,11 +62,7 @@ routerInventories.get("/:id", async (req, res) => {
       data: inventoryItem,
     });
   } catch (error) {
-    console.error("Ошибка загрузки инвентаря:", error);
-    res.status(500).json({
-      success: false,
-      message: "Ошибка загрузки инвентаря",
-    });
+    handleError(error, res);
   }
 });
 export default routerInventories;

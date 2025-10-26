@@ -42,7 +42,6 @@ routerTag.get("/", async (req, res) => {
 
     const tagNames = tags.map((tag) => tag.name);
 
-    console.log(`Теги из БД отправлены:`, tagNames);
     res.json(tagNames);
   } catch (error) {
     console.error(`Ошибка загрузки тегов:`, error);

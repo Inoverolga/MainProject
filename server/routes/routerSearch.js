@@ -1,5 +1,7 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
+import { hasReadAccess } from "../utils/accessUtils.js";
+import { checkToken } from "../middleware/checkToken.js";
 import jwt from "jsonwebtoken";
 
 const routerSearch = express.Router();
@@ -35,53 +37,36 @@ routerSearch.get("/", async (req, res) => {
       take: 50,
     });
 
-    console.log(`🔍 Global search "${query}": ${results.length} results`);
     res.json(results);
   } catch (error) {
-    console.error("Ошибка поиска:", error);
     res.status(500).json({ success: false, message: "Ошибка поиска" });
   }
 });
 
 // 2. ПЕРСОНАЛЬНЫЙ ПОИСК (все доступные инвентари)
-routerSearch.get("/personal", async (req, res) => {
+routerSearch.get("/personal", checkToken, async (req, res) => {
   try {
     const { q: query = "" } = req.query;
-    const token = req.headers.authorization?.split(" ")[1];
-
-    if (!token) return res.status(401).json({ error: "Требуется авторизация" });
     if (!query.trim()) return res.json([]);
 
-    const user = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    const userId = user.id;
-
-    const accessConditions = {
-      OR: [
-        { userId },
-        { isPublic: true },
-        { inventoryAccess: { some: { userId } } },
-      ],
-    };
-
-    const results = await prisma.inventory.findMany({
-      where: { AND: [accessConditions, buildSearchConditions(query)] },
-      include: {
-        ...inventoryInclude,
-        inventoryAccess: { where: { userId }, select: { accessLevel: true } },
-      },
+    const allInventories = await prisma.inventory.findMany({
+      where: buildSearchConditions(query),
+      include: inventoryInclude,
       orderBy: { createdAt: "desc" },
       take: 50,
     });
 
-    console.log(
-      `🔍 Personal search "${query}" (user: ${userId}): ${results.length} results`
-    );
-    res.json(results);
-  } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      return res.status(403).json({ error: "Недействительный токен" });
+    // Фильтруем по правам доступа
+    const accessibleInventories = [];
+    for (const inventory of allInventories) {
+      const hasAccess = await hasReadAccess(inventory.id, req.user.userId);
+      if (hasAccess) {
+        accessibleInventories.push(inventory);
+      }
     }
-    console.error("Ошибка персонального поиска:", error);
+
+    res.json(accessibleInventories);
+  } catch (error) {
     res.status(500).json({ success: false, message: "Ошибка поиска" });
   }
 });
@@ -116,7 +101,6 @@ routerSearch.get("/items", async (req, res) => {
       take: 50,
     });
 
-    console.log(`🔍 Items search "${query}": ${results.length} results`);
     res.json(results);
   } catch (error) {
     console.error("Ошибка поиска товаров:", error);

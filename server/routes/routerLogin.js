@@ -1,6 +1,7 @@
 import express from "express";
 import bcryptjs from "bcryptjs";
 import { prisma } from "../lib/prisma.js";
+import { handleError } from "../utils/handleError.js";
 import jwt from "jsonwebtoken";
 import { checkToken } from "../middleware/checkToken.js";
 
@@ -15,8 +16,7 @@ routerLogin.get("/me", checkToken, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Ошибка в /me:", error);
-    res.status(500).json({ error: "Внутренняя ошибка сервера" });
+    handleError(error, res);
   }
 });
 
@@ -62,8 +62,7 @@ routerLogin.post("/login", async (req, res) => {
       message: "Вход выполнен успешно",
     });
   } catch (error) {
-    console.error("Ошибка входа:", error);
-    res.status(500).json({ error: "Внутренняя ошибка сервера" });
+    handleError(error, res);
   }
 });
 
