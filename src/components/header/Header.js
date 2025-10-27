@@ -1,12 +1,13 @@
 import { useContext } from "react";
 import { SearchContext } from "../../contexts/SearchContext";
 import { AuthContext } from "../../contexts/AuthContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Header = () => {
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
-  const { isAuthenticated, authUser, loading } = useContext(AuthContext);
+  const { isAuthenticated, authUser, logout } = useContext(AuthContext);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -43,6 +44,12 @@ const Header = () => {
             />
           </div>
         </form>
+        {isAuthenticated && !isHomePage ? (
+          <button className="btn btn-outline-secondary" onClick={logout}>
+            <i className="bi bi-box-arrow-right me-2"></i>
+            Выйти
+          </button>
+        ) : null}
       </div>
     </nav>
   );

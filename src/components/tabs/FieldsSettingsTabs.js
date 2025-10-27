@@ -155,10 +155,10 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
                       {FIELD_TYPES[field.fieldType]?.label}
                     </Badge>
                     {field.isVisibleInTable && (
-                      <Badge bg="info">В таблице</Badge>
+                      <Badge bg="secondary">В таблице</Badge>
                     )}
                     {field.isRequired && (
-                      <Badge bg="warning">Обязательное</Badge>
+                      <Badge bg="secondary">Обязательное</Badge>
                     )}
                   </div>
                   {field.description && (

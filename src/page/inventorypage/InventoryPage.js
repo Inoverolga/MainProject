@@ -68,7 +68,7 @@ const InventoryPage = () => {
       <div className="mb-3">
         <button
           className="btn btn-outline-secondary btn-sm"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/profile")}
         >
           <i className="bi bi-arrow-left me-1"></i>
           Назад

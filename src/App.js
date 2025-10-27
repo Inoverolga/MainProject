@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { SearchProvider } from "./contexts/SearchContext";
 import { AuthProvider } from "./contexts/AuthContext.js";
 import { ToastContainer } from "react-toastify";
@@ -21,9 +26,9 @@ function App() {
         draggable
         pauseOnHover
       />
-      <AuthProvider>
-        <SearchProvider>
-          <Router>
+      <Router>
+        <AuthProvider>
+          <SearchProvider>
             <div className="container-lg mt-4">
               <Routes>
                 <Route path="/auth/register" element={<RegistrationPage />} />
@@ -59,32 +64,49 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route path="*" element={<WithHeaderLayout />} />
+                <Route
+                  path="/"
+                  element={
+                    <WithHeaderLayout>
+                      <MainPage />
+                    </WithHeaderLayout>
+                  }
+                />
+
+                <Route
+                  path="/inventory/:id"
+                  element={
+                    <WithHeaderLayout>
+                      <InventoryPage />
+                    </WithHeaderLayout>
+                  }
+                />
+
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <WithHeaderLayout>
+                        <ProfilePage />
+                      </WithHeaderLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
-          </Router>
-        </SearchProvider>
-      </AuthProvider>
+          </SearchProvider>
+        </AuthProvider>
+      </Router>
     </>
   );
 }
 
-function WithHeaderLayout() {
+function WithHeaderLayout({ children }) {
   return (
     <>
       <Header />
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/inventory/:id" element={<InventoryPage />} />
-      </Routes>
+      {children}
     </>
   );
 }
