@@ -7,7 +7,6 @@ import Error from "../../components/error/Error";
 import {
   fetchInventoryWithItems,
   fetchFieldsPublic,
-  fetchItemsWithFieldsPublic,
   fetchInventoryWithAccessCheck,
 } from "../../service/api";
 import { useContext } from "react";
@@ -58,31 +57,24 @@ const InventoryPage = () => {
   //       revalidateOnFocus: false,
   //     }
   //   );
-
-  const inventory = dataInventory?.data;
   //   const items = isAuthenticated
   //     ? dataItemsWithField?.data || []
   //     : inventory?.items || [];
+
+  //   const hasWriteAccess = isAuthenticated
+  //     ? isOwner || inventory?.canWrite || false
+  //     : false;
+
+  const inventory = dataInventory?.data;
 
   const items = inventory?.items || [];
 
   const fields = dataConfigFields?.data || [];
 
   const isOwner = inventory?.userId === authUser?.id;
-  //   const hasWriteAccess = isAuthenticated
-  //     ? isOwner || inventory?.canWrite || false
-  //     : false;
+
   const hasWriteAccess = isOwner || inventory?.canWrite || false;
 
-  console.log("🔍 ДИАГНОСТИКА ВКЛАДКИ ПОЛЕЙ:", {
-    isAuthenticated,
-    authUserId: authUser?.id,
-    inventoryUserId: inventory?.userId,
-    isOwner,
-    inventoryCanWrite: inventory?.canWrite,
-    hasWriteAccess,
-    inventory: inventory,
-  });
   if (inventoryLoading) return <Spinner />;
   if (inventoryError)
     return <Error message={`Ошибка загрузки: ${inventoryError.message}`} />;
