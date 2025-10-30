@@ -8,6 +8,7 @@ import {
   hasWriteAccess,
   hasReadAccess,
 } from "../utils/accessUtils.js";
+import { fieldsItemSelect } from "./routerUserItem.js";
 
 const routerUserInventories = express.Router();
 
@@ -27,6 +28,7 @@ export const inventorySelect = {
   updatedAt: true,
   isPublic: true,
   version: true,
+  userId: true,
   _count: { select: { items: true } },
 };
 
@@ -96,12 +98,13 @@ routerUserInventories.get(
         where: { id },
         select: {
           ...inventorySelect,
+          userId: true,
           user: { select: { name: true, email: true, id: true } },
           category: true,
           tags: true,
           //  version: true,
           items: {
-            include: { tags: true },
+            select: fieldsItemSelect,
             orderBy: { createdAt: "desc" },
           },
           // _count: { select: { items: true } },

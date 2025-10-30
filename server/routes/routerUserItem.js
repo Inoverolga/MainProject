@@ -35,7 +35,7 @@ const prepareItemData = ({
   },
 });
 
-const fieldsItemSelect = {
+export const fieldsItemSelect = {
   id: true,
   name: true,
   description: true,

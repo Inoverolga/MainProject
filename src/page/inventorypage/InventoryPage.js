@@ -28,6 +28,7 @@ const InventoryPage = () => {
     data: dataInventory,
     error: inventoryError,
     isLoading: inventoryLoading,
+    mutate: mutateMyInventoryWithItems,
   } = useSWR(
     isAuthenticated
       ? `/users/inventories/${id}/items-with-access`
@@ -44,30 +45,44 @@ const InventoryPage = () => {
     fetchFieldsPublic
   );
 
-  // 3. Загружаем товары (только для авторизованных)
-  const {
-    data: dataItemsWithField,
-    error: itemsError,
-    isLoading: itemsLoading,
-    mutate: mutateMyItems,
-  } = useSWR(
-    isAuthenticated ? `/users/inventories/${id}/items` : null,
-    fetchItemsWithFieldsPublic,
-    {
-      revalidateOnFocus: false,
-    }
-  );
+  //3. Загружаем товары (только для авторизованных)
+  //   const {
+  //     data: dataItemsWithField,
+  //     error: itemsError,
+  //     isLoading: itemsLoading,
+  //     mutate: mutateMyItems,
+  //   } = useSWR(
+  //     isAuthenticated ? `/users/inventories/${id}/items` : null,
+  //     fetchItemsWithFieldsPublic,
+  //     {
+  //       revalidateOnFocus: false,
+  //     }
+  //   );
 
   const inventory = dataInventory?.data;
+  //   const items = isAuthenticated
+  //     ? dataItemsWithField?.data || []
+  //     : inventory?.items || [];
+
+  const items = inventory?.items || [];
+
   const fields = dataConfigFields?.data || [];
 
-  const items = isAuthenticated
-    ? dataItemsWithField?.data || []
-    : inventory?.items || [];
-
   const isOwner = inventory?.userId === authUser?.id;
+  //   const hasWriteAccess = isAuthenticated
+  //     ? isOwner || inventory?.canWrite || false
+  //     : false;
   const hasWriteAccess = isOwner || inventory?.canWrite || false;
 
+  console.log("🔍 ДИАГНОСТИКА ВКЛАДКИ ПОЛЕЙ:", {
+    isAuthenticated,
+    authUserId: authUser?.id,
+    inventoryUserId: inventory?.userId,
+    isOwner,
+    inventoryCanWrite: inventory?.canWrite,
+    hasWriteAccess,
+    inventory: inventory,
+  });
   if (inventoryLoading) return <Spinner />;
   if (inventoryError)
     return <Error message={`Ошибка загрузки: ${inventoryError.message}`} />;
@@ -120,9 +135,9 @@ const InventoryPage = () => {
             data={items}
             fields={fields}
             hasWriteAccess={hasWriteAccess}
-            mutateMyItems={mutateMyItems}
-            itemsLoading={isAuthenticated ? itemsLoading : false}
-            itemsError={itemsError}
+            mutateMyItems={mutateMyInventoryWithItems}
+            //itemsLoading={isAuthenticated ? itemsLoading : false}
+            //itemsError={itemsError}
             isAuthenticated={isAuthenticated}
           />
         </Tab>
