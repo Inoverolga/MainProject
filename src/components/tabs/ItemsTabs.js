@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
-import { useItemsOperations } from "../../hooks/useItemsOperations.js";
-import { useItemColumns } from "../../hooks/useItemColumns.js";
+import { useItemsOperations } from "../../hooks/itemsWithFields/useItemsOperations.js";
+import { useItemColumns } from "../../hooks/itemsWithFields/useItemColumns.js";
 import MyInventoriesTable from "../table/MyInventoriesTable.js";
 import ItemToolbar from "../table/ToolbarForInventoryPage.js";
 import Spinner from "../../components/spinner/Spinner.js";

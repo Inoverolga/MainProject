@@ -15,12 +15,11 @@ const checkAccess = async (inventoryId, userId, accessLevels = []) => {
 
   if (!inventory) return false;
   if (inventory.userId === userId) {
-    console.log("✅ Access granted: owner");
     return true;
   }
   if (inventory.isPublic) {
     const result = accessLevels.includes("WRITE") ? !!userId : true;
-    console.log("🔍 Public inventory check:", { accessLevels, userId, result });
+
     return result;
   }
 
@@ -28,15 +27,12 @@ const checkAccess = async (inventoryId, userId, accessLevels = []) => {
 };
 
 export const isInventoryOwner = async (inventoryId, userId) => {
-  console.log("🔍 [isInventoryOwner] Проверка:", { inventoryId, userId });
   const inventory = await prisma.inventory.findUnique({
     where: { id: inventoryId },
     select: { userId: true },
   });
-  console.log("🔍 [isInventoryOwner] Найден инвентарь:", inventory);
 
   const result = inventory?.userId === userId;
-  console.log("🔍 [isInventoryOwner] Результат:", result);
 
   return result;
 };
@@ -58,11 +54,7 @@ export const getItemWithAccessCheck = async (
   });
 
   if (!item) throw new Error("Товар не найден");
-  console.log("🔍 Found item:", {
-    itemId: item.id,
-    inventoryId: item.inventoryId,
-    inventoryUserId: item.inventory.userId,
-  });
+
   const hasAccess = requireWrite
     ? await hasWriteAccess(item.inventoryId, userId)
     : await hasReadAccess(item.inventoryId, userId);

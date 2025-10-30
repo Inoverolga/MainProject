@@ -1,10 +1,10 @@
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import CreatableSelect from "react-select/creatable";
-import { useItemsOperations } from "../../hooks/useItemsOperations";
-import { useTags } from "../../hooks/useTags";
+import { useItemsOperations } from "../../hooks/itemsWithFields/useItemsOperations.js";
+import { useTags } from "../../hooks/tags/useTags.js";
 import useSWR from "swr";
 import { Spinner } from "react-bootstrap";
 import {
@@ -18,10 +18,11 @@ const UniversalItemForm = ({ mode = "create" }) => {
   const navigate = useNavigate();
   const { id: urlInventoryId, itemId: urlItemId } = useParams();
   const [customFields, setCustomFields] = useState({});
-  const initialDataRef = useRef(null);
+  const initialDataRef = useRef(null); //хранит начальные данные для сравнения
+  const formInitializedRef = useRef(false); //отслеживает факт инициализации формы
 
   const { data: itemData } = useSWR(
-    mode === "edit" && urlItemId ? `/users/items-adit/${urlItemId}` : null,
+    mode === "edit" && urlItemId ? `/users/items-edit/${urlItemId}` : null,
     fetchItem,
     {
       revalidateOnFocus: false,
@@ -48,7 +49,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
     inventoryId ? `/users/inventories/${inventoryId}/fields-public` : null,
     fetchFieldsPublic
   );
-  const fields = fieldsData?.data || [];
+  const fields = useMemo(() => fieldsData?.data || [], [fieldsData?.data]);
 
   const {
     selectedTags,
@@ -71,8 +72,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
     mode: "onChange",
   });
 
-  const watchedFields = watch(["name", "description"]);
-
   const { handleCreate, handleUpdate, isCreating, isUpdating } =
     useItemsOperations(mutateMyItems, inventoryId);
 
@@ -80,15 +79,30 @@ const UniversalItemForm = ({ mode = "create" }) => {
     setCustomFields((prev) => ({ ...prev, [fieldName]: value }));
   };
 
+  const handleTagsChange = (newSelectedTags) => {
+    setSelectedTags(newSelectedTags);
+  };
+
   // Заполняем форму данными при редактировании
   useEffect(() => {
-    if (mode === "edit" && itemData?.data && !initialDataRef.current) {
+    if (mode === "create") {
+      if (!formInitializedRef.current) {
+        reset({ name: "", description: "" });
+        setCustomFields({});
+        formInitializedRef.current = true;
+      }
+    } else if (
+      mode === "edit" &&
+      itemData?.data &&
+      !formInitializedRef.current
+    ) {
       const data = itemData.data;
+
       const initialCustomFields = {};
 
       fields.forEach((field) => {
         const fieldName = field.targetField;
-        if (data[fieldName] !== undefined && data[fieldName] !== null) {
+        if (data[fieldName] != null && data[fieldName] != undefined) {
           initialCustomFields[fieldName] = data[fieldName];
         }
       });
@@ -99,35 +113,39 @@ const UniversalItemForm = ({ mode = "create" }) => {
         customFields: initialCustomFields,
       };
 
-      // Основные поля
+      // ✅ Устанавливаем значения с валидацией
       setValue("name", data.name);
       setValue("description", data.description);
       setValue("version", data.version);
       setCustomFields(initialCustomFields);
-    }
-  }, [mode, itemData, setValue, fields]);
 
-  // Определяем, есть ли изменения в кастомных полях
+      formInitializedRef.current = true;
+    }
+  }, [mode, itemData, fields, setValue, reset]);
+
+  // Отслеживание изменений в кастомных полях
   const hasCustomFieldsChanges =
     mode === "create"
       ? false
       : initialDataRef.current &&
         Object.keys(customFields).some(
           (key) =>
-            customFields[key] !== initialDataRef.current.customFields[key]
+            // customFields[key] !== initialDataRef.current.customFields[key]
+            JSON.stringify(customFields[key]) !==
+            JSON.stringify(initialDataRef.current.customFields[key])
         );
 
   // Объединяем все проверки изменений
   const hasFormChanges =
-    mode === "create" || isDirty || hasCustomFieldsChanges || hasTagChanges;
+    mode === "create"
+      ? true
+      : formInitializedRef.current &&
+        (isDirty || hasCustomFieldsChanges || hasTagChanges);
 
   const isMutating = isCreating || isUpdating;
 
-  const handleTagsChange = (newSelectedTags) => {
-    setSelectedTags(newSelectedTags);
-  };
-
-  const canSubmit = isValid && (mode === "create" || hasFormChanges);
+  const canSubmit =
+    !isMutating && isValid && (mode === "create" || hasFormChanges);
 
   const onSubmit = async (formData) => {
     try {
@@ -138,6 +156,8 @@ const UniversalItemForm = ({ mode = "create" }) => {
         version: itemData?.data?.version,
       };
 
+      console.log("🔍 DATA TO SEND:", dataWithTags);
+
       if (mode === "create") {
         const result = await handleCreate(dataWithTags, inventoryId);
         if (result) {
@@ -147,9 +167,10 @@ const UniversalItemForm = ({ mode = "create" }) => {
         }
       } else {
         const success = await handleUpdate(urlItemId, dataWithTags);
+        console.log("🔍 UPDATE RESULT:", success); // ✅ Результат запроса
         if (success) {
           toast.success("Товар успешно обновлен!");
-          navigate(-1);
+          navigate(`/inventory/${inventoryId}`);
         }
       }
     } catch (error) {
@@ -252,7 +273,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
           <button
             type="submit"
             className="btn btn-secondary"
-            disabled={isMutating || !canSubmit}
+            disabled={!canSubmit}
           >
             {isMutating
               ? mode === "create"

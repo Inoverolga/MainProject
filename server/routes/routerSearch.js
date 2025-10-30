@@ -2,7 +2,7 @@ import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { hasReadAccess } from "../utils/accessUtils.js";
 import { checkToken } from "../middleware/checkToken.js";
-import jwt from "jsonwebtoken";
+import { handleError } from "../utils/handleError.js";
 
 const routerSearch = express.Router();
 
@@ -22,7 +22,30 @@ const inventoryInclude = {
   _count: { select: { items: true } },
 };
 
-// 1. ОБЩИЙ ПОИСК (публичные инвентари)
+// Поиск пользователей для автодополнения
+routerSearch.get("/users", checkToken, async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 2) return res.json([]);
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { email: { contains: q, mode: "insensitive" } },
+          { name: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      select: { id: true, name: true, email: true },
+      take: 10,
+    });
+
+    res.json(users);
+  } catch (error) {
+    handleError(error, res);
+  }
+});
+
+//  ОБЩИЙ ПОИСК (публичные инвентари)
 routerSearch.get("/", async (req, res) => {
   try {
     const query = req.query.q?.trim() || "";
@@ -43,7 +66,7 @@ routerSearch.get("/", async (req, res) => {
   }
 });
 
-// 2. ПЕРСОНАЛЬНЫЙ ПОИСК (все доступные инвентари)
+//  ПЕРСОНАЛЬНЫЙ ПОИСК (все доступные инвентари)
 routerSearch.get("/personal", checkToken, async (req, res) => {
   try {
     const { q: query = "" } = req.query;
@@ -71,7 +94,7 @@ routerSearch.get("/personal", checkToken, async (req, res) => {
   }
 });
 
-// 3. ПОИСК ТОВАРОВ
+//  ПОИСК ТОВАРОВ
 routerSearch.get("/items", async (req, res) => {
   try {
     const { q: query = "", inventoryId } = req.query;
@@ -107,6 +130,7 @@ routerSearch.get("/items", async (req, res) => {
     res.status(500).json({ success: false, message: "Ошибка поиска товаров" });
   }
 });
+
 export default routerSearch;
 
 // GET /api/search?q=... - общий поиск (публичные инвентари)

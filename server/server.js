@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import { createServer } from "http";
+import { initializeWebSocket } from "./websocket.js";
 import { prisma } from "./lib/prisma.js";
 import routerInventories from "./routes/routerInventoriesPublic.js";
 import routerSearch from "./routes/routerSearch.js";
@@ -10,13 +12,20 @@ import routerAuthMagic from "./routes/routerAuthMagic.js";
 import routerUserInventories from "./routes/routerUserInventories.js";
 import routerUserItem from "./routes/routerUserItem.js";
 import routerCustomFields from "./routes/routerCustomFields.js";
+import routerAccessUser from "./routes/routerAccessUsers.js";
+import routerPosts from "./routes/routerPosts.js";
 
 const app = express();
+
+//HTTP-сервер
+const server = createServer(app);
+initializeWebSocket(server);
+
 app.use(
   cors({
     origin: ["https://mainproject-front.onrender.com", "http://localhost:3000"],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -31,6 +40,8 @@ app.use("/api/auth", routerAuthMagic);
 app.use("/api/users", routerUserInventories);
 app.use("/api/users", routerUserItem);
 app.use("/api/users", routerCustomFields);
+app.use("/api/access/user", routerAccessUser);
+app.use("/api/posts", routerPosts);
 
 app.get("/", (req, res) => {
   res.json({
@@ -57,6 +68,15 @@ app.get("/api/test-db", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, "0.0.0.0", () => {
+//app.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`✅ HTTP Server running on port ${PORT}`);
+  console.log(`🔗 REST API: http://localhost:${PORT}/api`);
+  console.log(
+    `🔗 WebSocket: ws://localhost:${PORT}/ws/api/posts?inventoryId=...`
+  );
+
+  // Проверка что сервер слушает
+  console.log(`📡 Server listening: ${server.listening}`);
 });

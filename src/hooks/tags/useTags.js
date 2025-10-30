@@ -1,11 +1,12 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import useSWR from "swr";
-import { fetchTags } from "../service/api";
+import { fetchTags } from "../../service/api";
 
 export const useTags = (initialTags = [], mode = "create") => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagSearchInput, setTagSearchInput] = useState("");
   const initialTagsRef = useRef([]);
+  const tagsInitializedRef = useRef(false);
 
   const { data: allTags = [] } = useSWR("/tags", fetchTags, {
     revalidateOnFocus: false,
@@ -21,7 +22,11 @@ export const useTags = (initialTags = [], mode = "create") => {
   );
 
   useEffect(() => {
-    if (mode === "edit" && initialTags.length > 0) {
+    if (
+      mode === "edit" &&
+      initialTags.length > 0 &&
+      !tagsInitializedRef.current
+    ) {
       const formattedTags = initialTags.map((tag) => {
         if (typeof tag === "object" && tag.name) {
           return { value: tag.name, label: tag.name };
@@ -30,6 +35,7 @@ export const useTags = (initialTags = [], mode = "create") => {
       });
       setSelectedTags(formattedTags);
       initialTagsRef.current = formattedTags.map((tag) => tag.value);
+      tagsInitializedRef.current = true;
     }
   }, [mode, initialTags]);
 
@@ -42,8 +48,10 @@ export const useTags = (initialTags = [], mode = "create") => {
   const hasTagChanges =
     mode === "create"
       ? selectedTags.length > 0
-      : JSON.stringify(selectedTags.map((t) => t.value).sort()) !==
-        JSON.stringify(initialTagsRef.current.map((t) => t.value).sort());
+      : tagsInitializedRef.current &&
+        JSON.stringify(selectedTags.map((t) => t.value).sort()) !==
+          JSON.stringify(initialTagsRef.current.map((t) => t.value).sort());
+  //Проверка tagsInitializedRef.current гарантирует что изменения отслеживаются только после инициализации
 
   return {
     selectedTags,

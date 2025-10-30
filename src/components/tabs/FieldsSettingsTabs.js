@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { Button, Card, Form, Row, Col, Badge } from "react-bootstrap";
-import { useItemFieldOperations } from "../../hooks/useItemFieldOperations";
+import { useItemFieldOperations } from "../../hooks/itemsWithFields/useItemFieldOperations.js";
 import EditFieldModal from "../modal/EditFieldModal";
 
 const FIELD_TYPES = {

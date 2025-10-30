@@ -8,13 +8,12 @@ import {
   fetchExportInventories,
   fetchCreateInventories,
   fetchUpdateInventories,
-} from "../service/api.js";
+} from "../../service/api.js";
 import { saveAs } from "file-saver";
 
 export const useInventoryOperations = (
   mutateMyInventories,
-  mutateAccessInventories = null,
-  inventoryId = null
+  mutateAccessInventories = null
 ) => {
   const navigate = useNavigate();
 
@@ -33,8 +32,9 @@ export const useInventoryOperations = (
 
   // Обновление
   const { trigger: updateInventory, isMutating: isUpdating } = useSWRMutation(
-    inventoryId ? `/users/inventories-update/${inventoryId}` : null,
-    fetchUpdateInventories
+    "/users/inventories-update",
+    (url, { arg: { inventoryId, formData } }) =>
+      fetchUpdateInventories(`${url}/${inventoryId}`, formData)
   );
 
   const handleCreate = async (formData) => {
@@ -92,22 +92,25 @@ export const useInventoryOperations = (
   };
 
   const handleUpdate = useCallback(
-    async (formData) => {
+    async (inventoryId, formData) => {
       if (!inventoryId) {
         toast.error("ID инвентаря не найден");
         return false;
       }
-      const result = await updateInventory(formData);
+
+      const result = await updateInventory({ inventoryId, formData });
+
       if (result.success) {
         mutateMyInventories?.();
-        navigate("/profile");
+        //  navigate("/profile");
         return true;
       }
 
       toast.error(result.message || "Ошибка обновления инвентаря");
+
       return false;
     },
-    [inventoryId, updateInventory, mutateMyInventories]
+    [updateInventory, mutateMyInventories, navigate]
   );
 
   const handleExport = async (selectedRows) => {

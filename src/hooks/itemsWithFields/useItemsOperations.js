@@ -7,7 +7,7 @@ import {
   fetchCreateItem,
   fetchDeleteItem,
   fetchUpdateItem,
-} from "../service/api.js";
+} from "../../service/api.js";
 
 export const useItemsOperations = (mutateMyItems, inventoryId = null) => {
   const navigate = useNavigate();

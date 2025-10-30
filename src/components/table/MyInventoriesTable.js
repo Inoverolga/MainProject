@@ -29,9 +29,7 @@ const MyInventoriesTable = ({
       <DataGrid
         rows={data || []}
         onRowClick={(params) => {
-          if (hasWriteAccess) {
-            onEdit(params.row.id);
-          }
+          onEdit(params.row.id);
         }}
         columns={columns || []}
         loading={loading}
@@ -49,9 +47,9 @@ const MyInventoriesTable = ({
           columnMenu: CustomColumnMenu,
         }}
         localeText={ruRU.components.MuiDataGrid.defaultProps.localeText}
-        getRowHeight={() => "auto"}
         sx={{
           border: 0,
+
           "& .MuiDataGrid-cell": {
             borderBottom: "1px solid #f0f0f0",
             "&:hover, &:focus-within": { bgcolor: "transparent" },

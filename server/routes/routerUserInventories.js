@@ -83,18 +83,28 @@ routerUserInventories.get(
       const { id } = req.params;
       const userId = req.user?.userId;
 
+      // Используем готовую функцию проверки доступа
+      const hasAccess = await hasReadAccess(id, userId);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: "Нет доступа к инвентарю",
+        });
+      }
+
       const inventoryItem = await prisma.inventory.findUnique({
         where: { id },
-        include: {
+        select: {
+          ...inventorySelect,
           user: { select: { name: true, email: true, id: true } },
           category: true,
           tags: true,
-          version: true,
+          //  version: true,
           items: {
             include: { tags: true },
             orderBy: { createdAt: "desc" },
           },
-          _count: { select: { items: true } },
+          // _count: { select: { items: true } },
         },
       });
 
@@ -104,11 +114,7 @@ routerUserInventories.get(
           .json({ success: false, message: "Инвентарь не найден" });
       }
 
-      let canWrite = false;
-      if (userId) {
-        canWrite =
-          inventoryItem.userId === userId || (await hasWriteAccess(id, userId));
-      }
+      const canWrite = await hasWriteAccess(id, userId);
 
       res.json({
         success: true,
@@ -193,13 +199,13 @@ routerUserInventories.delete(
         });
       }
 
-      // const hasAccess = await hasWriteAccess(id, req.user.userId);
-      // if (!hasAccess) {
-      //   return res.status(403).json({
-      //     success: false,
-      //     message: "Нет прав для удаления инвентаря",
-      //   });
-      // }
+      const hasAccess = await hasWriteAccess(id, req.user.userId);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: "Нет прав для удаления инвентаря",
+        });
+      }
 
       await prisma.inventory.delete({
         where: {

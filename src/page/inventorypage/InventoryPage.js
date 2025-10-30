@@ -8,25 +8,35 @@ import {
   fetchInventoryWithItems,
   fetchFieldsPublic,
   fetchItemsWithFieldsPublic,
+  fetchInventoryWithAccessCheck,
 } from "../../service/api";
 import { useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import ItemsTabs from "../../components/tabs/ItemsTabs.js";
 import FieldSettingTabs from "../../components/tabs/FieldsSettingsTabs.js";
+import AccessTab from "../../components/tabs/AccessTabs.js";
+import DiscussionTab from "../../components/tabs/DiscussionTabs.js";
 
 const InventoryPage = () => {
   const { id } = useParams();
   const { isAuthenticated, authUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 1. Загружаем инвентарь публичный (название, описание, создатель)
+  // ✅ ДЛЯ АУТЕНТИФИЦИРОВАННЫХ: защищенный роут с canWrite
+  // ✅ ДЛЯ НЕАУТЕНТИФИЦИРОВАННЫХ: публичный роут
   const {
     data: dataInventory,
     error: inventoryError,
     isLoading: inventoryLoading,
-  } = useSWR(`/inventories/${id}`, fetchInventoryWithItems, {
-    revalidateOnFocus: false,
-  });
+  } = useSWR(
+    isAuthenticated
+      ? `/users/inventories/${id}/items-with-access`
+      : `/inventories/${id}`,
+    isAuthenticated ? fetchInventoryWithAccessCheck : fetchInventoryWithItems,
+    {
+      revalidateOnFocus: false,
+    }
+  );
 
   // 2. Загружаем поля для колонок (только для авторизованных)
   const { data: dataConfigFields, mutate: mutateFieldsPublic } = useSWR(
@@ -117,6 +127,15 @@ const InventoryPage = () => {
           />
         </Tab>
 
+        <Tab eventKey="discussion" title="💬 Обсуждение">
+          <DiscussionTab
+            inventoryId={id}
+            authUser={authUser}
+            isAuthenticated={isAuthenticated}
+            hasWriteAccess={hasWriteAccess}
+          />
+        </Tab>
+
         {hasWriteAccess && (
           <Tab eventKey="fields" title="🛠️ Поля">
             <FieldSettingTabs
@@ -127,18 +146,15 @@ const InventoryPage = () => {
             />
           </Tab>
         )}
-        {/* Остальные вкладки (пока disabled) */}
-        <Tab eventKey="discussion" title="💬 Обсуждение" disabled>
-          {/* DiscussionTab - будет создан */}
-        </Tab>
 
         <Tab eventKey="settings" title="⚙️ Настройки" disabled>
           {/* BasicSettings - будет создан */}
         </Tab>
-
-        <Tab eventKey="access" title="👥 Доступ" disabled>
-          {/* AccessSettings - будет создан */}
-        </Tab>
+        {isOwner && (
+          <Tab eventKey="access" title="👥 Доступ">
+            <AccessTab inventoryId={id} isOwner={isOwner} />
+          </Tab>
+        )}
       </Tabs>
     </Container>
   );

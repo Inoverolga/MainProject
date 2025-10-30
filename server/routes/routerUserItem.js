@@ -103,7 +103,7 @@ routerUserItem.post(
 );
 
 // Получить конкретный товар
-routerUserItem.get("/items-adit/:id", checkToken, async (req, res) => {
+routerUserItem.get("/items-edit/:id", checkToken, async (req, res) => {
   try {
     const item = await getItemWithAccessCheck(
       req.params.id,
@@ -122,11 +122,6 @@ routerUserItem.put("/items-update/:id", checkToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { version } = req.body;
-    console.log("🔍 [OPTIMISTIC LOCK] Начало обновления:", {
-      itemId: id,
-      expectedVersion: version,
-      receivedBody: req.body,
-    });
 
     await getItemWithAccessCheck(id, req.user.userId, true);
 

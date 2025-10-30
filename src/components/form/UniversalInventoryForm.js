@@ -1,17 +1,20 @@
 import { useForm } from "react-hook-form";
 import useSWR from "swr";
+import ReactMarkdown from "react-markdown";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import CreatableSelect from "react-select/creatable";
-import { useInventoryOperations } from "../../hooks/useInventoryOperations";
-import { useTags } from "../../hooks/useTags";
+import { useInventoryOperations } from "../../hooks/inventories/useInventoryOperations.js";
+import { useTags } from "../../hooks/tags/useTags.js";
 import { Spinner } from "react-bootstrap";
 import { fetchEditInventories, fetchMyInventories } from "../../service/api";
 
 const UniversalInventoryForm = ({ mode = "create" }) => {
   const navigate = useNavigate();
   const { id: inventoryId } = useParams();
+  const [showPreview, setShowPreview] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
 
   const { mutate: mutateMyInventories } = useSWR(
     "/users/me/inventories",
@@ -50,50 +53,73 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
     reset,
     setValue,
     getValues,
+    watch,
   } = useForm({
     mode: "onChange",
     defaultValues: { isPublic: "true" },
   });
 
-  const hasFormChanges = mode === "create" ? isValid : isDirty || hasTagChanges;
-  const canSubmit = mode === "create" ? isValid : hasFormChanges;
-
   const { handleCreate, handleUpdate, isCreating, isUpdating } =
     useInventoryOperations(mutateMyInventories, inventoryId);
 
-  useEffect(() => {
-    if (mode !== "edit") return;
+  const hasFormChanges = mode === "create" ? isValid : isDirty || hasTagChanges;
+  const canSubmit = mode === "create" ? isValid : hasFormChanges;
+  const isMutating = isCreating || isUpdating;
 
-    const interval = setInterval(async () => {
-      if (isDirty || hasTagChanges) {
-        try {
-          const formData = getValues();
-          const dataWithTags = {
-            ...formData,
-            tags: tagValues,
-            isPublic: formData.isPublic === "true",
-            version: formData.version,
-          };
+  const prepareFormData = (formData) => ({
+    ...formData,
+    tags: tagValues,
+    isPublic: formData.isPublic === "true",
+    version: formData.version,
+  });
 
-          await handleUpdate(dataWithTags);
-        } catch (error) {
-          if (error?.response?.status === 409) {
-            toast.error(
-              "Данные были изменены другим пользователем. Пожалуйста, обновите страницу."
-            );
-          }
-        }
-      }
-    }, 7000);
+  const descriptionValue = watch("description");
 
-    return () => clearInterval(interval);
-  }, [mode, isDirty, hasTagChanges, getValues, tagValues, handleUpdate]);
+  //автосохранение
+  //   useEffect(() => {
+  //     if (mode !== "edit") return;
+
+  //     let timeoutId;
+
+  //     if ((isDirty || hasTagChanges) && !isAutoSaving) {
+  //       timeoutId = setTimeout(async () => {
+  //         try {
+  //           setIsAutoSaving(true);
+  //           const formData = getValues();
+  //           await handleUpdate(inventoryId, prepareFormData(formData));
+
+  //           reset(formData);
+  //         } catch (error) {
+  //           if (error?.response?.status === 409) {
+  //             toast.error(
+  //               "Данные были изменены другим пользователем. Пожалуйста, обновите страницу."
+  //             );
+  //           }
+  //         } finally {
+  //           setIsAutoSaving(false);
+  //         }
+  //       }, 8000);
+  //     }
+
+  //     return () => {
+  //       if (timeoutId) {
+  //         clearTimeout(timeoutId);
+  //       }
+  //     };
+  //   }, [
+  //     mode,
+  //     isDirty,
+  //     hasTagChanges,
+  //     isAutoSaving,
+  //     getValues,
+  //     handleUpdate,
+  //     inventoryId,
+  //   ]);
 
   // Заполняем форму данными при редактировании
   useEffect(() => {
     if (mode === "edit" && inventoryData?.data) {
       const data = inventoryData.data;
-
       setValue("name", data.name);
       setValue("description", data.description);
       setValue("category", data.category?.name || "");
@@ -102,16 +128,9 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
     }
   }, [mode, inventoryData, setValue]);
 
-  const isMutating = isCreating || isUpdating;
-
   const onSubmit = async (formData) => {
     try {
-      const dataWithTags = {
-        ...formData,
-        tags: tagValues,
-        isPublic: formData.isPublic === "true",
-        version: formData.version,
-      };
+      const dataWithTags = prepareFormData(formData);
 
       if (mode === "create") {
         const result = await handleCreate(dataWithTags);
@@ -121,7 +140,7 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
           reset();
         }
       } else {
-        const success = await handleUpdate(dataWithTags);
+        const success = await handleUpdate(inventoryId, dataWithTags);
         if (success) {
           toast.success("Инвентарь успешно обновлен!");
         }
@@ -129,7 +148,7 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
     } catch (error) {
       if (error?.response?.status === 409) {
         toast.error(
-          "Данные были изменены другим пользователем. Пожалуйста, обновите страницу."
+          "Данные были изменены другим пользователем. Пожалуйста обновите страницу"
         );
       } else {
         toast.error(
@@ -150,10 +169,18 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
       </h2>
 
       {mode === "edit" && (
-        <div className="alert alert-light mb-3">
-          {isDirty || hasTagChanges
-            ? "● Изменения сохранятся автоматически через 7 секунд"
-            : "✓ Все изменения сохранены"}
+        <div className="mb-3" style={{ height: "24px" }}>
+          {isAutoSaving && (
+            <div className="d-flex align-items-center text-primary">
+              <div
+                className="spinner-border spinner-border-sm me-2"
+                role="status"
+              >
+                <span className="visually-hidden">Сохранение...</span>
+              </div>
+              <span className="small">Автосохранение...</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -173,17 +200,35 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
 
         {/* Описание */}
         <div className="mb-3">
-          <label className="form-label">Описание</label>
-          <textarea
-            className="form-control"
-            placeholder="Описание инвентаря (поддерживает Markdown)..."
-            rows={4}
-            {...register("description", {
-              required: "Поле обязательно к заполнению",
-              minLength: { value: 10, message: "Минимум 10 символов" },
-              maxLength: { value: 1000, message: "Максимум 1000 символов" },
-            })}
-          />
+          <label className="form-label">
+            Описание
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm ms-2"
+              onClick={() => setShowPreview(!showPreview)}
+            >
+              {showPreview ? "✏️ Редактировать" : "👁️ Предпросмотр"}
+            </button>
+          </label>
+
+          {showPreview ? (
+            <div className="border p-3 bg-light rounded">
+              <ReactMarkdown>
+                {descriptionValue || "*Описание отсутствует*"}
+              </ReactMarkdown>
+            </div>
+          ) : (
+            <textarea
+              className="form-control"
+              placeholder="Описание инвентаря..."
+              rows={4}
+              {...register("description", {
+                required: "Поле обязательно к заполнению",
+                minLength: { value: 10, message: "Минимум 10 символов" },
+                maxLength: { value: 1000, message: "Максимум 1000 символов" },
+              })}
+            />
+          )}
           {errors.description && (
             <div className="text-danger">{errors.description.message}</div>
           )}

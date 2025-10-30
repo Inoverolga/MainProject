@@ -16,6 +16,7 @@ model User {
   password          String
   inventories       Inventory[]
   inventoryAccesses InventoryAccess[]
+  posts             Post[]
 
   @@map("users")
 }
@@ -38,6 +39,7 @@ model Inventory {
   items             Item[]
   tags              Tag[]             @relation("InventoryToTag")
   fieldConfigs      InventoryFieldConfig[]
+  posts              Post[]
 
   @@map("inventories")
 }
@@ -138,6 +140,21 @@ model InventoryFieldConfig {
 }
 
 
+model Post {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  inventoryId String
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@map("posts")
+  @@index([inventoryId, createdAt])
+}
 
 
 

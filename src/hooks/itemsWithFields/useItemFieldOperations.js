@@ -5,7 +5,7 @@ import {
   fetchMyFieldCreate,
   fetchMyFieldDelete,
   fetchMyFieldUpdate,
-} from "../service/api.js";
+} from "../../service/api.js";
 
 export const useItemFieldOperations = (inventoryId, mutateFields) => {
   // Создание кастомного поля товара

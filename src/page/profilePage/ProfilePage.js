@@ -9,10 +9,10 @@ import {
 } from "../../service/api.js";
 import Error from "../../components/error/Error.js";
 import Spinner from "../../components/spinner/Spinner.js";
-import { useInventoryColumns } from "../../hooks/useInventoryColumns.js";
+import { useInventoryColumns } from "../../hooks/inventories/useInventoryColumns.js";
 import { SearchContext } from "../../contexts/SearchContext.js";
 import { InventorySection } from "../../components/table/ToolbarForProfilePage.js";
-import { useInventoryOperations } from "../../hooks/useInventoryOperations.js";
+import { useInventoryOperations } from "../../hooks/inventories/useInventoryOperations.js";
 
 const ProfilePage = () => {
   const { searchTerm } = useContext(SearchContext);
