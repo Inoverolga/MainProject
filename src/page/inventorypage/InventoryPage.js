@@ -128,8 +128,6 @@ const InventoryPage = () => {
             fields={fields}
             hasWriteAccess={hasWriteAccess}
             mutateMyItems={mutateMyInventoryWithItems}
-            //itemsLoading={isAuthenticated ? itemsLoading : false}
-            //itemsError={itemsError}
             isAuthenticated={isAuthenticated}
           />
         </Tab>
