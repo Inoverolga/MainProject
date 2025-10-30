@@ -1,13 +1,12 @@
 import { useContext } from "react";
 import { SearchContext } from "../../contexts/SearchContext";
 import { AuthContext } from "../../contexts/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const Header = () => {
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
   const { isAuthenticated, authUser, logout } = useContext(AuthContext);
   const location = useLocation();
-  const navigate = useNavigate();
 
   const handleSearch = (e) => {
     const value = e.target.value;
