@@ -1,13 +1,11 @@
-import { useEffect, useContext } from "react";
+import { useEffect } from "react";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import useWebSocket from "react-use-websocket";
-import { toast } from "react-toastify";
 import {
   fetchPostsGetMessage,
   fetchPostsCreateMessage,
 } from "../../service/api.js";
-import { AuthContext } from "../../contexts/AuthContext.js";
 
 const getWebSocketUrl = (inventoryId) => {
   if (!inventoryId) return null;
@@ -24,9 +22,7 @@ const getWebSocketUrl = (inventoryId) => {
   return url;
 };
 
-export const useDiscussion = (inventoryId, hasWriteAccess) => {
-  const { isAuthenticated } = useContext(AuthContext);
-
+export const useDiscussion = (inventoryId) => {
   const { lastMessage, readyState } = useWebSocket(
     getWebSocketUrl(inventoryId),
     {
@@ -72,23 +68,12 @@ export const useDiscussion = (inventoryId, hasWriteAccess) => {
     }
   }, [lastMessage, mutate]);
 
-  const handleNewUserMessage = async (newMessage) => {
-    if (!isAuthenticated || !hasWriteAccess) {
-      toast.error("Нет доступа для отправки сообщений");
-      return;
-    }
-    await sendMessage({
-      content: newMessage,
-      inventoryId: inventoryId,
-    });
-  };
-
   return {
     posts: data?.data || [],
-    isLoading: !data && !error,
+    isLoading: !data && !error && inventoryId,
     error,
     isSending,
-    handleNewUserMessage,
+    sendMessage,
     isConnected: readyState === 1,
   };
 };

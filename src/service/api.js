@@ -98,4 +98,4 @@ export const fetchPostsCreateMessage = (url, formData) =>
 //Лайки
 export const fetchLikesCreate = (url) => postData(url); //api/likes/:itemId/like-create
 export const fetchLikesDelete = (url) => deleteData(url); //api/likes/:itemId/like-delete
-export const fetchLikePublicInfo = (url) => getData(url); //api/likes/:itemId/likes-publicInfo
+export const fetchLikePublicInfo = (url) => getData(url); //api/likes/inventory/:inventoryId/likes-publicInfo

@@ -16,3 +16,22 @@ export const checkToken = (req, res, next) => {
     return res.status(403).json({ error: "Недействительный токен" });
   }
 };
+
+export const optionalAuth = (req, res, next) => {
+  const auth = req.headers["authorization"];
+  const token = auth && auth.split(" ")[1];
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    req.user = user;
+    next();
+  } catch (error) {
+    req.user = null;
+    next();
+  }
+};

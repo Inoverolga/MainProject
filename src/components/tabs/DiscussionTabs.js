@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Error from "../error/Error.js";
 import { useDiscussion } from "../../hooks/discussion/useDiscussion.js";
 import Spinner from "../../components/spinner/Spinner.js";
+import { toast } from "react-toastify";
 
 import { Card, Badge, Form, Button, Alert } from "react-bootstrap";
 
@@ -15,14 +16,8 @@ const DiscussionTab = ({
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
 
-  const {
-    posts,
-    isLoading,
-    error,
-    isSending,
-    handleNewUserMessage,
-    isConnected,
-  } = useDiscussion(inventoryId, hasWriteAccess);
+  const { posts, isLoading, error, isSending, sendMessage, isConnected } =
+    useDiscussion(inventoryId, hasWriteAccess);
 
   // Автоскролл к новым сообщениям
   useEffect(() => {
@@ -32,7 +27,15 @@ const DiscussionTab = ({
   // Отправка сообщения
   const handleSend = async () => {
     if (!newMessage.trim()) return;
-    await handleNewUserMessage(newMessage);
+    if (!isAuthenticated || !hasWriteAccess) {
+      toast.error("Нет доступа для отправки сообщений");
+      return;
+    }
+
+    await sendMessage({
+      content: newMessage,
+      inventoryId: inventoryId,
+    });
     setNewMessage("");
   };
 
@@ -77,7 +80,6 @@ const DiscussionTab = ({
           ) : (
             <div className="message-list">
               {posts?.map((post) => {
-                // Безопасное извлечение данных
                 const user = getPostUser(post);
                 const isCurrentUser = user?.id === authUser?.id;
 

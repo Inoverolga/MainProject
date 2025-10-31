@@ -2,13 +2,13 @@ import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { checkToken } from "../middleware/checkToken.js";
 import { handleError } from "../utils/handleError.js";
-import { hasWriteAccess, hasReadAccess } from "../utils/accessUtils.js";
+import { hasWriteAccess } from "../utils/accessUtils.js";
 import { sendMessageToAllUsers } from "../websocket.js";
 
 const routerPosts = express.Router();
 
 // GET /api/posts?inventoryId=xx - Получить сообщения обсуждения
-routerPosts.get("/", checkToken, async (req, res) => {
+routerPosts.get("/", async (req, res) => {
   try {
     const { inventoryId } = req.query;
 
@@ -19,16 +19,6 @@ routerPosts.get("/", checkToken, async (req, res) => {
       });
     }
 
-    const hasAccess = await hasReadAccess(inventoryId, req.user.userId);
-
-    if (!hasAccess) {
-      return res.status(403).json({
-        success: false,
-        message: "Нет доступа к обсуждению этого инвентаря",
-      });
-    }
-
-    // Получаем сообщения
     const posts = await prisma.post.findMany({
       where: { inventoryId },
       include: {

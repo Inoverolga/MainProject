@@ -1,7 +1,9 @@
 import { DataGrid } from "@mui/x-data-grid";
 import { GridColumnMenu } from "@mui/x-data-grid";
 import { ruRU } from "@mui/x-data-grid/locales";
+import { useContext } from "react";
 import { toast } from "react-toastify";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const CustomColumnMenu = (props) => (
   <GridColumnMenu
@@ -26,6 +28,7 @@ const MyInventoriesTable = ({
   selectedRows,
   ...props
 }) => {
+  const { isAuthenticated } = useContext(AuthContext);
   return (
     <div style={{ width: "100%" }}>
       <DataGrid
@@ -34,6 +37,11 @@ const MyInventoriesTable = ({
           const isNameClick = event.target.closest('a[data-field="name"]');
           const isLikesClick = event.target.closest('[data-field="likes"]');
 
+          if (!isAuthenticated && !hasWriteAccess) {
+            toast.info("🔒 Для просмотра товаров необходимо войти в систему");
+            return false;
+          }
+
           if (!isNameClick && !isLikesClick) {
             toast.info("Выберите элемент для редактирования");
             onEdit([]);
@@ -41,6 +49,9 @@ const MyInventoriesTable = ({
           return false;
         }}
         disableRowSelectionOnClick
+        disableColumnSorting={!isAuthenticated}
+        disableColumnFilter={!isAuthenticated}
+        disableColumnMenu={!isAuthenticated}
         columns={columns || []}
         loading={loading}
         pagination={enablePagination}

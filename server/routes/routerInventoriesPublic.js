@@ -4,31 +4,7 @@ import { prisma } from "../lib/prisma.js";
 
 const routerInventories = express.Router();
 
-const baseInventorySelect = {
-  id: true,
-  name: true,
-  description: true,
-  createdBy: true,
-  createdAt: true,
-};
-
-// routerInventories.get("/public", async (req, res) => {
-//   try {
-//     const inventoriesPublic = await prisma.inventory.findMany({
-//       where: { isPublic: true },
-//       select: baseInventorySelect,
-//       orderBy: {
-//         createdAt: "desc",
-//       },
-//     });
-
-//     res.json(inventoriesPublic);
-//   } catch (error) {
-//     handleError(error, res);
-//   }
-// });
-
-// В routerInventories.get("/public")
+//получение инвентарей для публичного доступа(в т.ч. популярных)
 routerInventories.get("/public", async (req, res) => {
   try {
     const { type = "recent", page = 1 } = req.query;
@@ -38,7 +14,11 @@ routerInventories.get("/public", async (req, res) => {
     let skip = undefined;
 
     if (type === "popular") {
-      orderBy = { items: { _count: "desc" } };
+      orderBy = [
+        { views: "desc" },
+        { items: { _count: "desc" } },
+        { updatedAt: "desc" },
+      ];
       take = 5;
     } else {
       orderBy = { createdAt: "desc" };
@@ -62,20 +42,8 @@ routerInventories.get("/public", async (req, res) => {
     handleError(error, res);
   }
 });
-// routerInventories.get("/public/popular", async (req, res) => {
-//   try {
-//     const inventories = await prisma.inventory.findMany({
-//       where: { isPublic: true },
-//       select: baseInventorySelect,
-//       orderBy: { items: { _count: "desc" } },
-//       take: 5,
-//     });
-//     res.json(inventories);
-//   } catch (error) {
-//     handleError(error, res);
-//   }
-// });
 
+//инвентарь+товар публичный
 routerInventories.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -105,6 +73,13 @@ routerInventories.get("/:id", async (req, res) => {
         message: "Инвентарь не найден",
       });
     }
+
+    prisma.inventory
+      .update({
+        where: { id: req.params.id },
+        data: { views: { increment: 1 } },
+      })
+      .catch(console.error);
 
     res.json({
       success: true,

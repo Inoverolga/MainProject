@@ -129,7 +129,6 @@ const MainPage = () => {
       <TagCloud tags={tags} onTagClick={setSearchTerm} />
       <LoginForm />
 
-      {/* Популярные инвентари (отдельный запрос) */}
       {!searchTerm && popularInventories.length > 0 && (
         <InventoryTable
           title="5 самых популярных инвентарей"
@@ -139,14 +138,12 @@ const MainPage = () => {
         />
       )}
 
-      {/* Основная таблица */}
       <InventoryTable
         title={searchTerm ? "🔍 Результаты поиска" : "Последние инвентари"}
         data={paginatedInventories}
         showItemCount={!!searchTerm}
       />
 
-      {/* Пагинация */}
       {totalPages > 1 && (
         <div className="d-flex justify-content-center align-items-center gap-3 mt-4">
           <button

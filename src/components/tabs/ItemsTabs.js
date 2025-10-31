@@ -7,6 +7,7 @@ import MyInventoriesTable from "../table/MyInventoriesTable.js";
 import ItemToolbar from "../table/ToolbarForInventoryPage.js";
 import Spinner from "../../components/spinner/Spinner.js";
 import Error from "../../components/error/Error.js";
+import { useLikes } from "../../hooks/likes/useLikes.js";
 
 const ItemsTabs = ({
   inventory,
@@ -22,12 +23,24 @@ const ItemsTabs = ({
   const [selectedRows, setSelectedRows] = useState([]);
   const navigate = useNavigate();
 
+  const {
+    getItemLikeData,
+    toggleLike,
+    isLoading: likesLoading,
+  } = useLikes(inventory?.id);
+
   const { handleDelete, handleEdit, isCreating, isUpdating } =
     useItemsOperations(mutateMyItems, inventory?.id);
 
-  const columns = useItemColumns(fields);
+  const columns = useItemColumns(
+    fields,
+    isAuthenticated,
+    inventory?.id,
+    getItemLikeData,
+    toggleLike
+  );
 
-  if (itemsLoading) return <Spinner />;
+  if (itemsLoading || likesLoading) return <Spinner />;
   if (itemsError)
     return <Error message={`Ошибка загрузки: ${itemsError.message}`} />;
 

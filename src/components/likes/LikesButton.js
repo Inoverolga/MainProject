@@ -1,39 +1,36 @@
 import { Heart } from "lucide-react";
-import { useLikes } from "../../hooks/likes/useLikes.js";
-import Spinner from "../../components/spinner/Spinner.js";
+import { toast } from "react-toastify";
 
 const LikeButton = ({
   itemId,
+  likeData,
+  onToggleLike,
   size = "md",
   showCount = true,
   className = "",
+  isAuthenticated,
 }) => {
-  const { toggleLike, isLiked, likeCount, isToggling, isLoading } =
-    useLikes(itemId);
-
-  const textSizes = {
-    sm: "text-xs",
-    md: "text-sm",
-    lg: "text-base",
-  };
+  const { likeCount = 0, isLiked = false } = likeData || {};
 
   const handleClick = (e) => {
-    //e.stopPropagation();
-    e.preventDefault();
-    //e.nativeEvent.stopImmediatePropagation();
-    toggleLike();
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.info("🔒 Для оценки товаров необходимо войти в систему");
+      return;
+    }
+    onToggleLike(itemId);
   };
 
-  if (isLoading) return <Spinner />;
   return (
     <button
       onClick={handleClick}
-      disabled={isToggling}
+      disabled={!isAuthenticated}
       className={`
         flex items-center gap-1
         bg-transparent border-none outline-none p-0
         ${isLiked ? "text-red-500" : "text-gray-400"}
-        ${isToggling ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+        cursor-pointer hover:scale-105
+        transition-all duration-200
         ${className}
       `}
     >
@@ -45,9 +42,7 @@ const LikeButton = ({
       />
       {showCount && (
         <span
-          className={`font-medium ${textSizes[size]} ${
-            isLiked ? "text-red-500" : "text-gray-600"
-          }`}
+          className={`text-sm ${isLiked ? "text-red-500" : "text-gray-600"}`}
         >
           {likeCount}
         </span>

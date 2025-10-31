@@ -2,7 +2,13 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import LikeButton from "../../components/likes/LikesButton";
 
-export const useItemColumns = (fields = []) => {
+export const useItemColumns = (
+  fields = [],
+  isAuthenticated,
+  inventoryId,
+  getItemLikeData,
+  toggleLike
+) => {
   return useMemo(() => {
     const baseColumns = [
       {
@@ -24,13 +30,17 @@ export const useItemColumns = (fields = []) => {
         headerAlign: "center",
         renderCell: (params) => (
           <div data-field="name" style={{ width: "100%" }}>
-            <Link
-              to={`/edit-item/${params.row.id}`}
-              className="text-primary text-decoration-none fw-medium"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {params.value}
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                to={`/edit-item/${params.row.id}`}
+                className="text-primary text-decoration-none fw-medium"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {params.value}
+              </Link>
+            ) : (
+              <span style={{ cursor: "not-allowed" }}>{params.value}</span>
+            )}
           </div>
         ),
       },
@@ -40,26 +50,23 @@ export const useItemColumns = (fields = []) => {
         width: 120,
         headerAlign: "center",
         align: "center",
-        renderCell: (params) => (
-          <div className="d-flex justify-content-center align-items-center gap-0 h-100">
-            <LikeButton
-              data-field="likes"
-              className="bg-transparent border-0 outline-none p-0"
-              itemId={params.row.id}
-              size="sm"
-              showCount={true}
-              style={{
-                border: "none",
-                outline: "none",
-                background: "transparent",
-                padding: 0,
-                cursor: "pointer",
-                boxShadow: "none",
-                ring: "none",
-              }}
-            />
-          </div>
-        ),
+        renderCell: (params) => {
+          const likeData = getItemLikeData(params.row.id);
+
+          return (
+            <div className="d-flex justify-content-center align-items-center gap-0 h-100">
+              <LikeButton
+                isAuthenticated={isAuthenticated}
+                itemId={params.row.id}
+                likeData={likeData}
+                onToggleLike={toggleLike}
+                size="sm"
+                showCount={true}
+                className="bg-transparent border-0 outline-none p-0"
+              />
+            </div>
+          );
+        },
         sortable: false,
         filterable: false,
       },
@@ -116,5 +123,5 @@ export const useItemColumns = (fields = []) => {
       }));
 
     return [...baseColumns, ...customColumns];
-  }, [fields]);
+  }, [fields, isAuthenticated, inventoryId, getItemLikeData, toggleLike]);
 };

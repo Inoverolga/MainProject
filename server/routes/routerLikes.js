@@ -1,7 +1,7 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { handleError } from "../utils/handleError.js";
-import { checkToken } from "../middleware/checkToken.js";
+import { checkToken, optionalAuth } from "../middleware/checkToken.js";
 
 const routerLikes = express.Router();
 
@@ -25,6 +25,7 @@ routerLikes.post("/:itemId/like-create", checkToken, async (req, res) => {
     });
 
     const likeCount = await prisma.like.count({ where: { itemId } });
+
     res.json({ success: true, data: { likeCount, isLiked: true, like } });
   } catch (error) {
     handleError(error, res);
@@ -45,37 +46,41 @@ routerLikes.delete("/:itemId/like-delete", checkToken, async (req, res) => {
   }
 });
 
-routerLikes.get("/:itemId/likes-publicInfo", checkToken, async (req, res) => {
-  try {
-    const { itemId } = req.params;
-    const userId = req.user?.userId;
+routerLikes.get(
+  "/inventory/:inventoryId/likes-publicInfo",
+  optionalAuth,
+  async (req, res) => {
+    try {
+      const { inventoryId } = req.params;
+      const userId = req.user?.userId;
 
-    const item = await prisma.item.findUnique({ where: { id: itemId } });
-    if (!item) throw new Error("Товар не найден");
-
-    const recentLikes = await prisma.like.findMany({
-      where: { itemId },
-      include: { user: { select: { id: true, name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-    });
-
-    const likeCount = await prisma.like.count({ where: { itemId } });
-
-    let userLike = null;
-    if (userId) {
-      userLike = await prisma.like.findUnique({
-        where: { userId_itemId: { userId, itemId } },
+      // Проверяем инвентарь и загружаем лайки в одном запросе
+      const items = await prisma.item.findMany({
+        where: { inventoryId },
+        select: {
+          id: true,
+          _count: { select: { likes: true } },
+          likes: userId
+            ? { where: { userId }, select: { id: true }, take: 1 }
+            : false,
+        },
       });
-    }
 
-    res.json({
-      success: true,
-      data: { likeCount, isLiked: !!userLike, showLastLikes: recentLikes },
-    });
-  } catch (error) {
-    handleError(error, res);
+      // Создаем объект лайков
+      const likes = {};
+      items.forEach((item) => {
+        likes[item.id] = {
+          itemId: item.id,
+          likeCount: item._count.likes,
+          isLiked: userId ? item.likes.length > 0 : false,
+        };
+      });
+
+      res.json({ success: true, data: { likes, totalItems: items.length } });
+    } catch (error) {
+      handleError(error, res);
+    }
   }
-});
+);
 
 export default routerLikes;
