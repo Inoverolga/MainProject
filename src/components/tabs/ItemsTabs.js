@@ -80,6 +80,7 @@ const ItemsTabs = ({
           )}
           <div>
             <MyInventoriesTable
+              selectedRows={selectedRows}
               data={items}
               columns={columns}
               loading={itemsLoading}
@@ -88,7 +89,7 @@ const ItemsTabs = ({
               enablePagination={true}
               pageSize={10}
               onSelectionChange={setSelectedRows}
-              onEdit={(itemId) => handleEdit([itemId])}
+              onEdit={() => {}}
             />
           </div>
 

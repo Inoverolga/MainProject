@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import LikeButton from "../../components/likes/LikesButton";
 
 export const useItemColumns = (fields = []) => {
   return useMemo(() => {
@@ -14,6 +15,7 @@ export const useItemColumns = (fields = []) => {
           <span className="fw-semibold text-muted">{params.value}</span>
         ),
       },
+
       {
         field: "name",
         headerName: "Название",
@@ -21,14 +23,47 @@ export const useItemColumns = (fields = []) => {
         flex: 1,
         headerAlign: "center",
         renderCell: (params) => (
-          <Link
-            to={`/items/${params.row.id}`}
-            className="text-primary text-decoration-none fw-medium"
-          >
-            {params.value}
-          </Link>
+          <div data-field="name" style={{ width: "100%" }}>
+            <Link
+              to={`/edit-item/${params.row.id}`}
+              className="text-primary text-decoration-none fw-medium"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {params.value}
+            </Link>
+          </div>
         ),
       },
+      {
+        field: "likes",
+        headerName: "Лайки",
+        width: 120,
+        headerAlign: "center",
+        align: "center",
+        renderCell: (params) => (
+          <div className="d-flex justify-content-center align-items-center gap-0 h-100">
+            <LikeButton
+              data-field="likes"
+              className="bg-transparent border-0 outline-none p-0"
+              itemId={params.row.id}
+              size="sm"
+              showCount={true}
+              style={{
+                border: "none",
+                outline: "none",
+                background: "transparent",
+                padding: 0,
+                cursor: "pointer",
+                boxShadow: "none",
+                ring: "none",
+              }}
+            />
+          </div>
+        ),
+        sortable: false,
+        filterable: false,
+      },
+
       {
         field: "description",
         headerName: "Описание",

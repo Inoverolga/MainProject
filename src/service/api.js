@@ -43,7 +43,8 @@ export const fetchLoginUser = async (url, { arg: userFormData }) => {
 };
 
 // Главная страница - публичные инвентари, поиск, теги
-export const fetchInventoriesPublic = (url) => getData(url); //api/inventories/public
+export const fetchInventoriesPublic = (url) => getData(url); //api/inventories/public/popular
+export const fetchInventoriesPublicPopular = (url) => getData(url); //api/inventories/public
 export const fetchInventoryWithItems = (url) => getData(url); //api/inventories/:id (публичный доступ)
 export const fetchSearchAll = (url) => getData(url); //api/search?q=${searchTerm}
 export const fetchTags = (url) => getData(url); //api/tags - без query-парметра
@@ -93,3 +94,8 @@ export const fetchUserSearch = (url) => getData(url); //api/search/users;
 export const fetchPostsGetMessage = (url) => getData(url); //api/posts?invotoryId="..."
 export const fetchPostsCreateMessage = (url, formData) =>
   postData(url, formData); //api/posts/create-post
+
+//Лайки
+export const fetchLikesCreate = (url) => postData(url); //api/likes/:itemId/like-create
+export const fetchLikesDelete = (url) => deleteData(url); //api/likes/:itemId/like-delete
+export const fetchLikePublicInfo = (url) => getData(url); //api/likes/:itemId/likes-publicInfo

@@ -4,27 +4,77 @@ import { prisma } from "../lib/prisma.js";
 
 const routerInventories = express.Router();
 
+const baseInventorySelect = {
+  id: true,
+  name: true,
+  description: true,
+  createdBy: true,
+  createdAt: true,
+};
+
+// routerInventories.get("/public", async (req, res) => {
+//   try {
+//     const inventoriesPublic = await prisma.inventory.findMany({
+//       where: { isPublic: true },
+//       select: baseInventorySelect,
+//       orderBy: {
+//         createdAt: "desc",
+//       },
+//     });
+
+//     res.json(inventoriesPublic);
+//   } catch (error) {
+//     handleError(error, res);
+//   }
+// });
+
+// В routerInventories.get("/public")
 routerInventories.get("/public", async (req, res) => {
   try {
-    const inventoriesPublic = await prisma.inventory.findMany({
+    const { type = "recent", page = 1 } = req.query;
+
+    let orderBy = {};
+    let take = undefined;
+    let skip = undefined;
+
+    if (type === "popular") {
+      orderBy = { items: { _count: "desc" } };
+      take = 5;
+    } else {
+      orderBy = { createdAt: "desc" };
+      take = 10;
+      skip = (parseInt(page) - 1) * take;
+    }
+
+    const inventories = await prisma.inventory.findMany({
       where: { isPublic: true },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        createdBy: true,
-        createdAt: true,
+      include: {
+        user: { select: { id: true, name: true } },
+        _count: { select: { items: true } },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy,
+      skip,
+      take,
     });
 
-    res.json(inventoriesPublic);
+    res.json(inventories);
   } catch (error) {
     handleError(error, res);
   }
 });
+// routerInventories.get("/public/popular", async (req, res) => {
+//   try {
+//     const inventories = await prisma.inventory.findMany({
+//       where: { isPublic: true },
+//       select: baseInventorySelect,
+//       orderBy: { items: { _count: "desc" } },
+//       take: 5,
+//     });
+//     res.json(inventories);
+//   } catch (error) {
+//     handleError(error, res);
+//   }
+// });
 
 routerInventories.get("/:id", async (req, res) => {
   try {

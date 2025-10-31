@@ -83,9 +83,9 @@ export const useInventoryOperations = (
     }
   };
 
-  const handleEdit = (selectedRows, navigate) => {
+  const handleEdit = (selectedRows) => {
     if (selectedRows.length !== 1) {
-      //  toast.info("Выберите один инвентарь для редактирования");
+      //toast.info("Выберите один инвентарь для редактирования");
       return;
     }
     navigate(`/inventory-edit/${selectedRows[0]}`);

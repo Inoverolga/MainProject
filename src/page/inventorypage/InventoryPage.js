@@ -21,8 +21,6 @@ const InventoryPage = () => {
   const { isAuthenticated, authUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // ✅ ДЛЯ АУТЕНТИФИЦИРОВАННЫХ: защищенный роут с canWrite
-  // ✅ ДЛЯ НЕАУТЕНТИФИЦИРОВАННЫХ: публичный роут
   const {
     data: dataInventory,
     error: inventoryError,
@@ -43,27 +41,6 @@ const InventoryPage = () => {
     isAuthenticated ? `/users/inventories/${id}/fields-public` : null,
     fetchFieldsPublic
   );
-
-  //3. Загружаем товары (только для авторизованных)
-  //   const {
-  //     data: dataItemsWithField,
-  //     error: itemsError,
-  //     isLoading: itemsLoading,
-  //     mutate: mutateMyItems,
-  //   } = useSWR(
-  //     isAuthenticated ? `/users/inventories/${id}/items` : null,
-  //     fetchItemsWithFieldsPublic,
-  //     {
-  //       revalidateOnFocus: false,
-  //     }
-  //   );
-  //   const items = isAuthenticated
-  //     ? dataItemsWithField?.data || []
-  //     : inventory?.items || [];
-
-  //   const hasWriteAccess = isAuthenticated
-  //     ? isOwner || inventory?.canWrite || false
-  //     : false;
 
   const inventory = dataInventory?.data;
 

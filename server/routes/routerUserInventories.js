@@ -102,12 +102,10 @@ routerUserInventories.get(
           user: { select: { name: true, email: true, id: true } },
           category: true,
           tags: true,
-          //  version: true,
           items: {
             select: fieldsItemSelect,
             orderBy: { createdAt: "desc" },
           },
-          // _count: { select: { items: true } },
         },
       });
 

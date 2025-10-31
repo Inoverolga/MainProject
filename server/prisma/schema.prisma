@@ -16,45 +16,43 @@ model User {
   password          String
   inventories       Inventory[]
   inventoryAccesses InventoryAccess[]
+  likes             Like[]
   posts             Post[]
 
   @@map("users")
 }
 
 model Inventory {
-  id                String            @id @default(cuid())
+  id                String                 @id @default(cuid())
   name              String
   description       String?
   createdBy         String
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  isPublic          Boolean           @default(true)
-  version           Int               @default(1) 
-  
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  isPublic          Boolean                @default(true)
   userId            String
   categoryId        String?
-  category          Category?         @relation(fields: [categoryId], references: [id])
-  user              User              @relation(fields: [userId], references: [id])
+  version           Int                    @default(1)
+  category          Category?              @relation(fields: [categoryId], references: [id])
+  user              User                   @relation(fields: [userId], references: [id])
   inventoryAccesses InventoryAccess[]
-  items             Item[]
-  tags              Tag[]             @relation("InventoryToTag")
   fieldConfigs      InventoryFieldConfig[]
-  posts              Post[]
+  items             Item[]
+  posts             Post[]
+  tags              Tag[]                  @relation("InventoryToTag")
 
   @@map("inventories")
 }
 
 model Tag {
   id          String      @id @default(cuid())
-  name        String     @unique
+  name        String      @unique
   isPublic    Boolean     @default(true)
   inventories Inventory[] @relation("InventoryToTag")
-
   items       Item[]      @relation("ItemToTag")
+
   @@map("tags")
 }
-
-
 
 model Category {
   id          String      @id @default(cuid())
@@ -65,7 +63,6 @@ model Category {
 
   @@map("categories")
 }
-
 
 model InventoryAccess {
   id          String    @id @default(cuid())
@@ -81,80 +78,74 @@ model InventoryAccess {
   @@map("inventory_accesses")
 }
 
-
-
 model Item {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  version     Int       @default(1)  
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  version       Int       @default(1)
+  inventoryId   String
+  customString1 String?
+  customString2 String?
+  customString3 String?
+  customText1   String?
+  customText2   String?
+  customText3   String?
+  customInt1    Int?
+  customInt2    Int?
+  customInt3    Int?
+  customBool1   Boolean?
+  customBool2   Boolean?
+  customBool3   Boolean?
+  inventory     Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  likes         Like[]
+  tags          Tag[]     @relation("ItemToTag")
 
-  inventoryId String
-  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
-
-  customString1  String?
-  customString2  String?
-  customString3  String?
-  
-  customText1    String?   @db.Text
-  customText2    String?   @db.Text
-  customText3    String?   @db.Text
-  
-  customInt1     Int?
-  customInt2     Int?
-  customInt3     Int?
-  
-  customBool1    Boolean?
-  customBool2    Boolean?
-  customBool3    Boolean?
-  
-
-  tags    Tag[]     @relation("ItemToTag")
-  @@map("items")
   @@unique([inventoryId, id])
+  @@map("items")
 }
 
-
 model InventoryFieldConfig {
-  id          String    @id @default(cuid())
-  inventoryId String
-  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
-  
-  fieldType   String
-  
-  position    Int
-  
-  name        String
-  description String?
-  isVisibleInTable Boolean @default(true)
-  isRequired  Boolean @default(false)
-  targetField String 
+  id               String    @id @default(cuid())
+  inventoryId      String
+  fieldType        String
+  position         Int
+  name             String
+  description      String?
+  isVisibleInTable Boolean   @default(true)
+  isRequired       Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  targetField      String
+  inventory        Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
   @@unique([inventoryId, fieldType, position])
   @@map("inventory_field_configs")
 }
 
-
 model Post {
-  id          String   @id @default(cuid())
-  content     String   @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id          String    @id @default(cuid())
+  content     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   inventoryId String
   inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("posts")
   @@index([inventoryId, createdAt])
+  @@map("posts")
 }
 
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  createdAt DateTime @default(now())
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-
+  @@unique([userId, itemId])
+  @@map("likes")
+}

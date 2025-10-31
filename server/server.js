@@ -14,6 +14,7 @@ import routerUserItem from "./routes/routerUserItem.js";
 import routerCustomFields from "./routes/routerCustomFields.js";
 import routerAccessUser from "./routes/routerAccessUsers.js";
 import routerPosts from "./routes/routerPosts.js";
+import routerLikes from "./routes/routerLikes.js";
 
 const app = express();
 
@@ -42,6 +43,17 @@ app.use("/api/users", routerUserItem);
 app.use("/api/users", routerCustomFields);
 app.use("/api/access/user", routerAccessUser);
 app.use("/api/posts", routerPosts);
+app.use("/api/likes", routerLikes);
+
+// Держи базу активной
+setInterval(async () => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    console.log("✅ Database keep-alive ping");
+  } catch (error) {
+    console.log("❌ Database ping failed:", error.message);
+  }
+}, 4 * 60 * 1000);
 
 app.get("/", (req, res) => {
   res.json({

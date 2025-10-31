@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 
 export const useInventoryColumns = (data = [], type = "my") => {
   return useMemo(() => {
-    //  const sampleItem = data[0] || {};
-
     const baseColumns = [
       {
         field: "name",
@@ -13,6 +11,7 @@ export const useInventoryColumns = (data = [], type = "my") => {
         flex: 1,
         renderCell: (params) => (
           <Link
+            data-field="name"
             to={`/inventory/${params.row.id}`}
             style={{
               textDecoration: "none",

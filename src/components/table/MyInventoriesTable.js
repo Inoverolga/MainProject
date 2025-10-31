@@ -1,6 +1,7 @@
 import { DataGrid } from "@mui/x-data-grid";
 import { GridColumnMenu } from "@mui/x-data-grid";
 import { ruRU } from "@mui/x-data-grid/locales";
+import { toast } from "react-toastify";
 
 const CustomColumnMenu = (props) => (
   <GridColumnMenu
@@ -22,15 +23,24 @@ const MyInventoriesTable = ({
   pageSize = 10,
   onSelectionChange,
   onEdit,
+  selectedRows,
   ...props
 }) => {
   return (
     <div style={{ width: "100%" }}>
       <DataGrid
         rows={data || []}
-        onRowClick={(params) => {
-          onEdit(params.row.id);
+        onRowClick={(params, event) => {
+          const isNameClick = event.target.closest('a[data-field="name"]');
+          const isLikesClick = event.target.closest('[data-field="likes"]');
+
+          if (!isNameClick && !isLikesClick) {
+            toast.info("Выберите элемент для редактирования");
+            onEdit([]);
+          }
+          return false;
         }}
+        disableRowSelectionOnClick
         columns={columns || []}
         loading={loading}
         pagination={enablePagination}
@@ -42,7 +52,6 @@ const MyInventoriesTable = ({
         onRowSelectionModelChange={(selectionModel) =>
           onSelectionChange?.(Array.from(selectionModel?.ids || []))
         }
-        disableRowSelectionOnClick
         slots={{
           columnMenu: CustomColumnMenu,
         }}
@@ -66,6 +75,13 @@ const MyInventoriesTable = ({
           "& .MuiCheckbox-root": {
             color: "#6c757d",
             "&.Mui-checked": { color: "#495057" },
+          },
+          "& .MuiDataGrid-cell": {
+            "&:focus, &:focus-within": {
+              outline: "none !important",
+              boxShadow: "none !important",
+              border: "none !important",
+            },
           },
         }}
         {...props}
