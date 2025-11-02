@@ -13,7 +13,8 @@ import { saveAs } from "file-saver";
 
 export const useInventoryOperations = (
   mutateMyInventories,
-  mutateAccessInventories = null
+  mutateAccessInventories = null,
+  mutateCurrentInventory = null
 ) => {
   const navigate = useNavigate();
 
@@ -24,7 +25,7 @@ export const useInventoryOperations = (
       fetchDeleteInventories(`${url}/${inventoryId}`, version)
   );
 
-  // Создание
+  //Создание
   const { trigger: createInventory, isMutating: isCreating } = useSWRMutation(
     "/users/inventories-create",
     fetchCreateInventories
@@ -37,10 +38,11 @@ export const useInventoryOperations = (
       fetchUpdateInventories(`${url}/${inventoryId}`, formData)
   );
 
-  const handleCreate = async (formData) => {
-    const result = await createInventory(formData);
-    if (result.success) {
+  const handleCreate = async (formatData) => {
+    const result = await createInventory(formatData);
+    if (result?.success) {
       mutateMyInventories?.();
+      navigate(`/inventory/${result.data.id}`);
       return result.data;
     }
     toast.error(result.message || "Ошибка создания инвентаря");
@@ -91,27 +93,25 @@ export const useInventoryOperations = (
     navigate(`/inventory-edit/${selectedRows[0]}`);
   };
 
-  const handleUpdate = useCallback(
-    async (inventoryId, formData) => {
-      if (!inventoryId) {
-        toast.error("ID инвентаря не найден");
-        return false;
-      }
-
-      const result = await updateInventory({ inventoryId, formData });
-
-      if (result.success) {
-        mutateMyInventories?.();
-        //  navigate("/profile");
-        return true;
-      }
-
-      toast.error(result.message || "Ошибка обновления инвентаря");
-
+  const handleUpdate = async (inventoryId, formData) => {
+    if (!inventoryId) {
+      toast.error("ID инвентаря не найден");
       return false;
-    },
-    [updateInventory, mutateMyInventories, navigate]
-  );
+    }
+
+    const result = await updateInventory({ inventoryId, formData });
+
+    if (result.success) {
+      mutateMyInventories?.();
+      mutateCurrentInventory?.();
+
+      return true;
+    }
+
+    toast.error(result.message || "Ошибка обновления инвентаря");
+
+    return false;
+  };
 
   const handleExport = async (selectedRows) => {
     if (selectedRows.length !== 1) {
@@ -133,16 +133,11 @@ export const useInventoryOperations = (
   };
 
   return {
-    // Операции с таблицей
     handleDelete,
     handleEdit,
     handleExport,
-
-    // Операции с формами
     handleCreate,
     handleUpdate,
-
-    // Состояния загрузки
     isCreating,
     isUpdating,
   };

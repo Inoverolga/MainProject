@@ -13,6 +13,7 @@ import {
   fetchFieldsPublic,
 } from "../../service/api";
 import { CustomFieldsForm } from "./CustomFieldsForm";
+import { useCustomIdFormat } from "../../hooks/customId/useCustomId.js";
 
 const UniversalItemForm = ({ mode = "create" }) => {
   const navigate = useNavigate();
@@ -71,9 +72,13 @@ const UniversalItemForm = ({ mode = "create" }) => {
   } = useForm({
     mode: "onChange",
   });
+  const customIdValue = watch("customId");
 
   const { handleCreate, handleUpdate, isCreating, isUpdating } =
     useItemsOperations(mutateMyItems, inventoryId);
+
+  const { generateIdForNewItem, isGeneratingItemId } =
+    useCustomIdFormat(inventoryId);
 
   const handleCustomFieldChange = (fieldName, value) => {
     setCustomFields((prev) => ({ ...prev, [fieldName]: value }));
@@ -83,47 +88,55 @@ const UniversalItemForm = ({ mode = "create" }) => {
     setSelectedTags(newSelectedTags);
   };
 
-  // Заполняем форму данными при редактировании
+  // ГЕНЕРАЦИЯ ID ПРИ СОЗДАНИИ ТОВАРА
   useEffect(() => {
-    if (mode === "create") {
+    const initializeForm = async () => {
       if (!formInitializedRef.current) {
-        reset({ name: "", description: "" });
-        setCustomFields({});
-        formInitializedRef.current = true;
-      }
-    } else if (
-      mode === "edit" &&
-      itemData?.data &&
-      !formInitializedRef.current
-    ) {
-      const data = itemData.data;
+        if (mode === "create" && inventoryId) {
+          const id = await generateIdForNewItem();
+          setValue("customId", id || "");
+          reset({ name: "", description: "" });
+          setCustomFields({});
+          formInitializedRef.current = true;
+        } else if (mode === "edit" && itemData?.data) {
+          const data = itemData.data;
+          const initialCustomFields = {};
 
-      const initialCustomFields = {};
+          fields.forEach((field) => {
+            const fieldName = field.targetField;
+            if (data[fieldName] != null && data[fieldName] != undefined) {
+              initialCustomFields[fieldName] = data[fieldName];
+            }
+          });
 
-      fields.forEach((field) => {
-        const fieldName = field.targetField;
-        if (data[fieldName] != null && data[fieldName] != undefined) {
-          initialCustomFields[fieldName] = data[fieldName];
+          initialDataRef.current = {
+            name: data.name,
+            description: data.description,
+            customFields: initialCustomFields,
+            customId: data.customId,
+          };
+
+          setValue("name", data.name);
+          setValue("description", data.description);
+          setValue("version", data.version);
+          setValue("customId", data.customId);
+          setCustomFields(initialCustomFields);
+          formInitializedRef.current = true;
         }
-      });
+      }
+    };
 
-      initialDataRef.current = {
-        name: data.name,
-        description: data.description,
-        customFields: initialCustomFields,
-      };
+    initializeForm();
+  }, [
+    mode,
+    inventoryId,
+    itemData,
+    fields,
+    setValue,
+    reset,
+    generateIdForNewItem,
+  ]);
 
-      // ✅ Устанавливаем значения с валидацией
-      setValue("name", data.name);
-      setValue("description", data.description);
-      setValue("version", data.version);
-      setCustomFields(initialCustomFields);
-
-      formInitializedRef.current = true;
-    }
-  }, [mode, itemData, fields, setValue, reset]);
-
-  // Отслеживание изменений в кастомных полях
   const hasCustomFieldsChanges =
     mode === "create"
       ? false
@@ -135,7 +148,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
             JSON.stringify(initialDataRef.current.customFields[key])
         );
 
-  // Объединяем все проверки изменений
   const hasFormChanges =
     mode === "create"
       ? true
@@ -152,11 +164,10 @@ const UniversalItemForm = ({ mode = "create" }) => {
       const dataWithTags = {
         ...formData,
         ...customFields,
+        customId: formData.customId,
         tags: tagValues,
         version: itemData?.data?.version,
       };
-
-      console.log("🔍 DATA TO SEND:", dataWithTags);
 
       if (mode === "create") {
         const result = await handleCreate(dataWithTags, inventoryId);
@@ -167,7 +178,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
         }
       } else {
         const success = await handleUpdate(urlItemId, dataWithTags);
-        console.log("🔍 UPDATE RESULT:", success); // ✅ Результат запроса
         if (success) {
           toast.success("Товар успешно обновлен!");
           navigate(`/inventory/${inventoryId}`);
@@ -196,6 +206,41 @@ const UniversalItemForm = ({ mode = "create" }) => {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-3">
+          <label className="form-label">ID товара</label>
+          <div className="input-group">
+            <input
+              type="text"
+              className="form-control"
+              value={customIdValue || ""}
+              placeholder={
+                isGeneratingItemId
+                  ? "Генерация ID..."
+                  : "ID будет сгенерирован автоматически"
+              }
+              readOnly
+            />
+            {mode === "create" && (
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() =>
+                  generateIdForNewItem().then((id) => {
+                    if (id) setValue("customId", id);
+                  })
+                }
+                disabled={isGeneratingItemId}
+              >
+                {isGeneratingItemId ? "..." : "🔄"}
+              </button>
+            )}
+          </div>
+          <div className="form-text">
+            {mode === "create"
+              ? "ID генерируется автоматически согласно настройкам формата"
+              : "Кастомный ID товара"}
+          </div>
+        </div>
+        <div className="mb-3">
           <label className="form-label">Название товара *</label>
           <input
             type="text"
@@ -212,7 +257,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
           )}
         </div>
 
-        {/* Описание */}
         <div className="mb-3">
           <label className="form-label">Описание *</label>
           <textarea
@@ -230,7 +274,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
           )}
         </div>
 
-        {/* Теги */}
         <div className="mb-4">
           <label className="form-label">Теги</label>
           <CreatableSelect
@@ -268,7 +311,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
           />
         </div>
 
-        {/* Кнопки */}
         <div className="d-flex gap-2 mb-5">
           <button
             type="submit"

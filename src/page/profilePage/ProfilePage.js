@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { Container } from "react-bootstrap";
+import { useNavigate, Link } from "react-router-dom";
+import { Container, Button } from "react-bootstrap";
 import {
   fetchMyInventories,
   fetchAccessibleInventories,
@@ -54,6 +54,7 @@ const ProfilePage = () => {
     mutateAccessInventories
   );
 
+  console.log(myData);
   const myInventories = myData?.data || myData || [];
   const accessInventories = accessData?.data || accessData || [];
 
@@ -66,7 +67,14 @@ const ProfilePage = () => {
 
   return (
     <Container className="py-4">
-      <h1 className="mb-4 fs-5">👤 Личный кабинет</h1>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="mb-4 fs-5">👤 Личный кабинет</h1>
+        <Link to="/inventory-create">
+          <Button variant="secondary" size="sm">
+            ＋ Создать инвентарь
+          </Button>
+        </Link>
+      </div>
 
       <InventorySection
         title="📁 Мои инвентари"
@@ -75,7 +83,8 @@ const ProfilePage = () => {
         loading={myLoading}
         selectedRows={selectedMyRows}
         onSelectionChange={setSelectedMyRows}
-        onEdit={() => handleEdit(selectedMyRows, navigate)}
+        // onEdit={() => handleEdit(selectedMyRows, navigate)}
+        onEdit={() => handleEdit(selectedMyRows)}
         onExport={() => handleExport(selectedMyRows)}
         onDelete={() =>
           handleDelete(selectedMyRows, setSelectedMyRows, myInventories)
@@ -93,7 +102,8 @@ const ProfilePage = () => {
         loading={accessLoading}
         selectedRows={selectedAccessRows}
         onSelectionChange={setSelectedAccessRows}
-        onEdit={() => handleEdit(selectedAccessRows, navigate)}
+        //onEdit={() => handleEdit(selectedAccessRows, navigate)}
+        onEdit={() => handleEdit(selectedMyRows)}
         onExport={() => handleExport(selectedAccessRows)}
         showDelete={false}
         onDelete={() =>

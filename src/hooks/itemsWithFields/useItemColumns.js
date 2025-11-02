@@ -12,7 +12,7 @@ export const useItemColumns = (
   return useMemo(() => {
     const baseColumns = [
       {
-        field: "id",
+        field: "customId",
         headerName: "ID",
         width: 100,
         headerAlign: "center",

@@ -53,7 +53,11 @@ routerSearch.get("/", async (req, res) => {
 
     const results = await prisma.inventory.findMany({
       where: {
-        AND: [{ isPublic: true }, buildSearchConditions(query)],
+        AND: [
+          { isPublic: true },
+          { status: "ACTIVE" },
+          buildSearchConditions(query),
+        ],
       },
       include: inventoryInclude,
       orderBy: { createdAt: "desc" },
@@ -73,7 +77,9 @@ routerSearch.get("/personal", checkToken, async (req, res) => {
     if (!query.trim()) return res.json([]);
 
     const allInventories = await prisma.inventory.findMany({
-      where: buildSearchConditions(query),
+      where: {
+        AND: [{ status: "ACTIVE" }, buildSearchConditions(query)],
+      },
       include: inventoryInclude,
       orderBy: { createdAt: "desc" },
       take: 50,

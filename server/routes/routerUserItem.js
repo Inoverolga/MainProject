@@ -18,6 +18,7 @@ const prepareItemData = ({
   customBool1,
   customBool2,
   customBool3,
+  customId,
   ...data
 }) => ({
   ...data,
@@ -27,6 +28,7 @@ const prepareItemData = ({
   customBool1: !!customBool1,
   customBool2: !!customBool2,
   customBool3: !!customBool3,
+  customId: customId || null,
   tags: {
     connectOrCreate: tags.map((tagName) => ({
       where: { name: tagName },
@@ -55,6 +57,7 @@ export const fieldsItemSelect = {
   customText2: true,
   customText3: true,
   tags: true,
+  customId: true,
 };
 
 // Получить все товары инвентаря с кастомными полями
@@ -84,7 +87,26 @@ routerUserItem.post(
       if (!canWrite)
         return res.status(403).json({ success: false, message: "Нет прав" });
 
-      const itemData = prepareItemData(req.body);
+      const customIdFormats = await prisma.customIdFormat.findMany({
+        where: { inventoryId },
+        orderBy: { position: "asc" },
+      });
+
+      let customIdFromUser = req.body.customId;
+
+      if (customIdFormats.length > 0 && !customIdFromUser) {
+        const { generateCustomId } = await import("./routerIdFormat.js");
+        customIdFromUser = await generateCustomId(
+          customIdFormats,
+          inventoryId,
+          true
+        );
+      }
+
+      const itemData = prepareItemData({
+        ...req.body,
+        customId: customIdFromUser,
+      });
 
       const newItem = await prisma.item.create({
         data: { ...itemData, inventoryId },
@@ -97,6 +119,13 @@ routerUserItem.post(
         data: newItem,
       });
     } catch (error) {
+      if (error.code === "P2002" && error.meta?.target?.includes("customId")) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "Товар с таким ID уже существует. Пожалуйста, измените ID и попробуйте снова.",
+        });
+      }
       handleError(error, res);
     }
   }

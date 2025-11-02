@@ -1,5 +1,4 @@
 import { Card, Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
 import MyInventoriesTable from "./MyInventoriesTable";
 
 const Toolbar = ({
@@ -48,11 +47,11 @@ const Toolbar = ({
   );
 };
 
-const CreateButton = () => (
-  <Button as={Link} to="/inventory-create" variant="secondary" size="sm">
-    ＋ Создать инвентарь
-  </Button>
-);
+// const CreateButton = () => (
+//   <Button as={Link} to="/inventory-create" variant="secondary" size="sm">
+//     ＋ Создать инвентарь
+//   </Button>
+// );
 
 export const InventorySection = ({
   title,
@@ -70,7 +69,7 @@ export const InventorySection = ({
   <Card className="mb-5">
     <Card.Header className="d-flex justify-content-between align-items-center">
       <h5 className="mb-0">{title}</h5>
-      <CreateButton />
+      {/* <CreateButton /> */}
     </Card.Header>
     <Card.Body>
       <Toolbar

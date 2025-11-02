@@ -11,6 +11,7 @@ export const checkToken = (req, res, next) => {
   try {
     const user = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     req.user = user;
+
     next();
   } catch (error) {
     return res.status(403).json({ error: "Недействительный токен" });

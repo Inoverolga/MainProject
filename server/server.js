@@ -15,6 +15,7 @@ import routerCustomFields from "./routes/routerCustomFields.js";
 import routerAccessUser from "./routes/routerAccessUsers.js";
 import routerPosts from "./routes/routerPosts.js";
 import routerLikes from "./routes/routerLikes.js";
+import routerIdFormat from "./routes/routerIdFormat.js";
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use("/api/users", routerCustomFields);
 app.use("/api/access/user", routerAccessUser);
 app.use("/api/posts", routerPosts);
 app.use("/api/likes", routerLikes);
+app.use("/api/idFormat", routerIdFormat);
 
 // Держи базу активной
 setInterval(async () => {

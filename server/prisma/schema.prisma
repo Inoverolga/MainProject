@@ -30,53 +30,22 @@ model Inventory {
   createdAt         DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
   isPublic          Boolean                @default(true)
-  views             Int                    @default(0)
   userId            String
   categoryId        String?
   version           Int                    @default(1)
+  views             Int                    @default(0)
+  status            String                 @default("DRAFT")
+  customIdFormats   CustomIdFormat[]
   category          Category?              @relation(fields: [categoryId], references: [id])
   user              User                   @relation(fields: [userId], references: [id])
   inventoryAccesses InventoryAccess[]
   fieldConfigs      InventoryFieldConfig[]
+  sequences         InventorySequence[]
   items             Item[]
   posts             Post[]
   tags              Tag[]                  @relation("InventoryToTag")
 
   @@map("inventories")
-}
-
-model Tag {
-  id          String      @id @default(cuid())
-  name        String      @unique
-  isPublic    Boolean     @default(true)
-  inventories Inventory[] @relation("InventoryToTag")
-  items       Item[]      @relation("ItemToTag")
-
-  @@map("tags")
-}
-
-model Category {
-  id          String      @id @default(cuid())
-  name        String      @unique
-  description String?
-  createdAt   DateTime    @default(now())
-  inventories Inventory[]
-
-  @@map("categories")
-}
-
-model InventoryAccess {
-  id          String    @id @default(cuid())
-  userId      String
-  inventoryId String
-  accessLevel String    @default("WRITE")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, inventoryId])
-  @@map("inventory_accesses")
 }
 
 model Item {
@@ -99,10 +68,12 @@ model Item {
   customBool1   Boolean?
   customBool2   Boolean?
   customBool3   Boolean?
+  customId      String?
   inventory     Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
   likes         Like[]
   tags          Tag[]     @relation("ItemToTag")
 
+  @@unique([inventoryId, customId])
   @@unique([inventoryId, id])
   @@map("items")
 }
@@ -123,6 +94,40 @@ model InventoryFieldConfig {
 
   @@unique([inventoryId, fieldType, position])
   @@map("inventory_field_configs")
+}
+
+model InventoryAccess {
+  id          String    @id @default(cuid())
+  userId      String
+  inventoryId String
+  accessLevel String    @default("WRITE")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, inventoryId])
+  @@map("inventory_accesses")
+}
+
+model Tag {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  isPublic    Boolean     @default(true)
+  inventories Inventory[] @relation("InventoryToTag")
+  items       Item[]      @relation("ItemToTag")
+
+  @@map("tags")
+}
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  inventories Inventory[]
+
+  @@map("categories")
 }
 
 model Post {
@@ -149,4 +154,30 @@ model Like {
 
   @@unique([userId, itemId])
   @@map("likes")
+}
+
+model CustomIdFormat {
+  id          String    @id @default(cuid())
+  inventoryId String
+  type        String
+  position    Int
+  value       String?
+  format      String?
+  sequenceKey String?   @default("default")
+  separator   String?   @default("_")
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@unique([inventoryId, position])
+  @@map("custom_id_formats")
+}
+
+model InventorySequence {
+  id          String    @id @default(cuid())
+  inventoryId String
+  sequenceKey String
+  value       Int       @default(1)
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@unique([inventoryId, sequenceKey])
+  @@map("inventory_sequences")
 }

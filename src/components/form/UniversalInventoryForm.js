@@ -10,7 +10,7 @@ import { useTags } from "../../hooks/tags/useTags.js";
 import { Spinner } from "react-bootstrap";
 import { fetchEditInventories, fetchMyInventories } from "../../service/api";
 
-const UniversalInventoryForm = ({ mode = "create" }) => {
+const UniversalInventoryForm = ({ mode = "create", onSave }) => {
   const navigate = useNavigate();
   const { id: inventoryId } = useParams();
   const [showPreview, setShowPreview] = useState(false);
@@ -59,18 +59,18 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
     defaultValues: { isPublic: "true" },
   });
 
-  const { handleCreate, handleUpdate, isCreating, isUpdating } =
-    useInventoryOperations(mutateMyInventories, inventoryId);
+  const { handleCreate, isCreating } =
+    useInventoryOperations(mutateMyInventories);
 
   const hasFormChanges = mode === "create" ? isValid : isDirty || hasTagChanges;
   const canSubmit = mode === "create" ? isValid : hasFormChanges;
-  const isMutating = isCreating || isUpdating;
+  const isMutating = isCreating;
 
   const prepareFormData = (formData) => ({
     ...formData,
     tags: tagValues,
     isPublic: formData.isPublic === "true",
-    version: formData.version,
+    version: inventoryData?.data?.version || formData.version,
   });
 
   const descriptionValue = watch("description");
@@ -140,21 +140,20 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
           reset();
         }
       } else {
-        const success = await handleUpdate(inventoryId, dataWithTags);
-        if (success) {
-          toast.success("Инвентарь успешно обновлен!");
+        if (onSave) {
+          const success = await onSave(inventoryId, dataWithTags);
+          if (success) {
+            toast.success("Инвентарь успешно обновлен!");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
         }
       }
     } catch (error) {
-      if (error?.response?.status === 409) {
-        toast.error(
-          "Данные были изменены другим пользователем. Пожалуйста обновите страницу"
-        );
-      } else {
-        toast.error(
-          `Ошибка ${mode === "create" ? "создания" : "обновления"} инвентаря`
-        );
-      }
+      const message =
+        error?.response?.status === 409
+          ? "Данные были изменены другим пользователем. Пожалуйста обновите страницу"
+          : `Ошибка ${mode === "create" ? "создания" : "обновления"} инвентаря`;
+      toast.error(message);
     }
   };
 
@@ -163,9 +162,7 @@ const UniversalInventoryForm = ({ mode = "create" }) => {
   return (
     <div className="container mt-4">
       <h2>
-        {mode === "create"
-          ? "🧰 Создание инвентаря"
-          : "✏️ Редактирование инвентаря"}
+        {mode === "create" ? "Создание инвентаря" : "Редактирование инвентаря"}
       </h2>
 
       {mode === "edit" && (

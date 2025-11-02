@@ -1,5 +1,4 @@
-import { DataGrid } from "@mui/x-data-grid";
-import { GridColumnMenu } from "@mui/x-data-grid";
+import { DataGrid, GridColumnMenu } from "@mui/x-data-grid";
 import { ruRU } from "@mui/x-data-grid/locales";
 import { useContext } from "react";
 import { toast } from "react-toastify";

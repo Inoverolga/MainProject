@@ -1,47 +1,45 @@
 import { prisma } from "../lib/prisma.js";
 
-const checkAccess = async (inventoryId, userId, accessLevels = []) => {
-  const inventory = await prisma.inventory.findUnique({
-    where: { id: inventoryId },
-    include: {
-      inventoryAccesses: {
-        where: {
-          userId,
-          accessLevel: { in: accessLevels },
-        },
-      },
-    },
-  });
-
-  if (!inventory) return false;
-  if (inventory.userId === userId) {
-    return true;
-  }
-  if (inventory.isPublic) {
-    const result = accessLevels.includes("WRITE") ? !!userId : true;
-
-    return result;
-  }
-
-  return inventory.inventoryAccesses.length > 0;
-};
-
 export const isInventoryOwner = async (inventoryId, userId) => {
   const inventory = await prisma.inventory.findUnique({
     where: { id: inventoryId },
     select: { userId: true },
   });
-
-  const result = inventory?.userId === userId;
-
-  return result;
+  return inventory?.userId === userId;
 };
 
-export const hasWriteAccess = async (inventoryId, userId) =>
-  checkAccess(inventoryId, userId, ["WRITE"]);
+export const hasWriteAccess = async (inventoryId, userId) => {
+  if (!userId) return false;
 
-export const hasReadAccess = async (inventoryId, userId) =>
-  checkAccess(inventoryId, userId, ["READ", "WRITE"]);
+  const inventory = await prisma.inventory.findUnique({
+    where: { id: inventoryId },
+    include: {
+      inventoryAccesses: {
+        where: { userId, accessLevel: "WRITE" },
+      },
+    },
+  });
+
+  if (!inventory) return false;
+
+  return (
+    inventory.userId === userId ||
+    inventory.isPublic ||
+    inventory.inventoryAccesses.length > 0
+  );
+};
+
+export const hasReadAccess = async (inventoryId, userId) => {
+  const inventory = await prisma.inventory.findUnique({
+    where: { id: inventoryId },
+  });
+
+  if (!inventory) return false;
+  if (inventory.isPublic) return true;
+  if (!userId) return false;
+
+  return await hasWriteAccess(inventoryId, userId);
+};
 
 export const getItemWithAccessCheck = async (
   itemId,

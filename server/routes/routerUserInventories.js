@@ -52,7 +52,10 @@ routerUserInventories.get(
   async (req, res) => {
     try {
       const accessible = await prisma.inventoryAccess.findMany({
-        where: { userId: req.user.userId, accessLevel: "WRITE" },
+        where: {
+          userId: req.user.userId,
+          accessLevel: "WRITE",
+        },
         include: {
           inventory: {
             select: {
@@ -128,11 +131,45 @@ routerUserInventories.get(
   }
 );
 
+// routerUserInventories.post(
+//   "/inventories-quick-create",
+//   checkToken,
+//   async (req, res) => {
+//     try {
+//       const user = await prisma.user.findUnique({
+//         where: { id: req.user.userId },
+//         select: { name: true },
+//       });
+
+//       const newInventory = await prisma.inventory.create({
+//         data: {
+//           name: "",
+//           description: "",
+//           createdBy: user?.name || "Неизвестный пользователь",
+//           isPublic: false,
+//           userId: req.user.userId,
+//         },
+//         select: inventorySelect,
+//       });
+
+//       res.json({
+//         success: true,
+//         message: "Инвентарь создан",
+//         data: newInventory,
+//       });
+//     } catch (error) {
+//       handleError(error, res);
+//     }
+//   }
+// );
+
 //создание инвентаря
 routerUserInventories.post(
   "/inventories-create",
   checkToken,
   async (req, res) => {
+    console.log("🎯 ЭНДПОИНТ ДОСТИГНУТ! /inventories-create");
+    console.log("🔑 User:", req.user);
     try {
       const {
         name,
@@ -179,6 +216,7 @@ routerUserInventories.post(
         data: newInventory,
       });
     } catch (error) {
+      console.error("❌ Ошибка в catch:", error);
       handleError(error, res);
     }
   }
@@ -394,4 +432,19 @@ routerUserInventories.get(
     }
   }
 );
+
+// Добавьте в routerUserInventories.js
+routerUserInventories.get("/debug/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const inventory = await prisma.inventory.findUnique({
+      where: { id },
+    });
+
+    console.log("🔍 Debug inventory:", inventory);
+    res.json({ exists: !!inventory, inventory });
+  } catch (error) {
+    handleError(error, res);
+  }
+});
 export default routerUserInventories;

@@ -99,3 +99,9 @@ export const fetchPostsCreateMessage = (url, formData) =>
 export const fetchLikesCreate = (url) => postData(url); //api/likes/:itemId/like-create
 export const fetchLikesDelete = (url) => deleteData(url); //api/likes/:itemId/like-delete
 export const fetchLikePublicInfo = (url) => getData(url); //api/likes/inventory/:inventoryId/likes-publicInfo
+
+//Формат id
+export const fetchFormatId = (url) => getData(url); //api/idFormat/inventories/:inventoryId/custom-id-format
+export const fetchFormatIdUpdate = (url, formatData) =>
+  putData(url, formatData); //api/idFormat/inventories/:inventoryId/custom-id-format-update
+export const fetchFormatIdGenerate = (url, formData) => postData(url, formData); //api/idFormat/inventories/:inventoryId/generate-id
