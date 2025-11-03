@@ -35,47 +35,64 @@ async function getSequenceValue(inventoryId, sequenceKey, increment = false) {
 export async function generateCustomId(
   customIdFormats,
   inventoryId,
-  forRealItem = false
+  forItem = false
 ) {
-  const sorted = customIdFormats.sort((a, b) => a.position - b.position);
+  try {
+    const sorted = customIdFormats.sort((a, b) => a.position - b.position);
+    console.log("📊 Sorted formats:", sorted);
+    const generators = {
+      fixed: (part) => {
+        return part.value || (forItem ? "" : "TEXT");
+      },
+      sequence: async (part) => {
+        const sequenceValue = await getSequenceValue(
+          inventoryId,
+          part.sequenceKey || "default",
+          forItem
+        );
+        return part.format
+          ? formatNumber(sequenceValue, part.format)
+          : sequenceValue.toString();
+      },
+      datetime: (part) => {
+        const now = new Date();
+        return part.format
+          ? format(now, part.format)
+          : format(now, "yyyy-MM-dd");
+      },
+      random6digit: () => {
+        return customAlphabet("0123456789", 6)();
+      },
+      random9digit: () => {
+        return customAlphabet("0123456789", 9)();
+      },
+      random20: () => {
+        return customAlphabet("0123456789", 20)();
+      },
+      random32: () => {
+        return customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", 32)();
+      },
+      guid: () => {
+        return uuidv4();
+      },
+    };
 
-  const generators = {
-    fixed: (part) => part.value || (forRealItem ? "" : "TEXT"),
-    sequence: async (part) => {
-      const sequenceValue = await getSequenceValue(
-        inventoryId,
-        part.sequenceKey || "default",
-        forRealItem
-      );
-      return part.format
-        ? formatNumber(sequenceValue, part.format)
-        : sequenceValue.toString();
-    },
-    datetime: (part) => {
-      const now = new Date();
-      return part.format ? format(now, part.format) : format(now, "yyyy-MM-dd");
-    },
-    random6digit: () => customAlphabet("0123456789", 6)(),
-    random9digit: () => customAlphabet("0123456789", 9)(),
-    random20: () => customAlphabet("0123456789", 7)(),
-    random32: () =>
-      customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", 10)(),
-    guid: () => uuidv4(),
-  };
+    const parts = [];
+    for (let i = 0; i < sorted.length; i++) {
+      const part = sorted[i];
+      const generator = generators[part.type];
+      const value = generator ? await generator(part) : forItem ? "" : "VAL";
+      parts.push(value);
 
-  const parts = [];
-  for (let i = 0; i < sorted.length; i++) {
-    const part = sorted[i];
-    const generator = generators[part.type];
-    const value = generator ? await generator(part) : forRealItem ? "" : "VAL";
-    parts.push(value);
-
-    if (part.separator && i < sorted.length - 1) {
-      parts.push(part.separator);
+      if (part.separator && i < sorted.length - 1) {
+        parts.push(part.separator);
+      }
     }
-  }
 
-  return parts.join("");
+    return parts.join("");
+  } catch (error) {
+    throw error;
+  }
 }
 
 // эндпоинт получения формата
@@ -190,15 +207,16 @@ routerIdFormat.post(
         });
       }
 
+      let customId;
       if (!Array.isArray(formatsToUse) || formatsToUse.length === 0) {
-        return res.json({ success: true, data: { customId: null } });
+        customId = uuidv4();
+      } else {
+        customId = await generateCustomId(
+          formatsToUse,
+          req.params.inventoryId,
+          forItem
+        );
       }
-
-      const customId = await generateCustomId(
-        formatsToUse,
-        req.params.inventoryId,
-        forItem
-      );
 
       res.json({ success: true, data: { customId } });
     } catch (error) {

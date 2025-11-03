@@ -8,7 +8,11 @@ import CreatableSelect from "react-select/creatable";
 import { useInventoryOperations } from "../../hooks/inventories/useInventoryOperations.js";
 import { useTags } from "../../hooks/tags/useTags.js";
 import { Spinner } from "react-bootstrap";
-import { fetchEditInventories, fetchMyInventories } from "../../service/api";
+import {
+  fetchEditInventories,
+  fetchMyInventories,
+  fetchCategories,
+} from "../../service/api";
 
 const UniversalInventoryForm = ({ mode = "create", onSave }) => {
   const navigate = useNavigate();
@@ -33,6 +37,14 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       dedupingInterval: 0,
+    }
+  );
+
+  const { data: categoriesData } = useSWR(
+    "/users/categories",
+    fetchCategories,
+    {
+      revalidateOnFocus: false,
     }
   );
 
@@ -131,12 +143,15 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
   const onSubmit = async (formData) => {
     try {
       const dataWithTags = prepareFormData(formData);
+      console.log("данные для отправки", dataWithTags);
 
       if (mode === "create") {
         const result = await handleCreate(dataWithTags);
+        console.log("отправляем", result);
         if (result) {
           toast.success("Инвентарь успешно создан!");
           setSelectedTags([]);
+          console.log("данные успешно отправились");
           reset();
         }
       } else {
@@ -149,6 +164,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
         }
       }
     } catch (error) {
+      console.log("Данные не отправильсь");
       const message =
         error?.response?.status === 409
           ? "Данные были изменены другим пользователем. Пожалуйста обновите страницу"
@@ -182,7 +198,6 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Название */}
         <div className="mb-3">
           <label className="form-label">Название</label>
           <input
@@ -195,7 +210,6 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
           )}
         </div>
 
-        {/* Описание */}
         <div className="mb-3">
           <label className="form-label">
             Описание
@@ -231,26 +245,24 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
           )}
         </div>
 
-        {/* Категория */}
         <div className="mb-3">
           <label className="form-label">Категория</label>
           <select
             className={`form-select ${errors.category ? "is-invalid" : ""}`}
             {...register("category", { required: "Выберите категорию" })}
           >
-            <option value="">Выберите категорию</option>
-            <option value="Оборудование">Оборудование</option>
-            <option value="Мебель">Мебель</option>
-            <option value="Книги">Книги</option>
-            <option value="Канцелярия">Канцелярия</option>
-            <option value="Другое">Другое</option>
+            <option value="">Без категории</option>
+            {categoriesData?.data?.map((category) => (
+              <option key={category.id} value={category.name}>
+                {category.name}
+              </option>
+            ))}
           </select>
           {errors.category && (
             <div className="invalid-feedback">{errors.category.message}</div>
           )}
         </div>
 
-        {/* Теги */}
         <div className="mb-3">
           <label className="form-label">Теги</label>
           <CreatableSelect
@@ -281,7 +293,6 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
           />
         </div>
 
-        {/* Видимость */}
         <div className="mb-3">
           <label className="form-label">Видимость инвентаря</label>
           <div className="form-check">
@@ -304,7 +315,6 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
           </div>
         </div>
 
-        {/* Изображение - ТОЛЬКО ССЫЛКА */}
         <div className="mb-3">
           <label className="form-label">Ссылка на изображение</label>
           <input

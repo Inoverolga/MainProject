@@ -16,6 +16,8 @@ import routerAccessUser from "./routes/routerAccessUsers.js";
 import routerPosts from "./routes/routerPosts.js";
 import routerLikes from "./routes/routerLikes.js";
 import routerIdFormat from "./routes/routerIdFormat.js";
+import routerAdmin from "./routes/routerAdmin.js";
+import routerStats from "./routes/routerStats.js";
 
 const app = express();
 
@@ -46,8 +48,9 @@ app.use("/api/access/user", routerAccessUser);
 app.use("/api/posts", routerPosts);
 app.use("/api/likes", routerLikes);
 app.use("/api/idFormat", routerIdFormat);
+app.use("/api/admin", routerAdmin);
+app.use("/api/stats", routerStats);
 
-// Держи базу активной
 setInterval(async () => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -90,7 +93,4 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(
     `🔗 WebSocket: ws://localhost:${PORT}/ws/api/posts?inventoryId=...`
   );
-
-  // Проверка что сервер слушает
-  console.log(`📡 Server listening: ${server.listening}`);
 });

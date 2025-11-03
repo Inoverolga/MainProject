@@ -20,22 +20,28 @@ const prepareItemData = ({
   customBool3,
   customId,
   ...data
-}) => ({
-  ...data,
-  customInt1: +customInt1 || null,
-  customInt2: +customInt2 || null,
-  customInt3: +customInt3 || null,
-  customBool1: !!customBool1,
-  customBool2: !!customBool2,
-  customBool3: !!customBool3,
-  customId: customId || null,
-  tags: {
-    connectOrCreate: tags.map((tagName) => ({
-      where: { name: tagName },
-      create: { name: tagName },
-    })),
-  },
-});
+}) => {
+  const result = {
+    ...data,
+    customInt1: +customInt1 || null,
+    customInt2: +customInt2 || null,
+    customInt3: +customInt3 || null,
+    customBool1: !!customBool1,
+    customBool2: !!customBool2,
+    customBool3: !!customBool3,
+    customId: customId || null,
+  };
+  if (tags.length > 0) {
+    result.tags = {
+      connectOrCreate: tags.map((tagName) => ({
+        where: { name: tagName },
+        create: { name: tagName },
+      })),
+    };
+  }
+
+  return result;
+};
 
 export const fieldsItemSelect = {
   id: true,

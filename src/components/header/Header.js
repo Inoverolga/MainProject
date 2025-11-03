@@ -1,12 +1,17 @@
 import { useContext } from "react";
 import { SearchContext } from "../../contexts/SearchContext";
 import { AuthContext } from "../../contexts/AuthContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Header = () => {
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
-  const { isAuthenticated, authUser, logout } = useContext(AuthContext);
+  const { isAuthenticated, authUser, logout, isAdmin } =
+    useContext(AuthContext);
+  const { id: inventoryId } = useParams();
+
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -14,13 +19,41 @@ const Header = () => {
   };
 
   const isHomePage = location.pathname === "/";
+  const isAdminPage = location.pathname === "/admin";
+  const isInventoryPage = location.pathname === `/inventory/${inventoryId}`;
+  const isProfilePage = location.pathname === "/profile";
+
+  const handleAdminClick = () => {
+    if (!isAdmin) {
+      toast.error("У вас нет прав администратора");
+      return;
+    }
+    navigate("/admin");
+  };
 
   return (
     <nav className="navbar bg-body-tertiary sticky-top">
       <div className="container-fluid">
-        <span className="navbar-brand fw-bold">
-          🗃️ Система управления запасами
-        </span>
+        <div
+          className="d-flex align-items-center"
+          style={{ cursor: "pointer" }}
+          onClick={() => navigate("/")}
+        >
+          <img
+            src="/logo.png"
+            alt="Логотип системы управления запасами"
+            style={{
+              height: "40px",
+              width: "auto",
+              maxWidth: "120px",
+              objectFit: "contain",
+              marginRight: "2px",
+            }}
+          />
+          <span className="navbar-brand  fs-6">
+            Система управления запасами
+          </span>
+        </div>
 
         {isAuthenticated && !isHomePage ? (
           <div className="text-muted">Здравствуйте, {authUser?.name}</div>
@@ -43,12 +76,40 @@ const Header = () => {
             />
           </div>
         </form>
-        {isAuthenticated && !isHomePage ? (
-          <button className="btn btn-outline-secondary" onClick={logout}>
-            <i className="bi bi-box-arrow-right me-2"></i>
-            Выйти
-          </button>
-        ) : null}
+
+        <div className="d-flex gap-2">
+          {isAuthenticated &&
+            !isAdminPage &&
+            !isInventoryPage &&
+            !isProfilePage && (
+              <button
+                className="btn btn-outline-secondary"
+                onClick={() => navigate("/profile")}
+                style={{ cursor: "pointer" }}
+              >
+                Войти в личный кабинет
+              </button>
+            )}
+          {isAuthenticated && !isAdminPage && (
+            <div className="custom-tooltip-container">
+              <button
+                className="btn btn-outline-secondary"
+                onClick={handleAdminClick}
+                disabled={!isAdmin}
+                data-tooltip={!isAdmin ? "Доступно только администраторам" : ""}
+              >
+                🛡️ Войти как Админ
+              </button>
+            </div>
+          )}
+
+          {isAuthenticated ? (
+            <button className="btn btn-outline-secondary" onClick={logout}>
+              <i className="bi bi-box-arrow-right me-2"></i>
+              Выйти
+            </button>
+          ) : null}
+        </div>
       </div>
     </nav>
   );

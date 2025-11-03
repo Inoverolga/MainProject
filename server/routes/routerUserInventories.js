@@ -32,6 +32,21 @@ export const inventorySelect = {
   _count: { select: { items: true } },
 };
 
+routerUserInventories.get("/categories", async (req, res) => {
+  try {
+    const categories = await prisma.category.findMany({
+      orderBy: { name: "asc" },
+    });
+
+    res.json({
+      success: true,
+      data: categories,
+    });
+  } catch (error) {
+    handleError(error, res);
+  }
+});
+
 routerUserInventories.get("/me/inventories", checkToken, async (req, res) => {
   try {
     const inventories = await prisma.inventory.findMany({
@@ -131,45 +146,11 @@ routerUserInventories.get(
   }
 );
 
-// routerUserInventories.post(
-//   "/inventories-quick-create",
-//   checkToken,
-//   async (req, res) => {
-//     try {
-//       const user = await prisma.user.findUnique({
-//         where: { id: req.user.userId },
-//         select: { name: true },
-//       });
-
-//       const newInventory = await prisma.inventory.create({
-//         data: {
-//           name: "",
-//           description: "",
-//           createdBy: user?.name || "Неизвестный пользователь",
-//           isPublic: false,
-//           userId: req.user.userId,
-//         },
-//         select: inventorySelect,
-//       });
-
-//       res.json({
-//         success: true,
-//         message: "Инвентарь создан",
-//         data: newInventory,
-//       });
-//     } catch (error) {
-//       handleError(error, res);
-//     }
-//   }
-// );
-
 //создание инвентаря
 routerUserInventories.post(
   "/inventories-create",
   checkToken,
   async (req, res) => {
-    console.log("🎯 ЭНДПОИНТ ДОСТИГНУТ! /inventories-create");
-    console.log("🔑 User:", req.user);
     try {
       const {
         name,
@@ -180,18 +161,19 @@ routerUserInventories.post(
         ...rest
       } = req.body.arg || req.body;
 
+      if (!name?.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Название обязательно",
+        });
+      }
+
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
         select: { name: true },
       });
 
       const categoryId = await findCategoryId(category);
-
-      if (category && !categoryId) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Категория не найдена" });
-      }
 
       const newInventory = await prisma.inventory.create({
         data: {
@@ -207,6 +189,10 @@ routerUserInventories.post(
               create: { name: tagName },
             })),
           },
+        },
+        include: {
+          category: true,
+          tags: true,
         },
       });
 

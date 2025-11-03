@@ -17,10 +17,11 @@ import InventorySettingsTabs from "../../components/tabs/InventorySettingTabs.js
 import AccessTab from "../../components/tabs/AccessTabs.js";
 import DiscussionTab from "../../components/tabs/DiscussionTabs.js";
 import CustomIdTabs from "../../components/tabs/CustomIdTabs.js";
+import StatsTabs from "../../components/tabs/StatsTabs.js";
 
 const InventoryPage = () => {
   const { id } = useParams();
-  const { isAuthenticated, authUser } = useContext(AuthContext);
+  const { isAuthenticated, authUser, isAdmin } = useContext(AuthContext);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("items");
 
@@ -43,6 +44,7 @@ const InventoryPage = () => {
   const items = inventory?.items || [];
   const isOwner = inventory?.userId === authUser?.id;
   const hasWriteAccess = Boolean(isOwner || inventory?.canWrite);
+  const hasTotalAccess = isOwner || isAdmin;
 
   const { data: dataConfigFields, mutate: mutateFieldsPublic } = useSWR(
     isAuthenticated && hasWriteAccess
@@ -120,7 +122,7 @@ const InventoryPage = () => {
           />
         </Tab>
 
-        {isOwner && (
+        {hasTotalAccess && (
           <Tab eventKey="settings" title="⚙️ Настройки">
             <InventorySettingsTabs
               inventoryId={id}
@@ -131,7 +133,7 @@ const InventoryPage = () => {
           </Tab>
         )}
 
-        {isOwner && (
+        {hasTotalAccess && (
           <Tab eventKey="fields" title="🛠️ Поля">
             <FieldSettingTabs
               inventoryId={id}
@@ -142,13 +144,19 @@ const InventoryPage = () => {
           </Tab>
         )}
 
-        {isOwner && (
+        {hasTotalAccess && (
           <Tab eventKey="custom-id" title="#️⃣ Формат ID">
             <CustomIdTabs inventoryId={id} />
           </Tab>
         )}
 
-        {isOwner && (
+        {hasTotalAccess && (
+          <Tab eventKey="stats" title="📈 Статистика">
+            <StatsTabs inventoryId={id} isOwner={isOwner} />
+          </Tab>
+        )}
+
+        {hasTotalAccess && (
           <Tab eventKey="access" title="👥 Доступ">
             <AccessTab inventoryId={id} isOwner={isOwner} />
           </Tab>

@@ -15,6 +15,7 @@ import ProtectedRoute from "./components/protectedRoute/ProtectedRoute.js";
 import ProfilePage from "./page/profilePage/ProfilePage.js";
 import UniversalItemForm from "./components/form/UniversalItemForm.js";
 import UniversalInventoryForm from "./components/form/UniversalInventoryForm.js";
+import AdminPage from "./page/adminpage/AdminPage.js";
 
 function App() {
   return (
@@ -31,6 +32,16 @@ function App() {
           <SearchProvider>
             <div className="container-lg mt-4">
               <Routes>
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute>
+                      <WithHeaderLayout>
+                        <AdminPage />
+                      </WithHeaderLayout>
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/auth/register" element={<RegistrationPage />} />
                 <Route
                   path="/inventory-create"

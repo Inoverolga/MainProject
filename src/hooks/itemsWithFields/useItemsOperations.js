@@ -98,7 +98,7 @@ export const useItemsOperations = (mutateMyItems, inventoryId = null) => {
       const result = await updateItem({ itemId, formData });
 
       if (result.success) {
-        mutateMyItems?.();
+        await mutateMyItems?.();
         return true;
       }
       toast.error(result.message || "Ошибка редактирования товара");

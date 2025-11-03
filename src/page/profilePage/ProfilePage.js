@@ -1,6 +1,6 @@
 import useSWR from "swr";
 import { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Container, Button } from "react-bootstrap";
 import {
   fetchMyInventories,
@@ -16,7 +16,6 @@ import { useInventoryOperations } from "../../hooks/inventories/useInventoryOper
 
 const ProfilePage = () => {
   const { searchTerm } = useContext(SearchContext);
-  const navigate = useNavigate();
 
   const [selectedMyRows, setSelectedMyRows] = useState([]);
   const [selectedAccessRows, setSelectedAccessRows] = useState([]);

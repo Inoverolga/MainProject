@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState, useRef, useMemo } from "react";
@@ -28,6 +28,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
+
       dedupingInterval: 0,
     }
   );
@@ -65,13 +66,19 @@ const UniversalItemForm = ({ mode = "create" }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid, isDirty },
+    formState: { errors, isValid, isDirty, isValidating },
     reset,
     setValue,
     watch,
+    control,
   } = useForm({
     mode: "onChange",
+    defaultValues: {
+      tags: [],
+    },
   });
+
+  useWatch({ control, name: "tags" });
   const customIdValue = watch("customId");
 
   const { handleCreate, handleUpdate, isCreating, isUpdating } =
@@ -86,9 +93,16 @@ const UniversalItemForm = ({ mode = "create" }) => {
 
   const handleTagsChange = (newSelectedTags) => {
     setSelectedTags(newSelectedTags);
+    setValue(
+      "tags",
+      newSelectedTags.map((tag) => tag.value),
+      {
+        shouldDirty: true,
+      }
+    );
   };
 
-  // ГЕНЕРАЦИЯ ID ПРИ СОЗДАНИИ ТОВАРА
+  // генерация id при создании товара
   useEffect(() => {
     const initializeForm = async () => {
       if (!formInitializedRef.current) {
@@ -120,6 +134,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
           setValue("description", data.description);
           setValue("version", data.version);
           setValue("customId", data.customId);
+          setValue("tags", tagValues);
           setCustomFields(initialCustomFields);
           formInitializedRef.current = true;
         }
@@ -143,7 +158,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
       : initialDataRef.current &&
         Object.keys(customFields).some(
           (key) =>
-            // customFields[key] !== initialDataRef.current.customFields[key]
+            //customFields[key] !== initialDataRef.current.customFields[key]
             JSON.stringify(customFields[key]) !==
             JSON.stringify(initialDataRef.current.customFields[key])
         );
@@ -156,8 +171,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
 
   const isMutating = isCreating || isUpdating;
 
-  const canSubmit =
-    !isMutating && isValid && (mode === "create" || hasFormChanges);
+  const canSubmit = !isMutating && (mode === "create" || hasFormChanges);
 
   const onSubmit = async (formData) => {
     try {
@@ -219,20 +233,20 @@ const UniversalItemForm = ({ mode = "create" }) => {
               }
               readOnly
             />
-            {mode === "create" && (
+            {mode === "create" || !itemData?.data?.customId ? (
               <button
                 type="button"
                 className="btn btn-outline-secondary"
                 onClick={() =>
-                  generateIdForNewItem().then((id) => {
-                    if (id) setValue("customId", id);
+                  generateIdForNewItem(true).then((id) => {
+                    if (id) setValue("customId", id, { shouldDirty: true });
                   })
                 }
                 disabled={isGeneratingItemId}
               >
                 {isGeneratingItemId ? "..." : "🔄"}
               </button>
-            )}
+            ) : null}
           </div>
           <div className="form-text">
             {mode === "create"

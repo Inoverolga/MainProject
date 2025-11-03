@@ -51,6 +51,7 @@ export const fetchTags = (url) => getData(url); //api/tags - без query-пар
 //api/tags/auto/autocompletion?q=${encodeURIComponent(tagSearchInput)}` - с query-парметров (для автодополнения)
 
 // Личный кабинет - инвентари пользователя
+export const fetchCategories = (url) => getData(url);
 export const fetchMyInventories = (url) => getData(url); //api/users/me/inventories
 export const fetchAccessibleInventories = (url) => getData(url); //api/users/me/accessible-inventories
 export const fetchInventoryWithAccessCheck = (url) => getData(url); //api/users/inventories/:id/items-with-access
@@ -105,3 +106,14 @@ export const fetchFormatId = (url) => getData(url); //api/idFormat/inventories/:
 export const fetchFormatIdUpdate = (url, formatData) =>
   putData(url, formatData); //api/idFormat/inventories/:inventoryId/custom-id-format-update
 export const fetchFormatIdGenerate = (url, formData) => postData(url, formData); //api/idFormat/inventories/:inventoryId/generate-id
+
+//Администратор
+export const fetchAllUser = (url) => getData(url); //api/admin/users
+export const fetchOneUser = (url) => getData(url); //api/admin/users/:userId
+export const fetchBlockAndUnblock = (url, isBlocked) =>
+  patchData(url, { isBlocked }); //api/admin/users/:userId/block
+export const fetchAddRoleAdmin = (url, isAdmin) => patchData(url, { isAdmin }); //api/admin/users/:userId/role
+export const fetchDeleteRoleAdmin = (url) => deleteData(url); //api/admin/users/:userId
+export const fetchStats = (url) => getData(url); //api/admin/stats
+//Статистика
+export const fetchStatsInventory = (url) => getData(url); //api/stats/inventories/:id

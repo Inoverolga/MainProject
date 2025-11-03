@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
     : "http://localhost:3001";
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -16,6 +17,7 @@ export const AuthProvider = ({ children }) => {
 
     if (token && userData) {
       setAuthUser(JSON.parse(userData));
+      setIsAdmin(userData.isAdmin || false);
     }
     setLoading(false);
   }, []);
@@ -24,12 +26,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("accessToken", token);
     localStorage.setItem("user", JSON.stringify(userData));
     setAuthUser(userData);
+    setIsAdmin(userData.isAdmin || false);
   };
 
   const logout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
     setAuthUser(null);
+    setIsAdmin(false);
     navigate("/");
   };
 
@@ -43,6 +47,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     authUser,
+    isAdmin,
     login,
     logout,
     loading,

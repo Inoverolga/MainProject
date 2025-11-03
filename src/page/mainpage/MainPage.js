@@ -7,6 +7,7 @@ import {
 import { useContext, useState, useEffect } from "react";
 import { SearchContext } from "../../contexts/SearchContext";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../contexts/AuthContext.js";
 import { LoginForm } from "../../components/loginForm/LoginForm.js";
 import Spinner from "../../components/spinner/Spinner.js";
 import Error from "../../components/error/Error.js";
@@ -40,9 +41,7 @@ const InventoryTable = ({
               onClick={() => navigate(`/inventory/${item.id}`)}
               style={{ cursor: "pointer" }}
             >
-              <td className={showItemCount ? "fw-semibold" : ""}>
-                {item.name}
-              </td>
+              <td className="fw-semibold">{item.name}</td>
               <td>{item.description || "-"}</td>
               <td>{item.user?.name || "-"}</td>
               {showItemCount && (
@@ -83,6 +82,7 @@ const TagCloud = ({ tags, onTagClick }) => {
 
 const MainPage = () => {
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
+  const { isAuthenticated, authUser } = useContext(AuthContext);
   const [page, setPage] = useState(0);
 
   // Запрос для популярных инвентарей
@@ -127,7 +127,20 @@ const MainPage = () => {
   return (
     <>
       <TagCloud tags={tags} onTagClick={setSearchTerm} />
-      <LoginForm />
+      {!isAuthenticated && <LoginForm />}
+
+      {isAuthenticated && (
+        <div className="card mb-4">
+          <div className="card-body">
+            <h5 className="card-title text-center">
+              Добро пожаловать, {authUser.name}!
+            </h5>
+            <p className="card-text text-center">
+              Вы находитесь на главной странице системы
+            </p>
+          </div>
+        </div>
+      )}
 
       {!searchTerm && popularInventories.length > 0 && (
         <InventoryTable

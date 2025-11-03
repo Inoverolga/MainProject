@@ -100,8 +100,11 @@ const CustomIdPart = ({ part, index, control, onRemove }) => {
           />
           <TextField
             label="Ключ последовательности"
-            value={sequenceKeyField.field.value || "default"}
-            onChange={sequenceKeyField.field.onChange}
+            value={sequenceKeyField.field.value}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^\w-]/g, "");
+              sequenceKeyField.field.onChange(value);
+            }}
             size="small"
             sx={{ width: 150 }}
           />

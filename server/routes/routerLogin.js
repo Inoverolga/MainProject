@@ -46,7 +46,6 @@ routerLogin.post("/login", async (req, res) => {
       {
         userId: chekUser.id,
         email: chekUser.email,
-        //role: user.role
       },
       process.env.JWT_ACCESS_SECRET,
       { expiresIn: "24h" }
