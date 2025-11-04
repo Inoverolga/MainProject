@@ -10,7 +10,7 @@ export const useUserSearch = () => {
     error,
     isLoading: isSearching,
   } = useSWR(
-    searchTerm && searchTerm.length >= 2
+    searchTerm && searchTerm.trim().length >= 1
       ? `/search/users?q=${encodeURIComponent(searchTerm)}`
       : null,
     fetchUserSearch,

@@ -18,6 +18,9 @@ const prepareItemData = ({
   customBool1,
   customBool2,
   customBool3,
+  customFile1,
+  customFile2,
+  customFile3,
   customId,
   ...data
 }) => {
@@ -29,6 +32,9 @@ const prepareItemData = ({
     customBool1: !!customBool1,
     customBool2: !!customBool2,
     customBool3: !!customBool3,
+    customFile1: customFile1 || null,
+    customFile2: customFile2 || null,
+    customFile3: customFile3 || null,
     customId: customId || null,
   };
   if (tags.length > 0) {
@@ -62,6 +68,9 @@ export const fieldsItemSelect = {
   customText1: true,
   customText2: true,
   customText3: true,
+  customFile1: true,
+  customFile2: true,
+  customFile3: true,
   tags: true,
   customId: true,
 };
@@ -143,7 +152,8 @@ routerUserItem.get("/items-edit/:id", checkToken, async (req, res) => {
     const item = await getItemWithAccessCheck(
       req.params.id,
       req.user?.userId,
-      false
+      false,
+      req.user.isAdmin
     );
 
     res.json({ success: true, data: item });
@@ -158,7 +168,7 @@ routerUserItem.put("/items-update/:id", checkToken, async (req, res) => {
     const { id } = req.params;
     const { version } = req.body;
 
-    await getItemWithAccessCheck(id, req.user.userId, true);
+    await getItemWithAccessCheck(id, req.user.userId, true, req.user.isAdmin);
 
     const updatedItem = await prisma.item.update({
       where: { id, version },
@@ -193,7 +203,7 @@ routerUserItem.delete("/items-delete/:id", checkToken, async (req, res) => {
       });
     }
 
-    await getItemWithAccessCheck(id, req.user.userId, true);
+    await getItemWithAccessCheck(id, req.user.userId, true, req.user.isAdmin);
     await prisma.item.delete({
       where: { id, version: parseInt(version) },
     });

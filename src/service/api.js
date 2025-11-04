@@ -46,7 +46,7 @@ export const fetchLoginUser = async (url, { arg: userFormData }) => {
 export const fetchInventoriesPublic = (url) => getData(url); //api/inventories/public/popular
 export const fetchInventoriesPublicPopular = (url) => getData(url); //api/inventories/public
 export const fetchInventoryWithItems = (url) => getData(url); //api/inventories/:id (публичный доступ)
-export const fetchSearchAll = (url) => getData(url); //api/search?q=${searchTerm}
+
 export const fetchTags = (url) => getData(url); //api/tags - без query-парметра
 //api/tags/auto/autocompletion?q=${encodeURIComponent(tagSearchInput)}` - с query-парметров (для автодополнения)
 
@@ -88,9 +88,6 @@ export const fetchUserAditAccess = (url, formData) => postData(url, formData); /
 export const fetchUserDeleteAccess = (url) => deleteData(url); //api/access/user/:inventoryId/:userId/delete-access
 //Получение инвентаря (вкл.товары) с проверкой доступа в секции с инвентарем
 
-// Поиск
-export const fetchUserSearch = (url) => getData(url); //api/search/users;
-
 //Обсуждения
 export const fetchPostsGetMessage = (url) => getData(url); //api/posts?invotoryId="..."
 export const fetchPostsCreateMessage = (url, formData) =>
@@ -117,3 +114,8 @@ export const fetchDeleteRoleAdmin = (url) => deleteData(url); //api/admin/users/
 export const fetchStats = (url) => getData(url); //api/admin/stats
 //Статистика
 export const fetchStatsInventory = (url) => getData(url); //api/stats/inventories/:id
+//поиск
+export const fetchSearchAll = (url) => getData(url); //api/search?q=${searchTerm}
+export const fetchItemsSearch = (url) => getData(url); //api/search/items?q=${searchTerm}
+export const fetchUserSearch = (url) => getData(url); //api/search/users?q=${searchTerm}; (для форм)
+export const fetchAdminSearch = (url) => getData(url); //api/search/users?q=${searchTerm};

@@ -41,6 +41,7 @@ model Inventory {
   userId            String
   categoryId        String?
   version           Int                    @default(1)
+  imageUrl          String?
   views             Int                    @default(0)
   status            String                 @default("DRAFT")
   customIdFormats   CustomIdFormat[]
@@ -53,6 +54,11 @@ model Inventory {
   posts             Post[]
   tags              Tag[]                  @relation("InventoryToTag")
 
+
+  @@index([userId])        
+  @@index([isPublic])      
+  @@index([createdAt])  
+  @@index([name])    
   @@map("inventories")
 }
 
@@ -77,10 +83,16 @@ model Item {
   customBool2   Boolean?
   customBool3   Boolean?
   customId      String?
+  customFile1 String?  
+  customFile2 String?
+  customFile3 String?
   inventory     Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
   likes         Like[]
   tags          Tag[]     @relation("ItemToTag")
 
+
+  @@index([inventoryId])   
+  @@index([createdAt])    
   @@unique([inventoryId, customId])
   @@unique([inventoryId, id])
   @@map("items")
@@ -125,7 +137,9 @@ model Tag {
   inventories Inventory[] @relation("InventoryToTag")
   items       Item[]      @relation("ItemToTag")
 
+  @@index([name])          
   @@map("tags")
+ 
 }
 
 model Category {

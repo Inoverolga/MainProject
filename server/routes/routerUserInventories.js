@@ -4,9 +4,9 @@ import { checkToken } from "../middleware/checkToken.js";
 import { handleError } from "../utils/handleError.js";
 import { Parser } from "json2csv";
 import {
-  isInventoryOwner,
   hasWriteAccess,
   hasReadAccess,
+  canManagersInventory,
 } from "../utils/accessUtils.js";
 import { fieldsItemSelect } from "./routerUserItem.js";
 
@@ -17,6 +17,7 @@ const findCategoryId = async (categoryName) => {
   const categoryRecord = await prisma.category.findFirst({
     where: { name: categoryName },
   });
+
   return categoryRecord?.id || null;
 };
 
@@ -24,11 +25,19 @@ export const inventorySelect = {
   id: true,
   name: true,
   description: true,
+  imageUrl: true,
   createdAt: true,
   updatedAt: true,
   isPublic: true,
   version: true,
   userId: true,
+  _count: { select: { items: true } },
+};
+
+const inventoryInclude = {
+  user: { select: { name: true, email: true } },
+  tags: true,
+  category: true,
   _count: { select: { items: true } },
 };
 
@@ -49,13 +58,35 @@ routerUserInventories.get("/categories", async (req, res) => {
 
 routerUserInventories.get("/me/inventories", checkToken, async (req, res) => {
   try {
+    const query = req.query.q?.trim() || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      userId: req.user.userId,
+      ...(query && {
+        name: { startsWith: query, mode: "insensitive" },
+      }),
+    };
+
     const inventories = await prisma.inventory.findMany({
-      where: { userId: req.user.userId },
-      select: inventorySelect,
+      where,
+      include: inventoryInclude,
+      skip,
+      take: limit,
       orderBy: { createdAt: "desc" },
     });
 
-    res.json({ success: true, data: inventories });
+    inventories.forEach((inv) => console.log("    -", inv.name));
+
+    const total = await prisma.inventory.count({ where });
+
+    res.json({
+      success: true,
+      data: inventories,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (error) {
     handleError(error, res);
   }
@@ -66,35 +97,61 @@ routerUserInventories.get(
   checkToken,
   async (req, res) => {
     try {
-      const accessible = await prisma.inventoryAccess.findMany({
-        where: {
-          userId: req.user.userId,
-          accessLevel: "WRITE",
-        },
-        include: {
-          inventory: {
-            select: {
-              ...inventorySelect,
-              user: { select: { id: true, name: true, email: true } },
-            },
+      const query = req.query.q?.trim() || "";
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 20;
+      const skip = (page - 1) * limit;
+
+      const where = {
+        inventoryAccesses: {
+          some: {
+            userId: req.user.userId,
+            OR: [{ accessLevel: "WRITE" }, { accessLevel: "READ" }],
           },
         },
-        orderBy: { inventory: { createdAt: "desc" } },
+        userId: { not: req.user.userId },
+        ...(query && {
+          name: { startsWith: query, mode: "insensitive" },
+        }),
+      };
+
+      const accessible = await prisma.inventory.findMany({
+        where,
+        include: {
+          ...inventoryInclude,
+          inventoryAccesses: {
+            where: { userId: req.user.userId },
+            select: { accessLevel: true },
+          },
+        },
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
       });
 
-      const inventories = accessible.map((access) => ({
-        ...access.inventory,
-        accessLevel: access.accessLevel,
+      const inventoriesWithAccess = accessible.map((inv) => ({
+        ...inv,
+        accessLevel: inv.inventoryAccesses[0]?.accessLevel || "READ",
       }));
 
-      res.json({ success: true, data: inventories });
+      const total = await prisma.inventory.count({ where });
+
+      res.json({
+        success: true,
+        data: inventoriesWithAccess,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
     } catch (error) {
       handleError(error, res);
     }
   }
 );
 
-// Защищенный роут с правами доступа
 routerUserInventories.get(
   "/inventories/:id/items-with-access",
   checkToken,
@@ -103,7 +160,6 @@ routerUserInventories.get(
       const { id } = req.params;
       const userId = req.user?.userId;
 
-      // Используем готовую функцию проверки доступа
       const hasAccess = await hasReadAccess(id, userId);
       if (!hasAccess) {
         return res.status(403).json({
@@ -146,7 +202,6 @@ routerUserInventories.get(
   }
 );
 
-//создание инвентаря
 routerUserInventories.post(
   "/inventories-create",
   checkToken,
@@ -158,6 +213,7 @@ routerUserInventories.post(
         category,
         tags = [],
         isPublic,
+        imageUrl,
         ...rest
       } = req.body.arg || req.body;
 
@@ -174,11 +230,11 @@ routerUserInventories.post(
       });
 
       const categoryId = await findCategoryId(category);
-
       const newInventory = await prisma.inventory.create({
         data: {
           name,
           description,
+          imageUrl: imageUrl || null,
           categoryId,
           createdBy: user?.name || "Неизвестный пользователь",
           isPublic: Boolean(isPublic),
@@ -208,7 +264,6 @@ routerUserInventories.post(
   }
 );
 
-//удаление инвентаря
 routerUserInventories.delete(
   "/inventories-delete/:id",
   checkToken,
@@ -224,11 +279,15 @@ routerUserInventories.delete(
         });
       }
 
-      const hasAccess = await hasWriteAccess(id, req.user.userId);
-      if (!hasAccess) {
+      const canAccess = await canManagersInventory(
+        id,
+        req.user.userId,
+        req.user.isAdmin
+      );
+      if (!canAccess) {
         return res.status(403).json({
           success: false,
-          message: "Нет прав для удаления инвентаря",
+          message: "Только владелец или администратор может удалять инвентарь",
         });
       }
 
@@ -246,15 +305,18 @@ routerUserInventories.delete(
   }
 );
 
-//редактирование инвентаря-получение данных для редактирования
 routerUserInventories.get(
   "/inventories-edit/:id",
   checkToken,
   async (req, res) => {
     try {
-      const hasAccess = await hasWriteAccess(req.params.id, req.user.userId);
+      const canAccess = await canManagersInventory(
+        req.params.id,
+        req.user.userId,
+        req.user.isAdmin
+      );
 
-      if (!hasAccess) {
+      if (!canAccess) {
         return res.status(403).json({
           success: false,
           message: "Инвентарь не найден или нет доступа",
@@ -267,6 +329,7 @@ routerUserInventories.get(
           id: true,
           name: true,
           description: true,
+          imageUrl: true,
           isPublic: true,
           version: true,
           category: { select: { id: true, name: true } },
@@ -300,6 +363,7 @@ routerUserInventories.put(
         tags = [],
         isPublic,
         version,
+        imageUrl,
       } = req.body.arg || req.body;
 
       if (!version) {
@@ -321,12 +385,17 @@ routerUserInventories.put(
         });
       }
 
-      const isOwner = await isInventoryOwner(req.params.id, req.user.userId);
+      const canEdit = await canManagersInventory(
+        req.params.id,
+        req.user.userId,
+        req.user.isAdmin
+      );
 
-      if (!isOwner) {
+      if (!canEdit) {
         return res.status(403).json({
           success: false,
-          message: "Только владелец может редактировать инвентарь",
+          message:
+            "Только владелец или администратор может редактировать инвентарь",
         });
       }
 
@@ -339,6 +408,7 @@ routerUserInventories.put(
           description: description.trim(),
           categoryId,
           isPublic: Boolean(isPublic),
+          imageUrl: imageUrl || null,
           version: { increment: 1 },
           tags: {
             set: [],
@@ -419,7 +489,6 @@ routerUserInventories.get(
   }
 );
 
-// Добавьте в routerUserInventories.js
 routerUserInventories.get("/debug/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -427,7 +496,6 @@ routerUserInventories.get("/debug/:id", async (req, res) => {
       where: { id },
     });
 
-    console.log("🔍 Debug inventory:", inventory);
     res.json({ exists: !!inventory, inventory });
   } catch (error) {
     handleError(error, res);

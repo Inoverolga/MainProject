@@ -2,7 +2,7 @@ import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { checkToken } from "../middleware/checkToken.js";
 import { handleError } from "../utils/handleError.js";
-import { isInventoryOwner } from "../utils/accessUtils.js";
+import { canManagersInventory } from "../utils/accessUtils.js";
 
 const routerCustomFields = express.Router();
 
@@ -11,11 +11,16 @@ const FIELD_TARGETS = {
   TEXT: ["customText1", "customText2", "customText3"],
   INTEGER: ["customInt1", "customInt2", "customInt3"],
   BOOLEAN: ["customBool1", "customBool2", "customBool3"],
+  FILE: ["customFile1", "customFile2", "customFile3"],
 };
 
-const checkFieldOwnership = async (inventoryId, userId) => {
-  if (!(await isInventoryOwner(inventoryId, userId))) {
-    throw new Error("Только владелец может управлять полями");
+const checkFieldOwnership = async (
+  inventoryId,
+  userId,
+  userIsAdmin = false
+) => {
+  if (!(await canManagersInventory(inventoryId, userId, userIsAdmin))) {
+    throw new Error("Только владелец или администратор может управлять полями");
   }
 };
 
@@ -45,7 +50,7 @@ routerCustomFields.post(
       const { fieldType, name, description, isVisibleInTable, isRequired } =
         req.body;
 
-      await checkFieldOwnership(inventoryId, req.user.userId);
+      await checkFieldOwnership(inventoryId, req.user.userId, req.user.isAdmin);
 
       // Проверяем лимит полей
       const fieldCount = await prisma.inventoryFieldConfig.count({
@@ -115,7 +120,11 @@ routerCustomFields.delete(
           .json({ success: false, message: "Поле не найдено" });
       }
 
-      await checkFieldOwnership(field.inventoryId, req.user.userId);
+      await checkFieldOwnership(
+        field.inventoryId,
+        req.user.userId,
+        req.user.isAdmin
+      );
 
       await prisma.inventoryFieldConfig.delete({
         where: { id: req.params.fieldId },
@@ -146,7 +155,11 @@ routerCustomFields.put(
         });
       }
 
-      await checkFieldOwnership(field.inventoryId, req.user.userId);
+      await checkFieldOwnership(
+        field.inventoryId,
+        req.user.userId,
+        req.user.isAdmin
+      );
 
       const updatedField = await prisma.inventoryFieldConfig.update({
         where: { id: req.params.fieldId },

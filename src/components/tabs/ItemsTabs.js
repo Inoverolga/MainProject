@@ -18,6 +18,8 @@ const ItemsTabs = ({
   itemsLoading,
   itemsError,
   isAuthenticated,
+  loading,
+  searchTerm,
   ...props
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
@@ -40,7 +42,8 @@ const ItemsTabs = ({
     toggleLike
   );
 
-  if (itemsLoading || likesLoading) return <Spinner />;
+  const isLoading = itemsLoading || likesLoading || loading;
+  if (isLoading && !items?.length) return <Spinner />;
   if (itemsError)
     return <Error message={`Ошибка загрузки: ${itemsError.message}`} />;
 

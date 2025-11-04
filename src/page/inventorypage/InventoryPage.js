@@ -8,9 +8,11 @@ import {
   fetchInventoryWithItems,
   fetchFieldsPublic,
   fetchInventoryWithAccessCheck,
+  fetchItemsSearch,
 } from "../../service/api";
 import { useContext, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
+import { SearchContext } from "../../contexts/SearchContext.js";
 import ItemsTabs from "../../components/tabs/ItemsTabs.js";
 import FieldSettingTabs from "../../components/tabs/FieldsSettingsTabs.js";
 import InventorySettingsTabs from "../../components/tabs/InventorySettingTabs.js";
@@ -22,6 +24,7 @@ import StatsTabs from "../../components/tabs/StatsTabs.js";
 const InventoryPage = () => {
   const { id } = useParams();
   const { isAuthenticated, authUser, isAdmin } = useContext(AuthContext);
+  const { searchTerm } = useContext(SearchContext);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("items");
 
@@ -40,8 +43,24 @@ const InventoryPage = () => {
     }
   );
 
+  const {
+    data: searchData,
+    isLoading: searchLoading,
+    error: searchError,
+  } = useSWR(
+    searchTerm
+      ? `/search/items?inventoryId=${id}&q=${encodeURIComponent(searchTerm)}`
+      : null,
+    fetchItemsSearch,
+    {
+      revalidateOnFocus: false,
+      keepPreviousData: true,
+    }
+  );
+
   const inventory = dataInventory?.data;
-  const items = inventory?.items || [];
+  const items = searchTerm ? searchData?.data || [] : inventory?.items || [];
+  //const items = inventory?.items || [];
   const isOwner = inventory?.userId === authUser?.id;
   const hasWriteAccess = Boolean(isOwner || inventory?.canWrite);
   const hasTotalAccess = isOwner || isAdmin;
@@ -110,6 +129,8 @@ const InventoryPage = () => {
             hasWriteAccess={hasWriteAccess}
             mutateMyItems={mutateMyInventoryWithItems}
             isAuthenticated={isAuthenticated}
+            loading={searchLoading && searchTerm}
+            searchTerm={searchTerm}
           />
         </Tab>
 

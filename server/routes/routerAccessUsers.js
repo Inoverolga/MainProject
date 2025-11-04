@@ -2,17 +2,23 @@ import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { checkToken } from "../middleware/checkToken.js";
 import { handleError } from "../utils/handleError.js";
-import { isInventoryOwner } from "../utils/accessUtils.js";
+import { canManagersInventory } from "../utils/accessUtils.js";
 
 const routerAccessUser = express.Router();
 
-// Общий middleware проверки владельца
-const checkOwner = async (req, res, next) => {
+// Общий middleware проверки владельца/admin
+const checkManagers = async (req, res, next) => {
   try {
-    if (!(await isInventoryOwner(req.params.inventoryId, req.user.userId))) {
-      return res
-        .status(403)
-        .json({ error: "Только владелец может управлять доступом" });
+    if (
+      !(await canManagersInventory(
+        req.params.inventoryId,
+        req.user.userId,
+        req.user.isAdmin
+      ))
+    ) {
+      return res.status(403).json({
+        error: "Только владелец или администратор может управлять доступом",
+      });
     }
     next();
   } catch (error) {
@@ -24,7 +30,7 @@ const checkOwner = async (req, res, next) => {
 routerAccessUser.get(
   "/inventories/:inventoryId/user-list-access",
   checkToken,
-  checkOwner,
+  checkManagers,
   async (req, res) => {
     try {
       const accesses = await prisma.inventoryAccess.findMany({
@@ -43,7 +49,7 @@ routerAccessUser.get(
 routerAccessUser.post(
   "/:inventoryId/edit-access",
   checkToken,
-  checkOwner,
+  checkManagers,
   async (req, res) => {
     try {
       const { userId } = req.body;
@@ -77,7 +83,7 @@ routerAccessUser.post(
 routerAccessUser.delete(
   "/:inventoryId/:userId/delete-access",
   checkToken,
-  checkOwner,
+  checkManagers,
   async (req, res) => {
     try {
       await prisma.inventoryAccess.delete({
@@ -99,7 +105,7 @@ routerAccessUser.delete(
 routerAccessUser.patch(
   "/:inventoryId/public-access",
   checkToken,
-  checkOwner,
+  checkManagers,
   async (req, res) => {
     try {
       const { isPublic } = req.body;

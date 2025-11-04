@@ -1,15 +1,11 @@
 import useSWR from "swr";
-import {
-  fetchInventoriesPublic,
-  fetchSearchAll,
-  fetchTags,
-} from "../../service/api";
+import { fetchInventoriesPublic, fetchTags } from "../../service/api";
 import { useContext, useState, useEffect } from "react";
 import { SearchContext } from "../../contexts/SearchContext";
 import { useNavigate } from "react-router-dom";
+import { useGlobalSearch } from "../../hooks/search/useGlobalSearch.js";
 import { AuthContext } from "../../contexts/AuthContext.js";
 import { LoginForm } from "../../components/loginForm/LoginForm.js";
-import Spinner from "../../components/spinner/Spinner.js";
 import Error from "../../components/error/Error.js";
 
 const InventoryTable = ({
@@ -81,51 +77,47 @@ const TagCloud = ({ tags, onTagClick }) => {
 };
 
 const MainPage = () => {
-  const { searchTerm, setSearchTerm } = useContext(SearchContext);
   const { isAuthenticated, authUser } = useContext(AuthContext);
-  const [page, setPage] = useState(0);
+  const { searchTerm, setSearchTerm } = useContext(SearchContext);
+  const [normalPage, setNormalPage] = useState(0);
 
   // Запрос для популярных инвентарей
-  const { data: popularInventories = [] } = useSWR(
+  const { data: popularInventories = [], error: popularError } = useSWR(
     !searchTerm ? "/inventories/public?type=popular" : null,
     fetchInventoriesPublic,
     { revalidateOnFocus: false }
   );
 
-  // Запрос для последних инвентарей
-  const {
-    data: recentInventories = [],
-    error,
-    isLoading,
-  } = useSWR(
-    searchTerm ? `/search?q=${searchTerm}` : "/inventories/public?type=recent",
-    searchTerm ? fetchSearchAll : fetchInventoriesPublic,
-    { keepPreviousData: true, revalidateOnFocus: false }
+  const { data: recentInventories = [], error: recentError } = useSWR(
+    !searchTerm ? "/inventories/public?type=recent" : null, // ← УБРАЛ поиск отсюда!
+    fetchInventoriesPublic,
+    { revalidateOnFocus: false }
   );
 
-  const { data: tags } = useSWR(`/tags`, fetchTags, {
+  const { data: tags, error: tagsError } = useSWR(`/tags`, fetchTags, {
     revalidateOnFocus: false,
   });
 
-  // Пагинация только для последних инвентарей
+  const { searchResults, pagination, currentPage, goToNextPage, goToPrevPage } =
+    useGlobalSearch("global");
+
   const itemsPerPage = 10;
-  const startIndex = page * itemsPerPage;
+  const startIndex = normalPage * itemsPerPage;
   const paginatedInventories = recentInventories.slice(
     startIndex,
     startIndex + itemsPerPage
   );
   const totalPages = Math.ceil(recentInventories.length / itemsPerPage);
 
-  // Сбрасываем на первую страницу при поиске
   useEffect(() => {
-    setPage(0);
+    setNormalPage(0);
   }, [searchTerm]);
 
+  const error = popularError || recentError || tagsError;
   if (error) return <Error message={`Ошибка загрузки: ${error.message}`} />;
-  if (isLoading) return <Spinner />;
 
   return (
-    <>
+    <div className="container-fluid">
       <TagCloud tags={tags} onTagClick={setSearchTerm} />
       {!isAuthenticated && <LoginForm />}
 
@@ -141,46 +133,70 @@ const MainPage = () => {
           </div>
         </div>
       )}
+      {searchTerm ? (
+        <div>
+          <InventoryTable data={searchResults} showItemCount={true} />
 
-      {!searchTerm && popularInventories.length > 0 && (
-        <InventoryTable
-          title="5 самых популярных инвентарей"
-          data={popularInventories}
-          showItemCount={true}
-          className="mb-5"
-        />
-      )}
-
-      <InventoryTable
-        title={searchTerm ? "🔍 Результаты поиска" : "Последние инвентари"}
-        data={paginatedInventories}
-        showItemCount={!!searchTerm}
-      />
-
-      {totalPages > 1 && (
-        <div className="d-flex justify-content-center align-items-center gap-3 mt-4">
-          <button
-            className="btn btn-outline-primary btn-sm"
-            disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            ← Назад
-          </button>
-
-          <span className="text-muted">
-            Страница {page + 1} из {totalPages}
-          </span>
-
-          <button
-            className="btn btn-outline-primary btn-sm"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Вперед →
-          </button>
+          {pagination && pagination.totalPages > 1 && (
+            <div className="d-flex justify-content-center gap-3 mt-4">
+              <button onClick={goToPrevPage} disabled={currentPage === 1}>
+                ← Назад
+              </button>
+              <span>
+                Страница {currentPage} из {pagination.totalPages}
+              </span>
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage >= pagination.totalPages}
+              >
+                Вперед →
+              </button>
+            </div>
+          )}
         </div>
+      ) : (
+        <>
+          {popularInventories.length > 0 && (
+            <InventoryTable
+              title="5 самых популярных инвентарей"
+              data={popularInventories}
+              showItemCount={true}
+              className="mb-5"
+            />
+          )}
+
+          <InventoryTable
+            title={"Последние инвентари"}
+            data={paginatedInventories}
+            showItemCount={true}
+          />
+
+          {totalPages > 1 && (
+            <div className="d-flex justify-content-center align-items-center gap-3 mt-4">
+              <button
+                className="btn btn-outline-primary btn-sm"
+                disabled={normalPage === 0}
+                onClick={() => setNormalPage((p) => p - 1)}
+              >
+                ← Назад
+              </button>
+
+              <span className="text-muted">
+                Страница {normalPage + 1} из {totalPages}
+              </span>
+
+              <button
+                className="btn btn-outline-primary btn-sm"
+                disabled={normalPage >= totalPages - 1}
+                onClick={() => setNormalPage((p) => p + 1)}
+              >
+                Вперед →
+              </button>
+            </div>
+          )}
+        </>
       )}
-    </>
+    </div>
   );
 };
 

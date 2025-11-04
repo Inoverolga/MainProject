@@ -1,8 +1,9 @@
-// pages/AdminPage.jsx
 import { toast } from "react-toastify";
 import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext.js";
+import { SearchContext } from "../../contexts/SearchContext.js"; // ✅ Добавить
+import { useGlobalSearch } from "../../hooks/search/useGlobalSearch.js";
 import AdminStats from "../../components/admin/AdminStats.js";
 import AdminUsersTable from "../../components/admin/AdminUsersTable.js";
 import { useAdminData } from "../../hooks/admin/useAdmin.js";
@@ -10,6 +11,7 @@ import Spinner from "../../components/spinner/Spinner.js";
 
 const AdminPage = () => {
   const { authUser } = useContext(AuthContext);
+  const { searchTerm } = useContext(SearchContext);
   const navigate = useNavigate();
 
   const {
@@ -22,6 +24,8 @@ const AdminPage = () => {
     handleDelete,
   } = useAdminData();
 
+  const { searchResults, isLoading: searchLoading } = useGlobalSearch("admin");
+
   useEffect(() => {
     if (authUser && !authUser.isAdmin) {
       toast.error("У вас нет прав для доступа к панели администратора");
@@ -32,13 +36,15 @@ const AdminPage = () => {
   if (!authUser?.isAdmin) return null;
   if (loading && !users.length) return <Spinner />;
 
+  const displayUsers = searchTerm ? searchResults : users;
+  const displayLoading = loading || searchLoading;
+
   return (
     <div className="container-fluid py-4">
       <div className="row">
         <div className="col-12">
           <h1 className="h3 mb-4 text-dark">Панель администратора</h1>
 
-          {/* Статистика */}
           <div
             className="mb-4 text-center mx-auto"
             style={{ width: "fit-content" }}
@@ -46,18 +52,18 @@ const AdminPage = () => {
             <AdminStats stats={stats} />
           </div>
 
-          {/* Управление пользователями */}
           <div className="card border-light">
             <div className="card-body">
               <h2 className="h5 mb-3 text-dark">Управление пользователями</h2>
 
               <AdminUsersTable
-                users={users}
+                users={displayUsers}
                 currentUser={currentUser}
-                loading={loading}
+                loading={displayLoading}
                 onBlock={handleBlock}
                 onAdmin={handleAdmin}
                 onDelete={handleDelete}
+                searchTerm={searchTerm}
               />
             </div>
           </div>

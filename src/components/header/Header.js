@@ -1,26 +1,25 @@
 import { useContext } from "react";
 import { SearchContext } from "../../contexts/SearchContext";
 import { AuthContext } from "../../contexts/AuthContext";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const Header = () => {
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
   const { isAuthenticated, authUser, logout, isAdmin } =
     useContext(AuthContext);
-  const { id: inventoryId } = useParams();
 
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleSearch = (e) => {
     const value = e.target.value;
-    setSearchTerm(value.toLowerCase());
+    setSearchTerm(value);
   };
 
   const isHomePage = location.pathname === "/";
   const isAdminPage = location.pathname === "/admin";
-  const isInventoryPage = location.pathname === `/inventory/${inventoryId}`;
+  const isInventoryPage = location.pathname.startsWith("/inventory/");
   const isProfilePage = location.pathname === "/profile";
 
   const handleAdminClick = () => {

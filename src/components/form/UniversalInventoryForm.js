@@ -61,11 +61,12 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid, isDirty },
+    formState: { errors, isValid, isDirty, isSubmitting },
     reset,
     setValue,
     getValues,
     watch,
+    trigger,
   } = useForm({
     mode: "onChange",
     defaultValues: { isPublic: "true" },
@@ -74,9 +75,9 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
   const { handleCreate, isCreating } =
     useInventoryOperations(mutateMyInventories);
 
-  const hasFormChanges = mode === "create" ? isValid : isDirty || hasTagChanges;
-  const canSubmit = mode === "create" ? isValid : hasFormChanges;
   const isMutating = isCreating;
+  const hasFormChanges = mode === "create" ? true : isDirty || hasTagChanges;
+  const canSubmit = hasFormChanges && !isMutating && !isSubmitting;
 
   const prepareFormData = (formData) => ({
     ...formData,
@@ -142,6 +143,12 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
 
   const onSubmit = async (formData) => {
     try {
+      const isFormValid = await trigger();
+      if (!isFormValid) {
+        toast.error("Пожалуйста, заполните все обязательные поля правильно");
+        return;
+      }
+
       const dataWithTags = prepareFormData(formData);
       console.log("данные для отправки", dataWithTags);
 
@@ -251,7 +258,9 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
             className={`form-select ${errors.category ? "is-invalid" : ""}`}
             {...register("category", { required: "Выберите категорию" })}
           >
-            <option value="">Без категории</option>
+            <option value="" disabled selected>
+              Выберите категорию
+            </option>
             {categoriesData?.data?.map((category) => (
               <option key={category.id} value={category.name}>
                 {category.name}
@@ -329,7 +338,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
           <button
             type="submit"
             className="btn btn-secondary"
-            disabled={isMutating || !canSubmit}
+            disabled={!canSubmit}
           >
             {isMutating
               ? mode === "create"

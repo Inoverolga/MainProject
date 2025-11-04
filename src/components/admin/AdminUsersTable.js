@@ -1,4 +1,3 @@
-// AdminUsersTable.js
 const AdminUsersTable = ({
   users,
   currentUser,

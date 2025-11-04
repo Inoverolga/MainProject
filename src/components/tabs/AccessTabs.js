@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Select from "react-select";
 import { useInventoryAccess } from "../../hooks/access/useInventoryAccess.js";
-import { useUserSearch } from "../../hooks/searchUser/useUserSearch.js";
+import { useUserSearch } from "../../hooks/search/useUserSearch.js";
 import Spinner from "../spinner/Spinner.js";
 
 const AccessTab = ({

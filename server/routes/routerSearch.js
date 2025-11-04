@@ -2,27 +2,159 @@ import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { hasReadAccess } from "../utils/accessUtils.js";
 import { checkToken } from "../middleware/checkToken.js";
+import { checkAdmin } from "../middleware/checkAdmin.js";
 import { handleError } from "../utils/handleError.js";
 
 const routerSearch = express.Router();
 
-const buildSearchConditions = (query) => ({
+export const searchConditions = (query) => ({
   OR: [
-    { name: { startsWith: query, mode: "insensitive" } },
+    { name: { contains: query, mode: "insensitive" } },
     { description: { contains: query, mode: "insensitive" } },
-    { tags: { some: { name: { startsWith: query, mode: "insensitive" } } } },
-    { items: { some: { name: { startsWith: query, mode: "insensitive" } } } },
+    { tags: { some: { name: { contains: query, mode: "insensitive" } } } },
+    {
+      items: {
+        some: {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { customId: { contains: query, mode: "insensitive" } },
+          ],
+        },
+      },
+    },
+    { category: { name: { contains: query, mode: "insensitive" } } },
+    { user: { name: { contains: query, mode: "insensitive" } } },
   ],
 });
 
-const inventoryInclude = {
+export const inventoryInclude = {
   user: { select: { name: true, email: true } },
   tags: true,
   category: true,
   _count: { select: { items: true } },
 };
 
-// Поиск пользователей для автодополнения
+routerSearch.get("/", async (req, res) => {
+  try {
+    const query = req.query.q?.trim() || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    if (!query) {
+      return res.json({
+        data: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+      });
+    }
+
+    const baseConditions = req.user
+      ? searchConditions(query)
+      : { isPublic: true, ...searchConditions(query) };
+
+    let inventories = await prisma.inventory.findMany({
+      where: baseConditions,
+      include: inventoryInclude,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    });
+
+    const total = await prisma.inventory.count({ where: baseConditions });
+
+    if (req.user) {
+      const accessibleInventories = [];
+      for (const inventory of inventories) {
+        const hasAccess = await hasReadAccess(inventory.id, req.user.userId);
+        if (hasAccess) accessibleInventories.push(inventory);
+      }
+      inventories = accessibleInventories;
+    }
+
+    res.json({
+      data: inventories,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    handleError(error, res);
+  }
+});
+
+routerSearch.get("/items", async (req, res) => {
+  try {
+    const { q: query = "", inventoryId } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    if (!query.trim()) {
+      return res.json({
+        data: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+      });
+    }
+
+    if (inventoryId) {
+      const inventory = await prisma.inventory.findUnique({
+        where: { id: inventoryId },
+        select: { isPublic: true },
+      });
+
+      if (!inventory?.isPublic && !req.user) {
+        return res.status(403).json({
+          success: false,
+          message: "Для просмотра этого инвентаря требуется авторизация",
+        });
+      }
+
+      if (!inventory?.isPublic && req.user) {
+        const hasAccess = await hasReadAccess(inventoryId, req.user.userId);
+        if (!hasAccess) {
+          return res.status(403).json({
+            success: false,
+            message: "Нет доступа к этому инвентарю",
+          });
+        }
+      }
+    }
+
+    const where = {
+      OR: [
+        { name: { contains: query, mode: "insensitive" } },
+        { customId: { contains: query, mode: "insensitive" } },
+        { description: { contains: query, mode: "insensitive" } },
+      ],
+      ...(inventoryId && { inventoryId }),
+    };
+
+    const items = await prisma.item.findMany({
+      where,
+      include: {
+        inventory: {
+          select: {
+            id: true,
+            name: true,
+            isPublic: true,
+            user: { select: { name: true } },
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    });
+
+    const total = await prisma.item.count({ where });
+
+    res.json({
+      data: items,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    handleError(error, res);
+  }
+});
+
 routerSearch.get("/users", checkToken, async (req, res) => {
   try {
     const { q } = req.query;
@@ -45,136 +177,79 @@ routerSearch.get("/users", checkToken, async (req, res) => {
   }
 });
 
-//  ОБЩИЙ ПОИСК (публичные инвентари)
-routerSearch.get("/", async (req, res) => {
+routerSearch.get("/tags", async (req, res) => {
+  try {
+    const tags = await prisma.tag.findMany({
+      where: { isPublic: true },
+      select: { name: true },
+      take: 30,
+    });
+
+    const tagNames = tags.map((tag) => tag.name);
+    res.json(tagNames);
+  } catch (error) {
+    handleError(error, res);
+  }
+});
+
+routerSearch.get("/admin", checkToken, checkAdmin, async (req, res) => {
   try {
     const query = req.query.q?.trim() || "";
-    if (!query) return res.json([]);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
 
-    const results = await prisma.inventory.findMany({
-      where: {
-        AND: [
-          { isPublic: true },
-          { status: "ACTIVE" },
-          buildSearchConditions(query),
-        ],
-      },
-      include: inventoryInclude,
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    });
-
-    res.json(results);
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Ошибка поиска" });
-  }
-});
-
-//  ПЕРСОНАЛЬНЫЙ ПОИСК (все доступные инвентари)
-routerSearch.get("/personal", checkToken, async (req, res) => {
-  try {
-    const { q: query = "" } = req.query;
-    if (!query.trim()) return res.json([]);
-
-    const allInventories = await prisma.inventory.findMany({
-      where: {
-        AND: [{ status: "ACTIVE" }, buildSearchConditions(query)],
-      },
-      include: inventoryInclude,
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    });
-
-    // Фильтруем по правам доступа
-    const accessibleInventories = [];
-    for (const inventory of allInventories) {
-      const hasAccess = await hasReadAccess(inventory.id, req.user.userId);
-      if (hasAccess) {
-        accessibleInventories.push(inventory);
-      }
+    if (!query) {
+      return res.json({
+        data: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+      });
     }
 
-    res.json(accessibleInventories);
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Ошибка поиска" });
-  }
-});
-
-//  ПОИСК ТОВАРОВ
-routerSearch.get("/items", async (req, res) => {
-  try {
-    const { q: query = "", inventoryId } = req.query;
-    if (!query.trim()) return res.json([]);
-
-    const searchConditions = {
+    const where = {
       OR: [
-        { name: { startsWith: query, mode: "insensitive" } },
-        { customId: { startsWith: query, mode: "insensitive" } },
+        { name: { contains: query, mode: "insensitive" } },
+        { email: { contains: query, mode: "insensitive" } },
+        {
+          inventories: {
+            some: {
+              name: { contains: query, mode: "insensitive" },
+            },
+          },
+        },
       ],
-      ...(inventoryId && { inventoryId }),
     };
 
-    const results = await prisma.item.findMany({
-      where: searchConditions,
+    const users = await prisma.user.findMany({
+      where,
       include: {
-        inventory: {
+        inventories: {
           select: {
             id: true,
             name: true,
             isPublic: true,
-            user: { select: { name: true } },
+            createdAt: true,
+            _count: { select: { items: true } },
           },
+          take: 5,
+        },
+        _count: {
+          select: { inventories: true },
         },
       },
+      skip,
+      take: limit,
       orderBy: { createdAt: "desc" },
-      take: 50,
     });
 
-    res.json(results);
+    const total = await prisma.user.count({ where });
+
+    res.json({
+      data: users,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (error) {
-    console.error("Ошибка поиска товаров:", error);
-    res.status(500).json({ success: false, message: "Ошибка поиска товаров" });
+    handleError(error, res);
   }
 });
-
 export default routerSearch;
-
-// GET /api/search?q=... - общий поиск (публичные инвентари)
-
-// GET /api/search/personal?q=... - персональный поиск (требует авторизации)
-
-// GET /api/search/items?q=... - поиск товаров
-
-// Визуализация:
-// text
-// ГЛАВНАЯ СТРАНИЦА
-// ├── Поиск инвентарей → /api/search?q=...
-// └── Облако тегов → /api/search?q=#тег
-
-// ЛИЧНЫЙ КАБИНЕТ
-// ├── Мои инвентари → /api/search/personal?q=...
-// └── Инвентари с доступом → /api/search/personal?q=...
-
-// СТРАНИЦА ИНВЕНТАРЯ
-// └── Товары инвентаря → /api/search/items?q=...&inventoryId=123
-
-// ОБЩИЙ ПОИСК
-// ├── Для гостей → /api/search?q=...
-// └── Для пользователей → /api/search/personal?q=...
-
-// АДМИН-ПАНЕЛЬ
-// └── Поиск пользователей → /api/admin/users?q=... (отдельный эндпоинт)
-// На верхнем заголовке (хедер):
-// javascript
-
-// // Умный поиск - определяет контекст:
-// if (на главной странице) {
-//   fetch(`/api/search?q=${query}`)
-// } else if (в личном кабинете) {
-//   fetch(`/api/search/personal?q=${query}`)
-// } else if (на странице инвентаря) {
-//   fetch(`/api/search/items?q=${query}&inventoryId=...`)
-// } else {
-//   // общий поиск
-//   fetch(`/api/search?q=${query}`)
-// }

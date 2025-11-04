@@ -1,7 +1,7 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { checkToken } from "../middleware/checkToken.js";
-import { isInventoryOwner, hasWriteAccess } from "../utils/accessUtils.js";
+import { canManagersInventory, hasWriteAccess } from "../utils/accessUtils.js";
 import { handleError } from "../utils/handleError.js";
 import { v4 as uuidv4 } from "uuid";
 import { customAlphabet } from "nanoid";
@@ -132,13 +132,17 @@ routerIdFormat.put(
   async (req, res) => {
     try {
       const { customIdFormats } = req.body;
-      const userId = req.user.userId;
 
-      const isOwner = await isInventoryOwner(req.params.inventoryId, userId);
-      if (!isOwner) {
+      const canManage = await canManagersInventory(
+        req.params.inventoryId,
+        req.user.userId,
+        req.user.isAdmin
+      );
+      if (!canManage) {
         return res.status(403).json({
           success: false,
-          message: "Только владелец инвентаря может изменять формат ID",
+          message:
+            "Только владелец  или администратор инвентаря может изменять формат ID",
         });
       }
 

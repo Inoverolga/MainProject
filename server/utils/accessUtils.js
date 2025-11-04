@@ -8,7 +8,22 @@ export const isInventoryOwner = async (inventoryId, userId) => {
   return inventory?.userId === userId;
 };
 
-export const hasWriteAccess = async (inventoryId, userId) => {
+//владелец+админ
+export const canManagersInventory = async (
+  inventoryId,
+  userId,
+  userIsAdmin = false
+) => {
+  if (userIsAdmin) return true;
+  return await isInventoryOwner(inventoryId, userId);
+};
+
+export const hasWriteAccess = async (
+  inventoryId,
+  userId,
+  userIsAdmin = false
+) => {
+  if (userIsAdmin) return true;
   if (!userId) return false;
 
   const inventory = await prisma.inventory.findUnique({
@@ -44,7 +59,8 @@ export const hasReadAccess = async (inventoryId, userId) => {
 export const getItemWithAccessCheck = async (
   itemId,
   userId,
-  requireWrite = false
+  requireWrite = false,
+  userIsAdmin = false
 ) => {
   const item = await prisma.item.findUnique({
     where: { id: itemId },
@@ -54,7 +70,7 @@ export const getItemWithAccessCheck = async (
   if (!item) throw new Error("Товар не найден");
 
   const hasAccess = requireWrite
-    ? await hasWriteAccess(item.inventoryId, userId)
+    ? await hasWriteAccess(item.inventoryId, userId, userIsAdmin)
     : await hasReadAccess(item.inventoryId, userId);
 
   if (!hasAccess) {
