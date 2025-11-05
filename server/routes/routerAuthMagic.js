@@ -116,17 +116,36 @@ routerAuthMagic.post("/magic", async (req, res) => {
 
 routerAuthMagic.get("/magic/verify", async (req, res) => {
   try {
+    console.log(
+      "🔗 Magic verify called with token:",
+      req.query.token?.substring(0, 50) + "..."
+    );
     if (!req.query.token) {
       return res.status(400).json({ error: "Отсутствует токен" });
     }
 
-    const tokenData = jwt.verify(
-      req.query.token,
-      process.env.JWT_ACCESS_SECRET
-    );
+    let tokenData;
+    try {
+      tokenData = jwt.verify(req.query.token, process.env.JWT_ACCESS_SECRET);
+      console.log("✅ Token verified for email:", tokenData.email);
+    } catch (jwtError) {
+      console.error("❌ JWT verification failed:", {
+        name: jwtError.name,
+        message: jwtError.message,
+        expiredAt: jwtError.expiredAt,
+      });
+      throw new Error("Неверный или просроченный токен");
+    }
+
+    //     const tokenData = jwt.verify(
+    //       req.query.token,
+    //       process.env.JWT_ACCESS_SECRET
+    //     );
 
     const { email, name, userPassword, isRegistration } = tokenData;
     const normalizedEmail = email.toLowerCase().trim();
+
+    console.log("👤 Processing user:", { normalizedEmail, isRegistration });
 
     let user;
 
@@ -162,7 +181,7 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
       process.env.JWT_ACCESS_SECRET,
       { expiresIn: "7d" }
     );
-
+    console.log("🎉 Auth successful, redirecting to:", FRONTEND_URL);
     res.send(`
       <html>
         <script>
