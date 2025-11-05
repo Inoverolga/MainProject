@@ -1,12 +1,13 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
-import { Resend } from "resend";
+import sgMail from "@sendgrid/mail";
 import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
 
 const routerAuthMagic = express.Router();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
@@ -45,11 +46,12 @@ routerAuthMagic.post("/magic", async (req, res) => {
 
     const magicLink = `${BACKEND_URL}/api/auth/magic/verify?token=${token}`;
 
-    // ✅ ОТПРАВКА ЧЕРЕЗ RESEND
-
-    const { data, error } = await resend.emails.send({
-      from: "onboarding@resend.dev", // Используйте верифицированный домен
-      to: email,
+    const msg = {
+      to: normalizedEmail,
+      from: {
+        email: "2021proekt2021@mail.ru",
+        name: "Inventory",
+      },
       subject: isRegistration ? "Подтверждение регистрации" : "Вход в систему",
       html: `
         <h2>${isRegistration ? "Завершение регистрации" : "Вход в систему"}</h2>
@@ -59,20 +61,26 @@ routerAuthMagic.post("/magic", async (req, res) => {
         </a>
         <p>Ссылка действительна 15 минут</p>
       `,
-    });
-    console.log("📧 Resend Response:", { data, error });
-    if (error) {
-      console.error("Resend error:", error);
+    };
+
+    try {
+      await sgMail.send(msg);
+      console.log("Email sent via SendGrid to:", normalizedEmail);
+      res.json({ success: true, message: "Ссылка отправлена" });
+    } catch (emailError) {
+      console.error("SendGrid error:", emailError);
+
+      if (emailError.response) {
+        console.error("SendGrid response error:", emailError.response.body);
+      }
       throw new Error("Ошибка отправки email");
     }
-    res.json({ success: true, message: "Ссылка отправлена" });
   } catch (error) {
     console.error("Magic link error:", error);
     res.status(500).json({ error: "Ошибка отправки" });
   }
 });
 
-// Верификация Magic Link
 routerAuthMagic.get("/magic/verify", async (req, res) => {
   try {
     if (!req.query.token) {
@@ -126,12 +134,12 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
       <html>
         <script>
           localStorage.setItem('accessToken', '${authToken}');
-         localStorage.setItem('user', ${JSON.stringify({
-           id: user.id,
-           email: user.email,
-           name: user.name,
-           isAdmin: user.isAdmin,
-         })});
+         localStorage.setItem('user', JSON.stringify({
+  id: '${user.id}',
+  email: '${user.email}',
+  name: '${user.name}',
+  isAdmin: ${user.isAdmin}
+    }));
           window.location.href = '${FRONTEND_URL}/profile';
         </script>
       </html>
