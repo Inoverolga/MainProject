@@ -6,12 +6,20 @@ import bcryptjs from "bcryptjs";
 
 const routerAuthMagic = express.Router();
 
+if (!process.env.RESEND_API_KEY) {
+  console.error("❌ RESEND_API_KEY is missing");
+}
+if (!process.env.JWT_ACCESS_SECRET) {
+  console.error("❌ JWT_ACCESS_SECRET is missing");
+}
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 routerAuthMagic.post("/magic", async (req, res) => {
   try {
+    console.log("📨 Received magic link request:", req.body);
     const { email, name, password: userPassword, isRegistration } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -44,6 +52,7 @@ routerAuthMagic.post("/magic", async (req, res) => {
     });
 
     const magicLink = `${BACKEND_URL}/api/auth/magic/verify?token=${token}`;
+    console.log("🔗 Generated magic link for:", normalizedEmail);
 
     // ✅ ОТПРАВКА ЧЕРЕЗ RESEND
 
@@ -75,6 +84,7 @@ routerAuthMagic.post("/magic", async (req, res) => {
 // Верификация Magic Link
 routerAuthMagic.get("/magic/verify", async (req, res) => {
   try {
+    console.log("🔍 Verifying magic link token");
     if (!req.query.token) {
       return res.status(400).json({ error: "Отсутствует токен" });
     }
@@ -84,6 +94,7 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
       process.env.JWT_ACCESS_SECRET
     );
 
+    console.log("✅ Token verified:", tokenData);
     const { email, name, userPassword, isRegistration } = tokenData;
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -100,6 +111,7 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
           password: hashedPassword,
         },
       });
+      console.log("✅ New user created:", user.id);
     } else {
       user = await prisma.user.findUnique({
         where: { email: normalizedEmail },
@@ -114,6 +126,7 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
           </html>
         `);
       }
+      console.log("✅ User found:", user.id);
     }
 
     const authToken = jwt.sign(
