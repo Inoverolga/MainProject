@@ -11,7 +11,7 @@ const RegistrationPage = () => {
     handleSubmit,
     formState: { errors, isValid },
     reset: resetForm,
-  } = useForm({ mode: "onChange" }); // валидация при изменении
+  } = useForm({ mode: "onChange" });
 
   const {
     trigger: magicTrigger,
@@ -37,6 +37,7 @@ const RegistrationPage = () => {
          отправлена на
          ${formData.email}`
       );
+      navigate("/");
     } catch (error) {
       if (error.response?.status === 400) {
         toast.error(

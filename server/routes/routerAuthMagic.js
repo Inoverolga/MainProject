@@ -1,19 +1,12 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
 import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
 
 const routerAuthMagic = express.Router();
 
-console.log("🔑 SendGrid API Key exists:", !!process.env.SENDGRID_API_KEY);
-console.log(
-  "🔑 Key starts with:",
-  process.env.SENDGRID_API_KEY?.substring(0, 10) + "..."
-);
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
+const resend = new Resend(process.env.RESEND_API_KEY);
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
@@ -21,12 +14,6 @@ routerAuthMagic.post("/magic", async (req, res) => {
   try {
     const { email, name, password: userPassword, isRegistration } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
-
-    console.log("📨 Magic link request:", {
-      email: normalizedEmail,
-      isRegistration,
-      name: name ? `${name.substring(0, 10)}...` : "none",
-    });
 
     if (isRegistration) {
       const checkUser = await prisma.user.findUnique({
@@ -58,14 +45,12 @@ routerAuthMagic.post("/magic", async (req, res) => {
 
     const magicLink = `${BACKEND_URL}/api/auth/magic/verify?token=${token}`;
 
-    console.log("🔗 MAGIC LINK FOR TESTING:", magicLink);
+    // ✅ ОТПРАВКА ЧЕРЕЗ RESEND
+    const adminEmail = "Kuzma-InoverOlga@resend.dev";
 
-    const msg = {
-      to: normalizedEmail,
-      from: {
-        email: "2021proekt2021@mail.ru",
-        name: "Inventory",
-      },
+    const { data, error } = await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: adminEmail,
       subject: isRegistration ? "Подтверждение регистрации" : "Вход в систему",
       html: `
         <h2>${isRegistration ? "Завершение регистрации" : "Вход в систему"}</h2>
@@ -75,77 +60,39 @@ routerAuthMagic.post("/magic", async (req, res) => {
         </a>
         <p>Ссылка действительна 15 минут</p>
       `,
-    };
-
-    console.log("📧 Attempting to send email via SendGrid...", {
-      to: msg.to,
-      from: msg.from.email,
-      subject: msg.subject,
     });
-
-    try {
-      const result = await sgMail.send(msg);
-
-      console.log("✅ SendGrid response:", {
-        statusCode: result[0]?.statusCode,
-        headers: result[0]?.headers,
-        messageId: result[0]?.headers?.["x-message-id"],
-      });
-
-      res.json({
-        success: true,
-        message: "Ссылка отправлена",
-        debugLink:
-          process.env.NODE_ENV === "development" ? magicLink : undefined,
-      });
-
-      // res.json({ success: true, message: "Ссылка отправлена" });
-    } catch (emailError) {
-      console.error("SendGrid error:", emailError);
-
-      if (emailError.response) {
-        console.error("SendGrid response error:", emailError.response.body);
-      }
+    console.log("📧 Resend Response:", { data, error });
+    if (error) {
+      console.error("Resend error:", error);
       throw new Error("Ошибка отправки email");
     }
+    res.json({
+      success: true,
+      message: `Запрос отправлен администратору (${adminEmail})`,
+      magicLink: magicLink,
+      adminEmail: adminEmail,
+      userEmail: normalizedEmail,
+    });
   } catch (error) {
     console.error("Magic link error:", error);
     res.status(500).json({ error: "Ошибка отправки" });
   }
 });
 
+// Верификация Magic Link
 routerAuthMagic.get("/magic/verify", async (req, res) => {
   try {
-    console.log(
-      "🔗 Magic verify called with token:",
-      req.query.token?.substring(0, 50) + "..."
-    );
     if (!req.query.token) {
       return res.status(400).json({ error: "Отсутствует токен" });
     }
 
-    let tokenData;
-    try {
-      tokenData = jwt.verify(req.query.token, process.env.JWT_ACCESS_SECRET);
-      console.log("✅ Token verified for email:", tokenData.email);
-    } catch (jwtError) {
-      console.error("❌ JWT verification failed:", {
-        name: jwtError.name,
-        message: jwtError.message,
-        expiredAt: jwtError.expiredAt,
-      });
-      throw new Error("Неверный или просроченный токен");
-    }
-
-    //     const tokenData = jwt.verify(
-    //       req.query.token,
-    //       process.env.JWT_ACCESS_SECRET
-    //     );
+    const tokenData = jwt.verify(
+      req.query.token,
+      process.env.JWT_ACCESS_SECRET
+    );
 
     const { email, name, userPassword, isRegistration } = tokenData;
     const normalizedEmail = email.toLowerCase().trim();
-
-    console.log("👤 Processing user:", { normalizedEmail, isRegistration });
 
     let user;
 
@@ -181,17 +128,17 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
       process.env.JWT_ACCESS_SECRET,
       { expiresIn: "7d" }
     );
-    console.log("🎉 Auth successful, redirecting to:", FRONTEND_URL);
+
     res.send(`
       <html>
         <script>
           localStorage.setItem('accessToken', '${authToken}');
-         localStorage.setItem('user', JSON.stringify({
-         id: '${user.id}',
-         email: '${user.email}',
-         name: '${user.name}',
-         isAdmin: ${user.isAdmin}
-          }));
+          localStorage.setItem('user', '${JSON.stringify({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            isAdmin: user.isAdmin,
+          }).replace(/'/g, "\\'")}');
           window.location.href = '${FRONTEND_URL}/profile';
         </script>
       </html>
