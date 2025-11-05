@@ -46,11 +46,10 @@ routerAuthMagic.post("/magic", async (req, res) => {
     const magicLink = `${BACKEND_URL}/api/auth/magic/verify?token=${token}`;
 
     // ✅ ОТПРАВКА ЧЕРЕЗ RESEND
-    const adminEmail = "Kuzma-InoverOlga@resend.dev";
 
     const { data, error } = await resend.emails.send({
       from: "onboarding@resend.dev",
-      to: adminEmail,
+      to: email,
       subject: isRegistration ? "Подтверждение регистрации" : "Вход в систему",
       html: `
         <h2>${isRegistration ? "Завершение регистрации" : "Вход в систему"}</h2>
@@ -66,13 +65,7 @@ routerAuthMagic.post("/magic", async (req, res) => {
       console.error("Resend error:", error);
       throw new Error("Ошибка отправки email");
     }
-    res.json({
-      success: true,
-      message: `Запрос отправлен администратору (${adminEmail})`,
-      magicLink: magicLink,
-      adminEmail: adminEmail,
-      userEmail: normalizedEmail,
-    });
+    res.json({ success: true, message: "Ссылка отправлена" });
   } catch (error) {
     console.error("Magic link error:", error);
     res.status(500).json({ error: "Ошибка отправки" });
@@ -137,8 +130,7 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
             id: user.id,
             email: user.email,
             name: user.name,
-            isAdmin: user.isAdmin,
-          }).replace(/'/g, "\\'")}');
+          })}');
           window.location.href = '${FRONTEND_URL}/profile';
         </script>
       </html>
