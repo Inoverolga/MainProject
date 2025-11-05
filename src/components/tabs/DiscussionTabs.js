@@ -1,10 +1,9 @@
-// components/tabs/DiscussionTab.jsx
 import { useEffect, useState, useRef } from "react";
 import Error from "../error/Error.js";
 import { useDiscussion } from "../../hooks/discussion/useDiscussion.js";
 import Spinner from "../../components/spinner/Spinner.js";
 import { toast } from "react-toastify";
-
+import { useTranslation } from "react-i18next";
 import { Card, Badge, Form, Button, Alert } from "react-bootstrap";
 
 const DiscussionTab = ({
@@ -13,22 +12,21 @@ const DiscussionTab = ({
   authUser,
   hasWriteAccess,
 }) => {
+  const { t } = useTranslation();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
 
   const { posts, isLoading, error, isSending, sendMessage, isConnected } =
     useDiscussion(inventoryId, hasWriteAccess);
 
-  // Автоскролл к новым сообщениям
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [posts]);
 
-  // Отправка сообщения
   const handleSend = async () => {
     if (!newMessage.trim()) return;
     if (!isAuthenticated || !hasWriteAccess) {
-      toast.error("Нет доступа для отправки сообщений");
+      toast.error(t("noAccessToSendMessages"));
       return;
     }
 
@@ -39,7 +37,6 @@ const DiscussionTab = ({
     setNewMessage("");
   };
 
-  // Обработка нажатия Enter
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -48,17 +45,16 @@ const DiscussionTab = ({
   };
 
   const getPostUser = (post) => {
-    return post?.user || { id: null, name: "Неизвестный пользователь" };
+    return post?.user || { id: null, name: t("unknownUser") };
   };
 
-  if (error) return <Error message={`Ошибка загрузки: ${error.message}`} />;
-
+  if (error) return <Error message={`${t("loadingError")} ${error.message}`} />;
   return (
     <div className="discussion-tab">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <Badge bg="secondary" className="rounded-pill">
           <i className="bi bi-chat-text me-1"></i>
-          {posts.length} сообщений
+          {posts.length} {t("messages")}
         </Badge>
 
         <Badge
@@ -71,7 +67,7 @@ const DiscussionTab = ({
 
       <Card className="shadow-sm">
         <Card.Header className="bg-light">
-          <Card.Title className="mb-0 h6">💬 Обсуждение</Card.Title>
+          <Card.Title className="mb-0 h6">💬 {t("discussion")}</Card.Title>
         </Card.Header>
 
         <div style={{ height: "350px", overflow: "auto" }} className="p-3">
@@ -103,7 +99,7 @@ const DiscussionTab = ({
                       <Card.Body className="p-2">
                         <div className="d-flex align-items-center mb-1">
                           <small className="fw-bold">
-                            {user?.name || "Неизвестный пользователь"}
+                            {user?.name || t("unknownUser")}
                           </small>
                           <small className="ms-2 text-body-secondary">
                             {post?.createdAt
@@ -124,16 +120,13 @@ const DiscussionTab = ({
           )}
         </div>
 
-        {/* Форма ввода */}
         {isAuthenticated && hasWriteAccess ? (
           <Card.Footer>
             <Form.Group>
               <div className="input-group">
                 <Form.Control
                   type="text"
-                  placeholder={
-                    isSending ? "Отправка..." : "Напишите сообщение..."
-                  }
+                  placeholder={isSending ? t("sending") : t("writeMessage")}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={handleKeyPress}
@@ -144,33 +137,27 @@ const DiscussionTab = ({
                   onClick={handleSend}
                   disabled={isSending || !newMessage.trim()}
                 >
-                  {isSending ? "Отправка..." : "Отправить"}
+                  {isSending ? t("sending") : t("send")}
                 </Button>
               </div>
             </Form.Group>
           </Card.Footer>
         ) : !isAuthenticated ? (
           <Card.Footer className="bg-light text-center">
-            <small className="text-muted">
-              Войдите в систему, чтобы участвовать в обсуждении
-            </small>
+            <small className="text-muted">{t("loginToParticipate")}</small>
           </Card.Footer>
         ) : (
           <Card.Footer className="bg-light text-center">
-            <small className="text-muted">
-              У вас нет прав для отправки сообщений в этом инвентаре
-            </small>
+            <small className="text-muted">{t("noPermissionToSend")}</small>
           </Card.Footer>
         )}
       </Card>
 
-      {/* Подсказка про Markdown */}
       {isAuthenticated && hasWriteAccess && (
         <Alert variant="light" className="mt-3">
           <small>
             <i className="bi bi-info-circle me-1"></i>
-            <strong>Поддерживается Markdown:</strong> **жирный** • *курсив* •
-            [ссылка](url)
+            <strong>{t("markdownSupported")}:</strong> {t("markdownExamples")}
           </small>
         </Alert>
       )}

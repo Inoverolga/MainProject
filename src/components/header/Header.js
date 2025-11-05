@@ -15,7 +15,7 @@ const Header = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  // const { t } = useTranslation();
+  const { t } = useTranslation();
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -29,7 +29,7 @@ const Header = () => {
 
   const handleAdminClick = () => {
     if (!isAdmin) {
-      toast.error("У вас нет прав администратора");
+      toast.error(t("noAdminRights"));
       return;
     }
     navigate("/");
@@ -45,7 +45,7 @@ const Header = () => {
         >
           <img
             src="/logo.png"
-            data-tooltip={"на главную страницу"}
+            data-tooltip={t("toMainPage")}
             alt="Логотип системы управления запасами"
             style={{
               height: "40px",
@@ -56,12 +56,14 @@ const Header = () => {
             }}
           />
           <span className="navbar-brand  fs-6">
-            Система управления запасами
+            {t("appName")} {/* Система управления запасами */}
           </span>
         </div>
 
         {isAuthenticated && !isHomePage ? (
-          <div className="text-muted">Здравствуйте, {authUser?.name}</div>
+          <div className="text-muted">
+            {t("hello")}, {authUser?.name}
+          </div>
         ) : null}
 
         <form
@@ -74,7 +76,7 @@ const Header = () => {
             <input
               className="form-control me-2"
               type="search"
-              placeholder="Поиск..."
+              placeholder={t("search")}
               aria-label="Search"
               value={searchTerm}
               onChange={handleSearch}
@@ -95,7 +97,7 @@ const Header = () => {
                 onClick={() => navigate("/profile")}
                 style={{ cursor: "pointer" }}
               >
-                Войти в личный кабинет
+                {t("enterPersonalAccount")}
               </button>
             )}
           {isAuthenticated && isAdmin && !isAdminPage && (
@@ -107,7 +109,7 @@ const Header = () => {
                   className="btn btn-outline-secondary btn-sm"
                   onClick={() => navigate(-1)}
                 >
-                  ← Назад
+                  ← {t("back")}
                 </button>
               ) : (
                 <div className="custom-tooltip-container">
@@ -115,7 +117,7 @@ const Header = () => {
                     className="btn btn-outline-secondary"
                     onClick={handleAdminClick}
                   >
-                    🛡️ Войти как Админ
+                    🛡️ {t("enterAsAdmin")}
                   </button>
                 </div>
               )}
@@ -127,7 +129,7 @@ const Header = () => {
               className="btn btn-outline-secondary btn-sm"
               onClick={() => navigate(-1)}
             >
-              ← Назад
+              ← {t("back")}
             </button>
           )}
 
@@ -136,14 +138,14 @@ const Header = () => {
               className="btn btn-outline-secondary"
               onClick={() => navigate("/")}
             >
-              ← Назад
+              ←{t("back")}
             </button>
           )}
 
           {isAuthenticated ? (
             <button className="btn btn-outline-secondary" onClick={logout}>
               <i className="bi bi-box-arrow-right me-2"></i>
-              Выйти
+              {t("logout")}
             </button>
           ) : null}
         </div>

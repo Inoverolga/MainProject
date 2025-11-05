@@ -1,6 +1,5 @@
 import { toast } from "react-toastify";
 import useSWRMutation from "swr/mutation";
-import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {

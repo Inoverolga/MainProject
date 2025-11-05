@@ -3,6 +3,7 @@ import { ruRU } from "@mui/x-data-grid/locales";
 import { useContext } from "react";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const CustomColumnMenu = (props) => (
   <GridColumnMenu
@@ -27,6 +28,10 @@ const MyInventoriesTable = ({
   selectedRows,
   ...props
 }) => {
+  const { t, i18n } = useTranslation();
+  const getGridLocale = () => {
+    return i18n.language === "ru" ? ruRU : undefined;
+  };
   const { isAuthenticated } = useContext(AuthContext);
   return (
     <div style={{ width: "100%" }}>
@@ -37,12 +42,12 @@ const MyInventoriesTable = ({
           const isLikesClick = event.target.closest('[data-field="likes"]');
 
           if (!isAuthenticated && !hasWriteAccess) {
-            toast.info("🔒 Для просмотра товаров необходимо войти в систему");
+            toast.info(t("loginToViewItems"));
             return false;
           }
 
           if (!isNameClick && !isLikesClick) {
-            toast.info("Выберите элемент для редактирования");
+            toast.info(t("selectItemToEdit"));
             onEdit([]);
           }
           return false;
@@ -65,7 +70,9 @@ const MyInventoriesTable = ({
         slots={{
           columnMenu: CustomColumnMenu,
         }}
-        localeText={ruRU.components.MuiDataGrid.defaultProps.localeText}
+        localeText={
+          getGridLocale()?.components?.MuiDataGrid?.defaultProps?.localeText
+        }
         sx={{
           border: 0,
 

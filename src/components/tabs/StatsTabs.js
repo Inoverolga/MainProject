@@ -3,8 +3,10 @@ import { Card, Row, Col, Badge, ProgressBar } from "react-bootstrap";
 import { fetchStatsInventory } from "../../service/api.js";
 import Spinner from "../../components/spinner/Spinner.js";
 import Error from "../../components/error/Error.js";
+import { useTranslation } from "react-i18next";
 
 const StatsTabs = ({ inventoryId }) => {
+  const { t } = useTranslation();
   const {
     data: dataStats,
     error,
@@ -18,7 +20,7 @@ const StatsTabs = ({ inventoryId }) => {
   if (isLoading) return <Spinner />;
   if (error) return <Error message={error.message} />;
   if (!dataStats)
-    return <div className="text-center text-muted py-4">Нет данных</div>;
+    return <div className="text-center text-muted py-4">{t("noData")}</div>;
 
   const renderFieldCard = (fieldData, fieldKey) => (
     <Col xs={12} sm={6} md={4} lg={3} key={fieldKey} className="mb-4">
@@ -30,7 +32,7 @@ const StatsTabs = ({ inventoryId }) => {
 
           <div className="mb-3">
             <div className="d-flex justify-content-between mb-1">
-              <small className="text-muted">Заполнено:</small>
+              <small className="text-muted">{t("filled")}:</small>
               <small className="text-muted">
                 {fieldData.filledPercentage}%
               </small>
@@ -39,22 +41,22 @@ const StatsTabs = ({ inventoryId }) => {
           </div>
 
           <div className="d-flex justify-content-between mb-2">
-            <span className="text-muted">Значений:</span>
+            <span className="text-muted">{t("values")}:</span>
             <Badge bg="light" text="dark">
-              {fieldData.count} из {dataStats.itemsCount}
+              {fieldData.count} {t("of")} {dataStats.itemsCount}
             </Badge>
           </div>
 
           {fieldData.average && (
             <div className="d-flex justify-content-between mb-2">
-              <span className="text-muted">Среднее:</span>
+              <span className="text-muted">{t("average")}:</span>
               <strong>{fieldData.average}</strong>
             </div>
           )}
 
           {fieldData.uniqueCount && (
             <div className="d-flex justify-content-between mb-2">
-              <span className="text-muted">Уникальных:</span>
+              <span className="text-muted">{t("unique")}:</span>
               <strong>{fieldData.uniqueCount}</strong>
             </div>
           )}
@@ -62,7 +64,7 @@ const StatsTabs = ({ inventoryId }) => {
           {fieldData.truePercentage !== undefined && (
             <div className="mt-auto">
               <div className="d-flex justify-content-between">
-                <small className="text-muted">Да:</small>
+                <small className="text-muted">{t("yes")}:</small>
                 <small className="text-muted">
                   {fieldData.truePercentage}%
                 </small>
@@ -74,7 +76,7 @@ const StatsTabs = ({ inventoryId }) => {
               />
 
               <div className="d-flex justify-content-between">
-                <small className="text-muted">Нет:</small>
+                <small className="text-muted">{t("no")}:</small>
                 <small className="text-muted">
                   {fieldData.falsePercentage}%
                 </small>
@@ -126,25 +128,25 @@ const StatsTabs = ({ inventoryId }) => {
                   <div className="display-4 fw-bold text-dark">
                     {dataStats.itemsCount}
                   </div>
-                  <p className="mb-0 text-muted">товаров</p>
+                  <p className="mb-0 text-muted">{t("items")}</p>
                 </div>
                 <div className="col-md-4">
                   <div className="display-4 fw-bold text-dark">
                     {dataStats.totalFields}
                   </div>
-                  <p className="mb-0 text-muted">полей</p>
+                  <p className="mb-0 text-muted">{t("fields")}</p>
                 </div>
                 <div className="col-md-4">
                   <div className="display-4 fw-bold text-dark">
                     {dataStats.overallCompletion}%
                   </div>
-                  <p className="mb-0 text-muted">заполнено</p>
+                  <p className="mb-0 text-muted">{t("completed")}</p>
                 </div>
               </div>
 
               <div className="mt-3">
                 <small className="text-muted">
-                  Создатель: {dataStats.creator}
+                  {t("creator")}: {dataStats.creator}
                 </small>
               </div>
             </Card.Body>
@@ -160,10 +162,8 @@ const StatsTabs = ({ inventoryId }) => {
       {!dataStats.fieldTypes && (
         <Card className="border-0 text-center bg-light">
           <Card.Body className="py-5">
-            <h5 className="text-muted">Нет данных для отображения</h5>
-            <p className="text-muted mb-0">
-              Добавьте товары с заполненными полями
-            </p>
+            <h5 className="text-muted">{t("noDataToDisplay")}</h5>
+            <p className="text-muted mb-0">{t("addItemsWithFieldsHint")}</p>
           </Card.Body>
         </Card>
       )}

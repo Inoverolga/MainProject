@@ -1,5 +1,6 @@
 import { Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const ItemToolbar = ({
   selectedRows,
@@ -8,9 +9,12 @@ const ItemToolbar = ({
   hasWriteAccess,
   inventoryId,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="mb-3 p-3 bg-light rounded d-flex justify-content-between align-items-center">
-      <span className="text-muted">Выбрано: {selectedRows.length}</span>
+      <span className="text-muted">
+        {t("selected")}: {selectedRows.length}
+      </span>
       <div className="d-flex gap-2">
         <Button
           variant="outline-secondary"
@@ -19,7 +23,7 @@ const ItemToolbar = ({
           onClick={onEdit}
           disabled={selectedRows.length === 0 || !hasWriteAccess}
         >
-          ✏️ Редактировать
+          ✏️ {t("edit")}
         </Button>
         <Button
           variant="outline-secondary"
@@ -28,7 +32,7 @@ const ItemToolbar = ({
           onClick={() => onDelete(selectedRows)}
           disabled={selectedRows.length === 0 || !hasWriteAccess}
         >
-          🗑️ Удалить выбранные
+          🗑️ {t("deleteSelected")}
         </Button>
         <Button
           as={Link}
@@ -38,7 +42,7 @@ const ItemToolbar = ({
           size="sm"
         >
           <i className="bi bi-plus-circle me-1"></i>
-          Добавить товар
+          {t("addItem")}
         </Button>
       </div>
     </div>

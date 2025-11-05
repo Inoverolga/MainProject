@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button, Card, Form, Row, Col, Badge } from "react-bootstrap";
 import { useItemFieldOperations } from "../../hooks/itemsWithFields/useItemFieldOperations.js";
 import EditFieldModal from "../modal/EditFieldModal";
+import { useTranslation } from "react-i18next";
 
 const FIELD_TYPES = {
   STRING: { label: "🔤 Текст", icon: "🔤" },
@@ -12,6 +13,7 @@ const FIELD_TYPES = {
 };
 
 const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
+  const { t } = useTranslation();
   const [editingField, setEditingField] = useState(null);
 
   const {
@@ -54,7 +56,7 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
     return (
       <Card>
         <Card.Body>
-          <h6>Поля инвентаря</h6>
+          <h6>{t("inventoryFields")}</h6>
           <div>
             {fields.map((field) => (
               <Badge
@@ -75,13 +77,13 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
   return (
     <Card>
       <Card.Header>
-        <h5 className="mb-0">🛠️ Управление полями товаров</h5>
+        <h5 className="mb-0">🛠️ {t("manageItemFields")}</h5>
       </Card.Header>
       <Card.Body>
         <Form onSubmit={handleSubmit(onSubmit)} className="mb-4">
           <Row className="g-2 align-items-end">
             <Col md={3}>
-              <Form.Label>Тип поля</Form.Label>
+              <Form.Label>{t("fieldType")}</Form.Label>
               <Form.Select {...register("fieldType")}>
                 {Object.entries(FIELD_TYPES).map(([key, config]) => (
                   <option key={key} value={key}>
@@ -92,13 +94,13 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
             </Col>
 
             <Col md={3}>
-              <Form.Label>Название *</Form.Label>
+              <Form.Label>{t("name")} *</Form.Label>
               <Form.Control
                 {...register("name", {
-                  required: "Название обязательно",
-                  minLength: { value: 2, message: "Минимум 2 символа" },
+                  required: t("nameRequired"),
+                  minLength: { value: 2, message: t("minLength2") },
                 })}
-                placeholder="Модель, Цена..."
+                placeholder={t("fieldNamePlaceholder")}
                 isInvalid={!!errors.name}
               />
               <Form.Control.Feedback type="invalid">
@@ -107,10 +109,10 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
             </Col>
 
             <Col md={4}>
-              <Form.Label>Описание</Form.Label>
+              <Form.Label>{t("description")}</Form.Label>
               <Form.Control
                 {...register("description")}
-                placeholder="Подсказка для пользователей..."
+                placeholder={t("fieldDescriptionPlaceholder")}
               />
             </Col>
 
@@ -120,7 +122,7 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
                 variant="secondary"
                 disabled={!isValid || isMutating}
               >
-                Добавить поле
+                {t("addField")}
               </Button>
             </Col>
           </Row>
@@ -129,21 +131,20 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
             <Col>
               <Form.Check
                 type="checkbox"
-                label="Показывать в таблице"
+                label={t("showInTable")}
                 {...register("isVisibleInTable")}
               />
             </Col>
             <Col>
               <Form.Check
                 type="checkbox"
-                label="Обязательное поле"
+                label={t("requiredField")}
                 {...register("isRequired")}
               />
             </Col>
           </Row>
         </Form>
 
-        {/* Список полей */}
         <div className="border rounded">
           {fields.map((field) => (
             <div key={field.id} className="p-3 border-bottom">
@@ -155,10 +156,10 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
                       {FIELD_TYPES[field.fieldType]?.label}
                     </Badge>
                     {field.isVisibleInTable && (
-                      <Badge bg="secondary">В таблице</Badge>
+                      <Badge bg="secondary">{t("inTable")}</Badge>
                     )}
                     {field.isRequired && (
-                      <Badge bg="secondary">Обязательное</Badge>
+                      <Badge bg="secondary">{t("required")}</Badge>
                     )}
                   </div>
                   {field.description && (
@@ -174,7 +175,7 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
                     onClick={() => setEditingField(field)}
                     disabled={isMutating}
                   >
-                    ✏️ Изменить
+                    ✏️ {t("edit")}
                   </Button>
                   <Button
                     variant="outline-danger"
@@ -183,7 +184,7 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
                     onClick={() => handleDeleteField(field.id)}
                     disabled={isMutating}
                   >
-                    🗑️ Удалить
+                    🗑️ {t("delete")}
                   </Button>
                 </div>
               </div>
@@ -193,8 +194,8 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
 
         {fields.length === 0 && (
           <div className="text-center text-muted py-4">
-            <p>Поля не добавлены</p>
-            <small>Добавьте поля для описания характеристик товаров</small>
+            <p>{t("noFieldsAdded")}</p>
+            <small>{t("addFieldsHint")}</small>
           </div>
         )}
 

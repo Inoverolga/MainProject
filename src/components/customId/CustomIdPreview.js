@@ -8,8 +8,10 @@ import {
 } from "@mui/material";
 import { useCustomIdFormat } from "../../hooks/customId/useCustomId.js";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 const CustomIdPreview = ({ formats, inventoryId }) => {
+  const { t } = useTranslation();
   const [previewId, setPreviewId] = useState("");
 
   const { generateFormatPreview, isGeneratingPreview } =
@@ -21,7 +23,7 @@ const CustomIdPreview = ({ formats, inventoryId }) => {
       const result = await generateFormatPreview(formats);
       setPreviewId(result || "");
     } catch (error) {
-      toast.error("Не удалось сгенерировать предпросмотр ID");
+      toast.error(t("previewGenerationError"));
     }
   };
 
@@ -30,7 +32,7 @@ const CustomIdPreview = ({ formats, inventoryId }) => {
   return (
     <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
       <Typography variant="h6" gutterBottom>
-        Предпросмотр ID
+        {t("idPreview")}
       </Typography>
 
       <Box display="flex" alignItems="center" gap={2} sx={{ mb: 2 }}>
@@ -40,7 +42,7 @@ const CustomIdPreview = ({ formats, inventoryId }) => {
           disabled={isGeneratingPreview || formats.length === 0}
           startIcon={isGeneratingPreview && <CircularProgress size={16} />}
         >
-          {isGeneratingPreview ? "Генерация..." : "Сгенерировать preview"}
+          {isGeneratingPreview ? t("generating") : t("generatePreview")}
         </Button>
       </Box>
 
@@ -57,7 +59,7 @@ const CustomIdPreview = ({ formats, inventoryId }) => {
             flex: 1,
           }}
         >
-          {previewId || "Нажмите кнопку для генерации preview"}
+          {previewId || t("clickToGeneratePreview")}
         </Typography>
       </Box>
     </Paper>

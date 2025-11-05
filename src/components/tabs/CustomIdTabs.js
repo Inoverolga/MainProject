@@ -31,8 +31,10 @@ import CustomIdPreview from "../customId/CustomIdPreview.js";
 import Spinner from "../spinner/Spinner.js";
 import { toast } from "react-toastify";
 import { CUSTOM_ID_PART_LABELS } from "../../constants/customIdFormat.js";
+import { useTranslation } from "react-i18next";
 
 const CustomIdTabs = ({ inventoryId }) => {
+  const { t } = useTranslation();
   const [selectValue, setSelectValue] = useState("");
   const {
     control,
@@ -73,7 +75,6 @@ const CustomIdTabs = ({ inventoryId }) => {
     }
   }, [formatData, setValue]);
 
-  // Добавление элемента
   const addPartOfFormat = (type) => {
     const basePart = {
       id: `part-${Date.now()}-${Math.random()}`,
@@ -96,14 +97,12 @@ const CustomIdTabs = ({ inventoryId }) => {
     append(newPart);
   };
 
-  // Обработчик выбора типа
   const handleTypeSelect = (event) => {
     const type = event.target.value;
     setSelectValue(type);
     addPartOfFormat(type);
   };
 
-  // Обработчик drag-and-drop
   const handleDragEnd = (event) => {
     const { active, over } = event;
 
@@ -114,13 +113,12 @@ const CustomIdTabs = ({ inventoryId }) => {
     }
   };
 
-  // Обработчик сохранения
   const onSubmit = async (data) => {
     try {
       await saveFormat(data.parts);
-      toast.success("Формат ID успешно сохранен");
+      toast.success(t("idFormatSaved"));
     } catch (error) {
-      toast.error(error.message || "Ошибка сохранения формата ID");
+      toast.error(error.message || t("idFormatSaveError"));
     }
   };
 
@@ -129,19 +127,18 @@ const CustomIdTabs = ({ inventoryId }) => {
   return (
     <Paper elevation={0} sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom fontWeight="bold">
-        Настройка формата ID
+        {t("idFormatSettings")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Создайте пользовательский формат идентификаторов для товаров в этом
-        инвентаре
+        {t("idFormatDescription")}
       </Typography>
 
       <Box component="form" onSubmit={handleSubmit(onSubmit)}>
         <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel>Добавить элемент ID</InputLabel>
+          <InputLabel>{t("addIdElement")}</InputLabel>
           <Select
             value={selectValue}
-            label="Добавить элемент ID"
+            label={t("addIdElement")}
             onChange={handleTypeSelect}
             startAdornment={<Add sx={{ mr: 1, color: "action.active" }} />}
           >
@@ -156,7 +153,7 @@ const CustomIdTabs = ({ inventoryId }) => {
         {fields.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle1" gutterBottom>
-              Элементы формата (перетаскивайте для изменения порядка):
+              {t("formatElements")}
             </Typography>
             <DndContext
               sensors={sensors}
@@ -194,7 +191,7 @@ const CustomIdTabs = ({ inventoryId }) => {
           sx={{ mt: 3 }}
           startIcon={isSaving && <CircularProgress size={16} />}
         >
-          {isSaving ? "Сохранение..." : "Сохранить формат ID"}
+          {isSaving ? t("saving") : t("saveIdFormat")}
         </Button>
       </Box>
     </Paper>

@@ -14,13 +14,15 @@ import {
 } from "../../service/api";
 import { CustomFieldsForm } from "./CustomFieldsForm";
 import { useCustomIdFormat } from "../../hooks/customId/useCustomId.js";
+import { useTranslation } from "react-i18next";
 
 const UniversalItemForm = ({ mode = "create" }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id: urlInventoryId, itemId: urlItemId } = useParams();
   const [customFields, setCustomFields] = useState({});
-  const initialDataRef = useRef(null); //хранит начальные данные для сравнения
-  const formInitializedRef = useRef(false); //отслеживает факт инициализации формы
+  const initialDataRef = useRef(null);
+  const formInitializedRef = useRef(false);
 
   const { data: itemData } = useSWR(
     mode === "edit" && urlItemId ? `/users/items-edit/${urlItemId}` : null,
@@ -66,7 +68,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid, isDirty, isValidating },
+    formState: { errors, isDirty },
     reset,
     setValue,
     watch,
@@ -186,7 +188,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
       if (mode === "create") {
         const result = await handleCreate(dataWithTags, inventoryId);
         if (result) {
-          toast.success("Товар успешно создан!");
+          toast.success(t("itemCreated"));
           setSelectedTags([]);
           setCustomFields([]);
           reset();
@@ -194,18 +196,16 @@ const UniversalItemForm = ({ mode = "create" }) => {
       } else {
         const success = await handleUpdate(urlItemId, dataWithTags);
         if (success) {
-          toast.success("Товар успешно обновлен!");
+          toast.success(t("itemUpdated"));
           navigate(`/inventory/${inventoryId}`);
         }
       }
     } catch (error) {
       if (error?.response?.status === 409) {
-        toast.error(
-          "Данные были изменены другим пользователем. Пожалуйста, обновите страницу."
-        );
+        toast.error(t("dataChangedByOther"));
       } else {
         toast.error(
-          `Ошибка ${mode === "create" ? "создания" : "обновления"} товара`
+          t(mode === "create" ? "createItemError" : "updateItemError")
         );
       }
     }
@@ -216,21 +216,19 @@ const UniversalItemForm = ({ mode = "create" }) => {
   return (
     <div className="container mt-4">
       <h2 className="mb-4">
-        {mode === "create" ? "📦 Создание товара" : "✏️ Редактирование товара"}
+        {mode === "create" ? t("createItem") : t("editItem")}
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-3">
-          <label className="form-label">ID товара</label>
+          <label className="form-label">{t("itemId")}</label>
           <div className="input-group">
             <input
               type="text"
               className="form-control"
               value={customIdValue || ""}
               placeholder={
-                isGeneratingItemId
-                  ? "Генерация ID..."
-                  : "ID будет сгенерирован автоматически"
+                isGeneratingItemId ? t("generatingId") : t("idWillBeGenerated")
               }
               readOnly
             />
@@ -250,21 +248,19 @@ const UniversalItemForm = ({ mode = "create" }) => {
             ) : null}
           </div>
           <div className="form-text">
-            {mode === "create"
-              ? "ID генерируется автоматически согласно настройкам формата"
-              : "Кастомный ID товара"}
+            {mode === "create" ? t("idGenerationHint") : t("customIdHint")}
           </div>
         </div>
         <div className="mb-3">
-          <label className="form-label">Название товара *</label>
+          <label className="form-label">{t("itemName")} *</label>
           <input
             type="text"
             className={`form-control ${errors.name ? "is-invalid" : ""}`}
-            placeholder="Введите название товара"
+            placeholder={t("enterItemName")}
             {...register("name", {
-              required: "Название обязательно",
-              minLength: { value: 2, message: "Минимум 2 символа" },
-              maxLength: { value: 200, message: "Максимум 200 символов" },
+              required: t("nameRequired"),
+              minLength: { value: 2, message: t("minLength2") },
+              maxLength: { value: 200, message: t("maxLength200") },
             })}
           />
           {errors.name && (
@@ -273,15 +269,15 @@ const UniversalItemForm = ({ mode = "create" }) => {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Описание *</label>
+          <label className="form-label">{t("description")} *</label>
           <textarea
             className={`form-control ${errors.description ? "is-invalid" : ""}`}
-            placeholder="Описание товара..."
+            placeholder={t("itemDescription")}
             rows={4}
             {...register("description", {
-              required: "Описание обязательно",
-              minLength: { value: 10, message: "Минимум 10 символов" },
-              maxLength: { value: 1000, message: "Максимум 1000 символов" },
+              required: t("descriptionRequired"),
+              minLength: { value: 10, message: t("minLength10") },
+              maxLength: { value: 1000, message: t("maxLength1000") },
             })}
           />
           {errors.description && (
@@ -290,15 +286,15 @@ const UniversalItemForm = ({ mode = "create" }) => {
         </div>
 
         <div className="mb-4">
-          <label className="form-label">Теги</label>
+          <label className="form-label">{t("tags")}</label>
           <CreatableSelect
             isMulti
             options={tagOptions}
             value={selectedTags}
             onChange={handleTagsChange}
             isLoading={isSearching}
-            placeholder={isSearching ? "Поиск тегов..." : "Выберите теги..."}
-            formatCreateLabel={(inputValue) => `Создать "${inputValue}"`}
+            placeholder={isSearching ? t("searchTags") : t("selectTags")}
+            formatCreateLabel={(inputValue) => t("createTag", { inputValue })}
             onInputChange={setTagSearchInput}
             onCreateOption={(inputValue) => {
               setSelectedTags((prev) => [
@@ -312,10 +308,10 @@ const UniversalItemForm = ({ mode = "create" }) => {
             }
             noOptionsMessage={({ inputValue }) =>
               inputValue
-                ? `Тег "${inputValue}" не найден. Нажмите Enter чтобы создать.`
-                : "Введите текст для поиска тегов"
+                ? t("tagNotFound", { inputValue })
+                : t("enterToSearchTags")
             }
-            loadingMessage={() => "Поиск тегов..."}
+            loadingMessage={() => t("searchingTags")}
           />
         </div>
         <div className="mb-3">
@@ -334,11 +330,11 @@ const UniversalItemForm = ({ mode = "create" }) => {
           >
             {isMutating
               ? mode === "create"
-                ? "Создание..."
-                : "Сохранение..."
+                ? t("creating")
+                : t("saving")
               : mode === "create"
-              ? "Создать товар"
-              : "Сохранить изменения"}
+              ? t("createItemButton")
+              : t("saveChanges")}
           </button>
           <button
             type="button"
@@ -346,7 +342,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
             disabled={isMutating}
             onClick={() => navigate(`/inventory/${inventoryId}`)}
           >
-            Вернуться на страницу инвентаря
+            {t("backToInventory")}
           </button>
         </div>
       </form>

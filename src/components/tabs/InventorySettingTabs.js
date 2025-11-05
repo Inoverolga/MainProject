@@ -1,6 +1,7 @@
 import { Card } from "react-bootstrap";
 import UniversalInventoryForm from "../form/UniversalInventoryForm";
 import { useInventoryOperations } from "../../hooks/inventories/useInventoryOperations";
+import { useTranslation } from "react-i18next";
 
 const InventorySettingsTabs = ({
   inventoryId,
@@ -8,6 +9,7 @@ const InventorySettingsTabs = ({
   mutateInventory,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
   const { handleUpdate } = useInventoryOperations(null, null, mutateInventory);
 
   const handleSaveWithRedirect = async (inventoryId, formData) => {
@@ -21,9 +23,9 @@ const InventorySettingsTabs = ({
   return (
     <Card className="border-0 shadow-sm">
       <Card.Body>
-        <h5>⚙️ Настройки инвентаря</h5>
+        <h5>⚙️ {t("inventorySettings")}</h5>
         <UniversalInventoryForm
-          key={inventory?.version} //чтобы  обновлялись версии
+          key={inventory?.version}
           mode="edit"
           inventoryId={inventoryId}
           inventory={inventory}

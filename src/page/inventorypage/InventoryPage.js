@@ -20,8 +20,10 @@ import AccessTab from "../../components/tabs/AccessTabs.js";
 import DiscussionTab from "../../components/tabs/DiscussionTabs.js";
 import CustomIdTabs from "../../components/tabs/CustomIdTabs.js";
 import StatsTabs from "../../components/tabs/StatsTabs.js";
+import { useTranslation } from "react-i18next";
 
 const InventoryPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
 
   const { isAuthenticated, authUser, isAdmin } = useContext(AuthContext);
@@ -61,7 +63,6 @@ const InventoryPage = () => {
 
   const inventory = dataInventory?.data;
   const items = searchTerm ? searchData?.data || [] : inventory?.items || [];
-  //const items = inventory?.items || [];
   const isOwner = inventory?.userId === authUser?.id;
   const hasWriteAccess = Boolean(isOwner || inventory?.canWrite);
   const hasTotalAccess = isOwner || isAdmin;
@@ -78,10 +79,10 @@ const InventoryPage = () => {
   if (inventoryLoading) return <Spinner />;
 
   if (inventoryError) {
-    return <Error message={`Ошибка загрузки: ${inventoryError.message}`} />;
+    return <Error message={`${t("loadingError")} ${inventoryError.message}`} />;
   }
 
-  if (!inventory) return <div>Инвентарь не найден</div>;
+  if (!inventory) return <div>{t("inventoryNotFound")}</div>;
 
   return (
     <Container className="py-4">
@@ -92,27 +93,27 @@ const InventoryPage = () => {
             onClick={() => navigate("/profile")}
           >
             <i className="bi bi-arrow-left me-1"></i>
-            Назад
+            {t("back")}
           </button>
         )}
       </div>
 
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="fs-4 mb-0 text-dark fw-bold">
-          {inventory.name || "Новый инвентарь"}
+          {inventory.name || t("newInventory")}
         </h1>
       </div>
 
       <Card className="border-0 shadow-sm mb-4">
         <Card.Body className="p-4">
           <Card.Title className="text-muted mb-3 small text-uppercase fw-semibold">
-            📋 Описание инвентаря
+            📋 {t("inventoryDescriptionTitle")}
           </Card.Title>
           <div className="markdown-content" style={{ lineHeight: "1.6" }}>
             {inventory.description ? (
               <ReactMarkdown>{inventory.description}</ReactMarkdown>
             ) : (
-              <p className="text-muted fst-italic mb-0">Описание отсутствует</p>
+              <p className="text-muted fst-italic mb-0">{t("noDescription")}</p>
             )}
           </div>
         </Card.Body>
@@ -124,7 +125,7 @@ const InventoryPage = () => {
         activeKey={activeTab}
         onSelect={setActiveTab}
       >
-        <Tab eventKey="items" title="🗃️ Товары">
+        <Tab eventKey="items" title={`🗃️ ${t("items")}`}>
           <ItemsTabs
             inventory={inventory}
             data={items}
@@ -137,7 +138,7 @@ const InventoryPage = () => {
           />
         </Tab>
 
-        <Tab eventKey="discussion" title="💬 Обсуждение">
+        <Tab eventKey="discussion" title={`💬 ${t("discussion")}`}>
           <DiscussionTab
             inventoryId={id}
             authUser={authUser}
@@ -147,7 +148,7 @@ const InventoryPage = () => {
         </Tab>
 
         {hasTotalAccess && (
-          <Tab eventKey="settings" title="⚙️ Настройки">
+          <Tab eventKey="settings" title={`⚙️ ${t("settings")}`}>
             <InventorySettingsTabs
               inventoryId={id}
               inventory={inventory}
@@ -158,7 +159,7 @@ const InventoryPage = () => {
         )}
 
         {hasTotalAccess && (
-          <Tab eventKey="fields" title="🛠️ Поля">
+          <Tab eventKey="fields" title={`🛠️ ${t("fields")}`}>
             <FieldSettingTabs
               inventoryId={id}
               fields={fields}
@@ -169,19 +170,19 @@ const InventoryPage = () => {
         )}
 
         {hasTotalAccess && (
-          <Tab eventKey="custom-id" title="#️⃣ Формат ID">
+          <Tab eventKey="custom-id" title={`#️⃣ ${t("idFormat")}`}>
             <CustomIdTabs inventoryId={id} />
           </Tab>
         )}
 
         {hasTotalAccess && (
-          <Tab eventKey="stats" title="📈 Статистика">
+          <Tab eventKey="stats" title={`📈 ${t("statistics")}`}>
             <StatsTabs inventoryId={id} isOwner={isOwner} />
           </Tab>
         )}
 
         {hasTotalAccess && (
-          <Tab eventKey="access" title="👥 Доступ">
+          <Tab eventKey="access" title={`👥 ${t("Access")}`}>
             <AccessTab inventoryId={id} isOwner={isOwner} />
           </Tab>
         )}

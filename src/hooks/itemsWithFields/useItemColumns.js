@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import LikeButton from "../../components/likes/LikesButton";
+import { useTranslation } from "react-i18next";
 
 export const useItemColumns = (
   fields = [],
@@ -9,6 +10,7 @@ export const useItemColumns = (
   getItemLikeData,
   toggleLike
 ) => {
+  const { t } = useTranslation();
   return useMemo(() => {
     const baseColumns = [
       {
@@ -24,7 +26,7 @@ export const useItemColumns = (
 
       {
         field: "name",
-        headerName: "Название",
+        headerName: t("name"),
         width: 200,
         flex: 1,
         headerAlign: "center",
@@ -46,7 +48,7 @@ export const useItemColumns = (
       },
       {
         field: "likes",
-        headerName: "Лайки",
+        headerName: t("likes"),
         width: 120,
         headerAlign: "center",
         align: "center",
@@ -73,7 +75,7 @@ export const useItemColumns = (
 
       {
         field: "description",
-        headerName: "Описание",
+        headerName: t("description"),
         width: 250,
         flex: 1,
         headerAlign: "center",
@@ -81,7 +83,7 @@ export const useItemColumns = (
       },
       {
         field: "tags",
-        headerName: "Теги",
+        headerName: t("tags"),
         flex: 1,
         minWidth: 150,
         headerAlign: "center",
@@ -123,5 +125,5 @@ export const useItemColumns = (
       }));
 
     return [...baseColumns, ...customColumns];
-  }, [fields, isAuthenticated, inventoryId, getItemLikeData, toggleLike]);
+  }, [fields, isAuthenticated, inventoryId, getItemLikeData, toggleLike, t]);
 };

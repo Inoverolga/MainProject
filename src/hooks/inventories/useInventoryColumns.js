@@ -1,12 +1,14 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export const useInventoryColumns = (data = [], type = "my") => {
+  const { t } = useTranslation();
   return useMemo(() => {
     const baseColumns = [
       {
         field: "name",
-        headerName: "Название",
+        headerName: t("inventoryName"),
         width: 250,
         flex: 1,
         renderCell: (params) => (
@@ -26,7 +28,7 @@ export const useInventoryColumns = (data = [], type = "my") => {
 
     baseColumns.push({
       field: "itemCount",
-      headerName: "Товаров",
+      headerName: t("itemsCount"),
       width: 120,
       align: "center",
       headerAlign: "center",
@@ -35,7 +37,7 @@ export const useInventoryColumns = (data = [], type = "my") => {
 
     baseColumns.push({
       field: "createdAt",
-      headerName: "Дата создания",
+      headerName: t("createdAt"),
       width: 150,
       align: "center",
       headerAlign: "center",
@@ -46,7 +48,7 @@ export const useInventoryColumns = (data = [], type = "my") => {
     if (type === "accessible") {
       baseColumns.splice(1, 0, {
         field: "owner",
-        headerName: "Создатель",
+        headerName: t("creator"),
         align: "center",
         headerAlign: "center",
         width: 150,
@@ -55,5 +57,5 @@ export const useInventoryColumns = (data = [], type = "my") => {
     }
 
     return baseColumns;
-  }, [data, type]);
+  }, [data, type, t]);
 };

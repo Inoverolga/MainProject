@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 const AdminUsersTable = ({
   users,
   currentUser,
@@ -5,6 +7,7 @@ const AdminUsersTable = ({
   onAdmin,
   onDelete,
 }) => {
+  const { t } = useTranslation();
   const handleAction = (type, user) => {
     switch (type) {
       case "block":
@@ -25,22 +28,22 @@ const AdminUsersTable = ({
         <thead>
           <tr>
             <th width="25%" className="text-dark">
-              Email
+              {t("email")}
             </th>
             <th width="15%" className="text-dark">
-              Имя
+              {t("name")}
             </th>
             <th width="10%" className="text-dark">
-              Админ
+              {t("admin")}
             </th>
             <th width="15%" className="text-dark">
-              Статус
+              {t("status")}
             </th>
             <th width="15%" className="text-dark">
-              Регистрация
+              {t("registration")}
             </th>
             <th width="20%" className="text-dark">
-              Действия
+              {t("actions")}
             </th>
           </tr>
         </thead>
@@ -51,12 +54,12 @@ const AdminUsersTable = ({
               <td className="text-secondary">{user.name}</td>
               <td>
                 <span className="badge bg-light text-secondary border">
-                  {user.isAdmin ? "Да" : "Нет"}
+                  {user.isAdmin ? t("yes") : t("no")}
                 </span>
               </td>
               <td>
                 <span className="badge bg-light text-secondary border">
-                  {user.isBlocked ? "Заблокирован" : "Активен"}
+                  {user.isBlocked ? t("blocked") : t("active")}
                 </span>
               </td>
               <td className="text-secondary">
@@ -69,7 +72,7 @@ const AdminUsersTable = ({
                   <button
                     className="btn btn-sm btn-outline-secondary"
                     onClick={() => handleAction("block", user)}
-                    title={user.isBlocked ? "Разблокировать" : "Заблокировать"}
+                    title={user.isBlocked ? t("unblock") : t("block")}
                   >
                     {user.isBlocked ? "✓" : "🚫"}
                   </button>
@@ -77,7 +80,7 @@ const AdminUsersTable = ({
                   <button
                     className="btn btn-sm btn-outline-secondary"
                     onClick={() => handleAction("admin", user)}
-                    title={user.isAdmin ? "Снять права" : "Сделать админом"}
+                    title={user.isAdmin ? t("removeAdmin") : t("makeAdmin")}
                   >
                     ⚙️
                   </button>
@@ -86,7 +89,7 @@ const AdminUsersTable = ({
                     className="btn btn-sm btn-outline-secondary"
                     onClick={() => handleAction("delete", user)}
                     disabled={user.id === currentUser?.id}
-                    title="Удалить"
+                    title={t("delete")}
                   >
                     🗑️
                   </button>

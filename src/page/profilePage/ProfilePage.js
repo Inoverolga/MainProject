@@ -13,8 +13,10 @@ import { useInventoryColumns } from "../../hooks/inventories/useInventoryColumns
 import { SearchContext } from "../../contexts/SearchContext.js";
 import { InventorySection } from "../../components/table/ToolbarForProfilePage.js";
 import { useInventoryOperations } from "../../hooks/inventories/useInventoryOperations.js";
+import { useTranslation } from "react-i18next";
 
 const ProfilePage = () => {
+  const { t } = useTranslation();
   const { searchTerm } = useContext(SearchContext);
 
   const [selectedMyRows, setSelectedMyRows] = useState([]);
@@ -67,16 +69,16 @@ const ProfilePage = () => {
   return (
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="mb-4 fs-5">👤 Личный кабинет</h1>
+        <h1 className="mb-4 fs-5"> {t("personalAccount")}</h1>
         <Link to="/inventory-create">
           <Button variant="secondary" size="sm">
-            ＋ Создать инвентарь
+            {t("createInventory")}
           </Button>
         </Link>
       </div>
 
       <InventorySection
-        title="📁 Мои инвентари"
+        title={t("myInventories")}
         data={myInventories}
         columns={myColumns}
         loading={myLoading && myData}
@@ -92,19 +94,19 @@ const ProfilePage = () => {
         createButtonVariant="secondary"
         emptyMessage={
           searchTerm
-            ? `По запросу "${searchTerm}" не найдено ваших инвентарей`
-            : "У вас пока нет инвентарей"
+            ? `${t("noInventoriesForQuery")} "${searchTerm}"`
+            : t("noInventories")
         }
       />
 
       {searchTerm && myPagination && myPagination.totalPages > 1 && (
         <div className="text-center text-muted mt-2 mb-4">
-          Страница {myPagination.page} из {myPagination.totalPages}
+          {t("page")} {myPagination.page} из {myPagination.totalPages}
         </div>
       )}
 
       <InventorySection
-        title="🔗 Доступные инвентари"
+        title={t("accessibleInventories")}
         data={accessInventories}
         columns={accessColumns}
         loading={accessLoading && accessData}
@@ -124,13 +126,14 @@ const ProfilePage = () => {
         createButtonVariant="secondary"
         emptyMessage={
           searchTerm
-            ? `По запросу "${searchTerm}" не найдено доступных инвентарей`
-            : "У вас нет доступа к чужим инвентарям"
+            ? `${t("noAccessInventoriesForQuery")} "${searchTerm}"`
+            : t("noAccessInventories")
         }
       />
       {searchTerm && accessPagination && accessPagination.totalPages > 1 && (
         <div className="text-center text-muted mt-2">
-          Страница {accessPagination.page} из {accessPagination.totalPages}
+          {t("page")} {accessPagination.page} {t("of")}{" "}
+          {accessPagination.totalPages}
         </div>
       )}
     </Container>

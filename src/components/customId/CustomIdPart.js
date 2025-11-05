@@ -13,9 +13,11 @@ import {
 } from "@mui/material";
 import { DragHandle, Delete } from "@mui/icons-material";
 import { CUSTOM_ID_PART_LABELS } from "../../constants/customIdFormat.js";
+import { useTranslation } from "react-i18next";
 
 const CustomIdPart = ({ part, index, control, onRemove }) => {
-  // Контроллеры для всех полей
+  const { t } = useTranslation();
+
   const separatorField = useController({
     control,
     name: `parts.${index}.separator`,
@@ -68,8 +70,8 @@ const CustomIdPart = ({ part, index, control, onRemove }) => {
       </Box>
 
       <FormControl sx={{ minWidth: 200 }}>
-        <InputLabel>Тип элемента</InputLabel>
-        <Select value={part.type} label="Тип элемента" disabled>
+        <InputLabel>{t("elementType")}</InputLabel>
+        <Select value={part.type} label={t("elementType")} disabled>
           <MenuItem value={part.type}>
             {CUSTOM_ID_PART_LABELS[part.type] || part.type}
           </MenuItem>
@@ -78,28 +80,28 @@ const CustomIdPart = ({ part, index, control, onRemove }) => {
 
       {part.type === "fixed" && (
         <TextField
-          label="Текст"
+          label={t("text")}
           value={valueField.field.value || ""}
           onChange={valueField.field.onChange}
           size="small"
           sx={{ width: 150 }}
-          placeholder="Например: INV"
+          placeholder={t("fixedTextPlaceholder")}
         />
       )}
 
       {part.type === "sequence" && (
         <>
           <TextField
-            label="Формат чисел"
+            label={t("numberFormat")}
             value={formatField.field.value || ""}
             onChange={formatField.field.onChange}
             size="small"
             sx={{ width: 120 }}
             placeholder="0000"
-            helperText="0000 = 4 цифры"
+            helperText={t("numberFormatHelper")}
           />
           <TextField
-            label="Ключ последовательности"
+            label={t("sequenceKey")}
             value={sequenceKeyField.field.value}
             onChange={(e) => {
               const value = e.target.value.replace(/[^\w-]/g, "");
@@ -113,18 +115,18 @@ const CustomIdPart = ({ part, index, control, onRemove }) => {
 
       {part.type === "datetime" && (
         <TextField
-          label="Формат даты"
+          label={t("dateFormat")}
           value={formatField.field.value || ""}
           onChange={formatField.field.onChange}
           size="small"
           sx={{ width: 150 }}
           placeholder="yyyy-MM-dd"
-          helperText="формат date-fns"
+          helperText={t("dateFormatHelper")}
         />
       )}
 
       <TextField
-        label="Разделитель"
+        label={t("separator")}
         value={separatorField.field.value || ""}
         onChange={separatorField.field.onChange}
         size="small"

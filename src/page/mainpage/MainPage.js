@@ -7,6 +7,7 @@ import { useGlobalSearch } from "../../hooks/search/useGlobalSearch.js";
 import { AuthContext } from "../../contexts/AuthContext.js";
 import { LoginForm } from "../../components/loginForm/LoginForm.js";
 import Error from "../../components/error/Error.js";
+import { useTranslation } from "react-i18next";
 
 const InventoryTable = ({
   title,
@@ -14,6 +15,7 @@ const InventoryTable = ({
   showItemCount = false,
   className = "",
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   if (!data?.length) return null;
@@ -24,10 +26,12 @@ const InventoryTable = ({
       <table className="table table-hover">
         <thead>
           <tr>
-            <th>Наименование инвентаря</th>
-            <th>Описание</th>
-            <th>Создатель</th>
-            {showItemCount && <th className="text-center">Товаров</th>}
+            <th>{t("inventoryName")}</th>
+            <th>{t("description")}</th>
+            <th>{t("creator")}</th>
+            {showItemCount && (
+              <th className="text-center">{t("itemsCount")}</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -77,6 +81,7 @@ const TagCloud = ({ tags, onTagClick }) => {
 };
 
 const MainPage = () => {
+  const { t } = useTranslation();
   const { isAuthenticated, authUser } = useContext(AuthContext);
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
   const [normalPage, setNormalPage] = useState(0);
@@ -113,7 +118,7 @@ const MainPage = () => {
   }, [searchTerm]);
 
   const error = popularError || recentError || tagsError;
-  if (error) return <Error message={`Ошибка загрузки: ${error.message}`} />;
+  if (error) return <Error message={`${t("loadingError")} ${error.message}`} />;
 
   return (
     <div className="container-fluid">
@@ -124,13 +129,16 @@ const MainPage = () => {
         <div className="card mb-4">
           <div className="card-body">
             <h5 className="card-title text-center">
-              Добро пожаловать, {authUser.name}!
+              {t("welcome")}, {authUser.name}!
               {authUser.isAdmin && (
-                <span className="badge bg-danger ms-2">Администратор</span>
+                <span className="badge bg-danger ms-2">
+                  {t("administrator")}
+                </span>
               )}
             </h5>
             <p className="card-text text-center">
-              Вы находитесь на главной странице системы
+              {t("youAreOnMainPage")}{" "}
+              {/* Вы находитесь на главной странице системы */}
             </p>
           </div>
         </div>
@@ -142,16 +150,16 @@ const MainPage = () => {
           {pagination && pagination.totalPages > 1 && (
             <div className="d-flex justify-content-center gap-3 mt-4">
               <button onClick={goToPrevPage} disabled={currentPage === 1}>
-                ← Назад
+                ← {t("back")}
               </button>
               <span>
-                Страница {currentPage} из {pagination.totalPages}
+                {t("page")} {currentPage} {t("of")} {pagination.totalPages}
               </span>
               <button
                 onClick={goToNextPage}
                 disabled={currentPage >= pagination.totalPages}
               >
-                Вперед →
+                {t("forward")} →
               </button>
             </div>
           )}
@@ -160,7 +168,7 @@ const MainPage = () => {
         <>
           {popularInventories.length > 0 && (
             <InventoryTable
-              title="5 самых популярных инвентарей"
+              title={t("mostPopularInventories")}
               data={popularInventories}
               showItemCount={true}
               className="mb-5"
@@ -168,7 +176,7 @@ const MainPage = () => {
           )}
 
           <InventoryTable
-            title={"Последние инвентари"}
+            title={t("recentInventories")}
             data={paginatedInventories}
             showItemCount={true}
           />
@@ -180,11 +188,11 @@ const MainPage = () => {
                 disabled={normalPage === 0}
                 onClick={() => setNormalPage((p) => p - 1)}
               >
-                ← Назад
+                ← {t("back")}
               </button>
 
               <span className="text-muted">
-                Страница {normalPage + 1} из {totalPages}
+                {t("page")} {normalPage + 1} {t("of")} {totalPages}
               </span>
 
               <button
@@ -192,7 +200,7 @@ const MainPage = () => {
                 disabled={normalPage >= totalPages - 1}
                 onClick={() => setNormalPage((p) => p + 1)}
               >
-                Вперед →
+                {t("forward")} →
               </button>
             </div>
           )}

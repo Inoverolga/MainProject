@@ -8,6 +8,7 @@ import ItemToolbar from "../table/ToolbarForInventoryPage.js";
 import Spinner from "../../components/spinner/Spinner.js";
 import Error from "../../components/error/Error.js";
 import { useLikes } from "../../hooks/likes/useLikes.js";
+import { useTranslation } from "react-i18next";
 
 const ItemsTabs = ({
   inventory,
@@ -22,6 +23,7 @@ const ItemsTabs = ({
   searchTerm,
   ...props
 }) => {
+  const { t } = useTranslation();
   const [selectedRows, setSelectedRows] = useState([]);
   const navigate = useNavigate();
 
@@ -45,7 +47,7 @@ const ItemsTabs = ({
   const isLoading = itemsLoading || likesLoading || loading;
   if (isLoading && !items?.length) return <Spinner />;
   if (itemsError)
-    return <Error message={`Ошибка загрузки: ${itemsError.message}`} />;
+    return <Error message={`${t("loadingError")} ${itemsError.message}`} />;
 
   return (
     <div>
@@ -56,7 +58,7 @@ const ItemsTabs = ({
               <div className="d-flex align-items-center text-muted mb-2">
                 <i className="bi bi-person-circle me-2 fs-5"></i>
                 <span className="small">
-                  <strong>Создатель:</strong>{" "}
+                  <strong>{t("creator")}:</strong>{" "}
                   <span className="text-dark">
                     {inventory.user?.name || "-"}
                   </span>
@@ -66,7 +68,7 @@ const ItemsTabs = ({
             <div className="col-md-6 text-md-end">
               <div className="d-flex align-items-center justify-content-md-end text-muted">
                 <span className="small">
-                  <strong>Товаров:</strong>{" "}
+                  <strong>{t("itemsCount")}:</strong>{" "}
                   <span className="text-dark fw-semibold">{items.length}</span>
                 </span>
               </div>
@@ -78,7 +80,9 @@ const ItemsTabs = ({
       <Card className="border-0 shadow-sm">
         <Card.Header className="bg-light border-0 py-3">
           <div className="d-flex justify-content-between align-items-center">
-            <h5 className="card-title mb-0 fs-5 fw-semibold">🗃️ Товары</h5>
+            <h5 className="card-title mb-0 fs-5 fw-semibold">
+              🗃️ {t("items")}
+            </h5>
           </div>
         </Card.Header>
         <Card.Body className="p-0">
@@ -112,11 +116,9 @@ const ItemsTabs = ({
           {items.length === 0 && (
             <div className="text-center text-muted py-5">
               <i className="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-              <p className="mb-0">Товары отсутствуют</p>
+              <p className="mb-0">{t("noItems")}</p>
               {hasWriteAccess && (
-                <small className="text-muted">
-                  Нажмите "Добавить товар" чтобы создать первый товар
-                </small>
+                <small className="text-muted">{t("addFirstItemHint")}</small>
               )}
             </div>
           )}

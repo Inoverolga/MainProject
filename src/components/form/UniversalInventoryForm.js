@@ -13,8 +13,10 @@ import {
   fetchMyInventories,
   fetchCategories,
 } from "../../service/api";
+import { useTranslation } from "react-i18next";
 
 const UniversalInventoryForm = ({ mode = "create", onSave }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id: inventoryId } = useParams();
   const [showPreview, setShowPreview] = useState(false);
@@ -104,9 +106,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
   //           reset(formData);
   //         } catch (error) {
   //           if (error?.response?.status === 409) {
-  //             toast.error(
-  //               "Данные были изменены другим пользователем. Пожалуйста, обновите страницу."
-  //             );
+  //              toast.error(t("dataChangedByOther"))
   //           }
   //         } finally {
   //           setIsAutoSaving(false);
@@ -145,37 +145,37 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
     try {
       const isFormValid = await trigger();
       if (!isFormValid) {
-        toast.error("Пожалуйста, заполните все обязательные поля правильно");
+        toast.error(t("fillRequiredFields"));
         return;
       }
 
       const dataWithTags = prepareFormData(formData);
-      console.log("данные для отправки", dataWithTags);
 
       if (mode === "create") {
         const result = await handleCreate(dataWithTags);
-        console.log("отправляем", result);
         if (result) {
-          toast.success("Инвентарь успешно создан!");
+          toast.success(t("inventoryCreated"));
           setSelectedTags([]);
-          console.log("данные успешно отправились");
           reset();
         }
       } else {
         if (onSave) {
           const success = await onSave(inventoryId, dataWithTags);
           if (success) {
-            toast.success("Инвентарь успешно обновлен!");
+            toast.success(t("inventoryUpdated"));
             window.scrollTo({ top: 0, behavior: "smooth" });
           }
         }
       }
     } catch (error) {
-      console.log("Данные не отправильсь");
       const message =
         error?.response?.status === 409
-          ? "Данные были изменены другим пользователем. Пожалуйста обновите страницу"
-          : `Ошибка ${mode === "create" ? "создания" : "обновления"} инвентаря`;
+          ? t("dataChangedByOther")
+          : t(
+              mode === "create"
+                ? "createInventoryError"
+                : "updateInventoryError"
+            );
       toast.error(message);
     }
   };
@@ -184,9 +184,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
 
   return (
     <div className="container mt-4">
-      <h2>
-        {mode === "create" ? "Создание инвентаря" : "Редактирование инвентаря"}
-      </h2>
+      <h2>{mode === "create" ? t("createInventory") : t("editInventory")}</h2>
 
       {mode === "edit" && (
         <div className="mb-3" style={{ height: "24px" }}>
@@ -196,9 +194,9 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
                 className="spinner-border spinner-border-sm me-2"
                 role="status"
               >
-                <span className="visually-hidden">Сохранение...</span>
+                <span className="visually-hidden">{t("savingStatus")}</span>
               </div>
-              <span className="small">Автосохранение...</span>
+              <span className="small">{t("autoSaving")}</span>
             </div>
           )}
         </div>
@@ -206,11 +204,11 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-3">
-          <label className="form-label">Название</label>
+          <label className="form-label">{t("name")}</label>
           <input
             type="text"
             className="form-control"
-            {...register("name", { required: "Название обязательно" })}
+            {...register("name", { required: t("nameRequired") })}
           />
           {errors.name && (
             <div className="text-danger">{errors.name.message}</div>
@@ -219,31 +217,31 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
 
         <div className="mb-3">
           <label className="form-label">
-            Описание
+            {t("description")}
             <button
               type="button"
               className="btn btn-outline-secondary btn-sm ms-2"
               onClick={() => setShowPreview(!showPreview)}
             >
-              {showPreview ? "✏️ Редактировать" : "👁️ Предпросмотр"}
+              {showPreview ? t("edit") : t("preview")}
             </button>
           </label>
 
           {showPreview ? (
             <div className="border p-3 bg-light rounded">
               <ReactMarkdown>
-                {descriptionValue || "*Описание отсутствует*"}
+                {descriptionValue || t("noDescription")}
               </ReactMarkdown>
             </div>
           ) : (
             <textarea
               className="form-control"
-              placeholder="Описание инвентаря..."
+              placeholder={t("inventoryDescription")}
               rows={4}
               {...register("description", {
-                required: "Поле обязательно к заполнению",
-                minLength: { value: 10, message: "Минимум 10 символов" },
-                maxLength: { value: 1000, message: "Максимум 1000 символов" },
+                required: t("descriptionRequired"),
+                minLength: { value: 10, message: t("descriptionMinLength") },
+                maxLength: { value: 1000, message: t("descriptionMaxLength") },
               })}
             />
           )}
@@ -253,13 +251,13 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Категория</label>
+          <label className="form-label">{t("category")}</label>
           <select
             className={`form-select ${errors.category ? "is-invalid" : ""}`}
-            {...register("category", { required: "Выберите категорию" })}
+            {...register("category", { required: t("categoryRequired") })}
           >
             <option value="" disabled selected>
-              Выберите категорию
+              {t("chooseCategory")}
             </option>
             {categoriesData?.data?.map((category) => (
               <option key={category.id} value={category.name}>
@@ -273,7 +271,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Теги</label>
+          <label className="form-label">{t("tags")}</label>
           <CreatableSelect
             isMulti
             options={tagOptions}
@@ -281,8 +279,8 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
             onChange={setSelectedTags}
             onInputChange={setTagSearchInput}
             isLoading={isSearching}
-            placeholder={isSearching ? "Поиск тегов..." : "Выберите теги..."}
-            formatCreateLabel={(inputValue) => `Создать "${inputValue}"`}
+            placeholder={isSearching ? t("searchTags") : t("selectTags")}
+            formatCreateLabel={(inputValue) => t("createTag", { inputValue })}
             onCreateOption={(inputValue) => {
               setSelectedTags((prev) => [
                 ...prev,
@@ -295,15 +293,15 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
             }
             noOptionsMessage={({ inputValue }) =>
               inputValue
-                ? `Тег "${inputValue}" не найден. Нажмите Enter чтобы создать.`
-                : "Введите текст для поиска тегов"
+                ? t("tagNotFound", { inputValue })
+                : t("enterToSearchTags")
             }
-            loadingMessage={() => "Поиск тегов..."}
+            loadingMessage={() => t("searchingTags")}
           />
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Видимость инвентаря</label>
+          <label className="form-label">{t("inventoryVisibility")}</label>
           <div className="form-check">
             <input
               type="radio"
@@ -311,7 +309,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
               {...register("isPublic")}
               className="form-check-input"
             />
-            <label className="form-check-label">🟢 Публичный</label>
+            <label className="form-check-label">{t("public")}</label>
           </div>
           <div className="form-check">
             <input
@@ -320,12 +318,12 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
               {...register("isPublic")}
               className="form-check-input"
             />
-            <label className="form-check-label">🔴 Приватный</label>
+            <label className="form-check-label">{t("private")}</label>
           </div>
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Ссылка на изображение</label>
+          <label className="form-label">{t("imageUrl")}</label>
           <input
             type="url"
             className="form-control"
@@ -342,11 +340,11 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
           >
             {isMutating
               ? mode === "create"
-                ? "Создание..."
-                : "Сохранение..."
+                ? t("creating")
+                : t("saving")
               : mode === "create"
-              ? "Создать инвентарь"
-              : "Сохранить изменения"}
+              ? t("createInventoryButton")
+              : t("saveChanges")}
           </button>
           <button
             type="button"
@@ -354,7 +352,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
             disabled={isMutating}
             onClick={() => navigate("/profile")}
           >
-            Вернуться в личный кабинет
+            {t("backToProfile")}
           </button>
         </div>
       </form>

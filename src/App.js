@@ -17,6 +17,7 @@ import UniversalItemForm from "./components/form/UniversalItemForm.js";
 import UniversalInventoryForm from "./components/form/UniversalInventoryForm.js";
 import AdminPage from "./page/adminpage/AdminPage.js";
 import { ThemeProvider } from "./contexts/ThemeContext.js";
+import "./i18n.js";
 
 function App() {
   return (

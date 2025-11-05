@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const AdminPanel = ({ currentInventoryId }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const menuItems = [
-    { path: "/admin", label: "Страница администратора" },
-    { path: "/profile", label: "Инвентари" },
+    { path: "/admin", label: t("adminPage") },
+    { path: "/profile", label: t("inventories") },
   ];
 
   const handleMenuItemClick = (path) => {
