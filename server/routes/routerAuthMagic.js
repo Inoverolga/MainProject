@@ -154,4 +154,15 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
   }
 });
 
+// Добавьте в routerAuthMagic.js
+routerAuthMagic.get("/magic/status", (req, res) => {
+  res.json({
+    status: "active",
+    resend_configured: !!process.env.RESEND_API_KEY,
+    jwt_configured: !!process.env.JWT_ACCESS_SECRET,
+    backend_url: process.env.BACKEND_URL,
+    frontend_url: process.env.FRONTEND_URL,
+    timestamp: new Date().toISOString(),
+  });
+});
 export default routerAuthMagic;
