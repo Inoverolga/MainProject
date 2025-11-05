@@ -168,11 +168,11 @@ routerAuthMagic.get("/magic/verify", async (req, res) => {
         <script>
           localStorage.setItem('accessToken', '${authToken}');
          localStorage.setItem('user', JSON.stringify({
-  id: '${user.id}',
-  email: '${user.email}',
-  name: '${user.name}',
-  isAdmin: ${user.isAdmin}
-    }));
+         id: '${user.id}',
+         email: '${user.email}',
+         name: '${user.name}',
+         isAdmin: ${user.isAdmin}
+          }));
           window.location.href = '${FRONTEND_URL}/profile';
         </script>
       </html>
