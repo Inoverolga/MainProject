@@ -16,6 +16,7 @@ import ProfilePage from "./page/profilePage/ProfilePage.js";
 import UniversalItemForm from "./components/form/UniversalItemForm.js";
 import UniversalInventoryForm from "./components/form/UniversalInventoryForm.js";
 import AdminPage from "./page/adminpage/AdminPage.js";
+import { ThemeProvider } from "./contexts/ThemeContext.js";
 
 function App() {
   return (
@@ -28,86 +29,88 @@ function App() {
         pauseOnHover
       />
       <Router>
-        <AuthProvider>
-          <SearchProvider>
-            <div className="container-lg mt-4">
-              <Routes>
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute>
+        <ThemeProvider>
+          <AuthProvider>
+            <SearchProvider>
+              <div className="container-lg mt-4">
+                <Routes>
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute>
+                        <WithHeaderLayout>
+                          <AdminPage />
+                        </WithHeaderLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/auth/register" element={<RegistrationPage />} />
+                  <Route
+                    path="/inventory-create"
+                    element={
+                      <ProtectedRoute>
+                        <UniversalInventoryForm mode="create" />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/inventory-edit/:id"
+                    element={
+                      <ProtectedRoute>
+                        <UniversalInventoryForm mode="edit" />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/create-item/:id"
+                    element={
+                      <ProtectedRoute>
+                        <UniversalItemForm mode="create" />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/edit-item/:itemId"
+                    element={
+                      <ProtectedRoute>
+                        <UniversalItemForm mode="edit" />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/"
+                    element={
                       <WithHeaderLayout>
-                        <AdminPage />
+                        <MainPage />
                       </WithHeaderLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/auth/register" element={<RegistrationPage />} />
-                <Route
-                  path="/inventory-create"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalInventoryForm mode="create" />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/inventory-edit/:id"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalInventoryForm mode="edit" />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/create-item/:id"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalItemForm mode="create" />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/edit-item/:itemId"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalItemForm mode="edit" />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/"
-                  element={
-                    <WithHeaderLayout>
-                      <MainPage />
-                    </WithHeaderLayout>
-                  }
-                />
+                    }
+                  />
 
-                <Route
-                  path="/inventory/:id"
-                  element={
-                    <WithHeaderLayout>
-                      <InventoryPage />
-                    </WithHeaderLayout>
-                  }
-                />
-
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
+                  <Route
+                    path="/inventory/:id"
+                    element={
                       <WithHeaderLayout>
-                        <ProfilePage />
+                        <InventoryPage />
                       </WithHeaderLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
-          </SearchProvider>
-        </AuthProvider>
+                    }
+                  />
+
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <WithHeaderLayout>
+                          <ProfilePage />
+                        </WithHeaderLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </div>
+            </SearchProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </Router>
     </>
   );

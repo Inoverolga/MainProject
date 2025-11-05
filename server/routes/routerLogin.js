@@ -56,6 +56,7 @@ routerLogin.post("/login", async (req, res) => {
         id: chekUser.id,
         name: chekUser.name,
         email: chekUser.email,
+        isAdmin: chekUser.isAdmin,
       },
       token,
       message: "Вход выполнен успешно",

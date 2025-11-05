@@ -21,9 +21,13 @@ import routerStats from "./routes/routerStats.js";
 
 const app = express();
 
-//HTTP-сервер
 const server = createServer(app);
 initializeWebSocket(server);
+
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 app.use(
   cors({
@@ -34,6 +38,27 @@ app.use(
   })
 );
 app.use(express.json());
+
+app.get("/ping", (req, res) => {
+  console.log("🔄 Keep-alive ping received");
+  res.json({
+    status: "alive",
+    timestamp: new Date().toISOString(),
+    service: "mainproject-backend",
+    uptime: process.uptime(),
+  });
+});
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    database: "connected",
+    environment: process.env.NODE_ENV || "development",
+  });
+});
+
+server.timeout = 300000;
+server.keepAliveTimeout = 120000;
 
 app.use("/api/inventories", routerInventories);
 app.use("/api/search", routerSearch);

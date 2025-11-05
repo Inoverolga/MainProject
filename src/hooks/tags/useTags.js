@@ -33,7 +33,7 @@ export const useTags = (initialTags = [], mode = "create") => {
         }
         return { value: tag, label: tag };
       });
-      console.log("🔄 useTags: setting selectedTags:", formattedTags);
+
       setSelectedTags(formattedTags);
       initialTagsRef.current = formattedTags.map((tag) => tag.value);
       tagsInitializedRef.current = true;

@@ -8,7 +8,7 @@ import { AuthContext } from "../../contexts/AuthContext";
 import { toast } from "react-toastify";
 
 export const LoginForm = () => {
-  const { login, openOAuthPopup } = useContext(AuthContext);
+  const { login, openOAuthPopup, isAdmin } = useContext(AuthContext);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const navigate = useNavigate();
 
@@ -29,11 +29,13 @@ export const LoginForm = () => {
   const onSubmit = async (formData) => {
     try {
       const result = await trigger(formData);
+
       if (result) {
         toast.success(`${result.user.name}, добро пожаловать в систему!`);
         login(result.user, result.token);
         resetForm();
-        navigate("/profile");
+        const userIsAdmin = result.user.isAdmin;
+        navigate(userIsAdmin ? "/" : "/profile");
       }
     } catch (error) {}
   };
@@ -43,7 +45,8 @@ export const LoginForm = () => {
       if (event.data.type === "OAUTH_SUCCESS") {
         toast.success(`${event.data.user.name}, добро пожаловать в систему!`);
         login(event.data.user, event.data.token);
-        navigate("/profile");
+        const userIsAdmin = event.data.user.isAdmin;
+        navigate(userIsAdmin ? "/" : "/profile");
       }
       if (event.data.type === "OAUTH_ERROR") {
         toast.error(event.data.error);
@@ -74,9 +77,20 @@ export const LoginForm = () => {
               <button
                 className="btn btn-outline-dark btn-sm"
                 onClick={() => setShowEmailForm(true)}
+                disabled={isMutating}
               >
                 <i className="bi bi-envelope me-2"></i>
-                Войти по email и паролю
+                {isMutating ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    ></span>
+                    Выполняется вход...
+                  </>
+                ) : (
+                  "Войти по email и паролю"
+                )}
               </button>
             </div>
           ) : (

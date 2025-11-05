@@ -188,6 +188,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
         if (result) {
           toast.success("Товар успешно создан!");
           setSelectedTags([]);
+          setCustomFields([]);
           reset();
         }
       } else {

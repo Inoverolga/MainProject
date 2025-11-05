@@ -16,8 +16,9 @@ export const AuthProvider = ({ children }) => {
     const userData = localStorage.getItem("user");
 
     if (token && userData) {
-      setAuthUser(JSON.parse(userData));
-      setIsAdmin(userData.isAdmin || false);
+      const parsedUser = JSON.parse(userData);
+      setAuthUser(parsedUser);
+      setIsAdmin(parsedUser.isAdmin || false);
     }
     setLoading(false);
   }, []);

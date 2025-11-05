@@ -81,7 +81,6 @@ const MainPage = () => {
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
   const [normalPage, setNormalPage] = useState(0);
 
-  // Запрос для популярных инвентарей
   const { data: popularInventories = [], error: popularError } = useSWR(
     !searchTerm ? "/inventories/public?type=popular" : null,
     fetchInventoriesPublic,
@@ -89,7 +88,7 @@ const MainPage = () => {
   );
 
   const { data: recentInventories = [], error: recentError } = useSWR(
-    !searchTerm ? "/inventories/public?type=recent" : null, // ← УБРАЛ поиск отсюда!
+    !searchTerm ? "/inventories/public?type=recent" : null,
     fetchInventoriesPublic,
     { revalidateOnFocus: false }
   );
@@ -126,6 +125,9 @@ const MainPage = () => {
           <div className="card-body">
             <h5 className="card-title text-center">
               Добро пожаловать, {authUser.name}!
+              {authUser.isAdmin && (
+                <span className="badge bg-danger ms-2">Администратор</span>
+              )}
             </h5>
             <p className="card-text text-center">
               Вы находитесь на главной странице системы

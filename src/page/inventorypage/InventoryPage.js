@@ -23,6 +23,7 @@ import StatsTabs from "../../components/tabs/StatsTabs.js";
 
 const InventoryPage = () => {
   const { id } = useParams();
+
   const { isAuthenticated, authUser, isAdmin } = useContext(AuthContext);
   const { searchTerm } = useContext(SearchContext);
   const navigate = useNavigate();
@@ -85,13 +86,15 @@ const InventoryPage = () => {
   return (
     <Container className="py-4">
       <div className="mb-3">
-        <button
-          className="btn btn-outline-secondary btn-sm"
-          onClick={() => navigate("/profile")}
-        >
-          <i className="bi bi-arrow-left me-1"></i>
-          Назад
-        </button>
+        {!isAdmin && (
+          <button
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => navigate("/profile")}
+          >
+            <i className="bi bi-arrow-left me-1"></i>
+            Назад
+          </button>
+        )}
       </div>
 
       <div className="d-flex justify-content-between align-items-center mb-4">

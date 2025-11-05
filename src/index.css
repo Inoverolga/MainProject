@@ -32,26 +32,9 @@ code {
   background-color: transparent !important;
 }
 
-/* Добавьте в CSS */
 .custom-tooltip-container {
   position: relative;
   display: inline-block;
-}
-
-.custom-tooltip-container button[data-tooltip]:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #2f2f2f;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 1000;
-  margin-bottom: 5px;
 }
 
 .custom-tooltip-container button:disabled {

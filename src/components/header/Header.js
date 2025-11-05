@@ -3,6 +3,10 @@ import { SearchContext } from "../../contexts/SearchContext";
 import { AuthContext } from "../../contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
+import AdminPanel from "../admin/AdminPanel.js";
+import LanguageToggle from "../../components/ui/LanguageToggle.js";
+import ThemeToggle from "../ui/ThemeToggle";
 
 const Header = () => {
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
@@ -11,6 +15,7 @@ const Header = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
+  // const { t } = useTranslation();
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -27,19 +32,20 @@ const Header = () => {
       toast.error("У вас нет прав администратора");
       return;
     }
-    navigate("/admin");
+    navigate("/");
   };
 
   return (
     <nav className="navbar bg-body-tertiary sticky-top">
-      <div className="container-fluid">
+      <div className="container-fluid ">
         <div
-          className="d-flex align-items-center"
+          className="d-flex align-items-center "
           style={{ cursor: "pointer" }}
           onClick={() => navigate("/")}
         >
           <img
             src="/logo.png"
+            data-tooltip={"на главную страницу"}
             alt="Логотип системы управления запасами"
             style={{
               height: "40px",
@@ -74,13 +80,16 @@ const Header = () => {
               onChange={handleSearch}
             />
           </div>
+          <LanguageToggle />
+          <ThemeToggle />
         </form>
 
         <div className="d-flex gap-2">
           {isAuthenticated &&
             !isAdminPage &&
             !isInventoryPage &&
-            !isProfilePage && (
+            !isProfilePage &&
+            !isAdmin && (
               <button
                 className="btn btn-outline-secondary"
                 onClick={() => navigate("/profile")}
@@ -89,17 +98,46 @@ const Header = () => {
                 Войти в личный кабинет
               </button>
             )}
-          {isAuthenticated && !isAdminPage && (
-            <div className="custom-tooltip-container">
-              <button
-                className="btn btn-outline-secondary"
-                onClick={handleAdminClick}
-                disabled={!isAdmin}
-                data-tooltip={!isAdmin ? "Доступно только администраторам" : ""}
-              >
-                🛡️ Войти как Админ
-              </button>
-            </div>
+          {isAuthenticated && isAdmin && !isAdminPage && (
+            <>
+              {isHomePage ? (
+                <AdminPanel currentInventoryId={null} />
+              ) : isProfilePage || isInventoryPage ? (
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => navigate(-1)}
+                >
+                  ← Назад
+                </button>
+              ) : (
+                <div className="custom-tooltip-container">
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={handleAdminClick}
+                  >
+                    🛡️ Войти как Админ
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {isAdminPage && (
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => navigate(-1)}
+            >
+              ← Назад
+            </button>
+          )}
+
+          {isAuthenticated && !isAdmin && isProfilePage && (
+            <button
+              className="btn btn-outline-secondary"
+              onClick={() => navigate("/")}
+            >
+              ← Назад
+            </button>
           )}
 
           {isAuthenticated ? (

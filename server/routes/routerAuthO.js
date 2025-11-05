@@ -15,6 +15,7 @@ const createAuthResponse = (req, res) => {
           expiresIn: "7d",
         }),
         user: user,
+        isAdmin: user.isAdmin,
       };
 
   res.send(`
