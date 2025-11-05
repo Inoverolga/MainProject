@@ -6,6 +6,12 @@ import bcryptjs from "bcryptjs";
 
 const routerAuthMagic = express.Router();
 
+console.log("🔑 SendGrid API Key exists:", !!process.env.SENDGRID_API_KEY);
+console.log(
+  "🔑 Key starts with:",
+  process.env.SENDGRID_API_KEY?.substring(0, 10) + "..."
+);
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
@@ -15,6 +21,12 @@ routerAuthMagic.post("/magic", async (req, res) => {
   try {
     const { email, name, password: userPassword, isRegistration } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
+
+    console.log("📨 Magic link request:", {
+      email: normalizedEmail,
+      isRegistration,
+      name: name ? `${name.substring(0, 10)}...` : "none",
+    });
 
     if (isRegistration) {
       const checkUser = await prisma.user.findUnique({
@@ -46,6 +58,8 @@ routerAuthMagic.post("/magic", async (req, res) => {
 
     const magicLink = `${BACKEND_URL}/api/auth/magic/verify?token=${token}`;
 
+    console.log("🔗 MAGIC LINK FOR TESTING:", magicLink);
+
     const msg = {
       to: normalizedEmail,
       from: {
@@ -63,10 +77,29 @@ routerAuthMagic.post("/magic", async (req, res) => {
       `,
     };
 
+    console.log("📧 Attempting to send email via SendGrid...", {
+      to: msg.to,
+      from: msg.from.email,
+      subject: msg.subject,
+    });
+
     try {
-      await sgMail.send(msg);
-      console.log("Email sent via SendGrid to:", normalizedEmail);
-      res.json({ success: true, message: "Ссылка отправлена" });
+      const result = await sgMail.send(msg);
+
+      console.log("✅ SendGrid response:", {
+        statusCode: result[0]?.statusCode,
+        headers: result[0]?.headers,
+        messageId: result[0]?.headers?.["x-message-id"],
+      });
+
+      res.json({
+        success: true,
+        message: "Ссылка отправлена",
+        debugLink:
+          process.env.NODE_ENV === "development" ? magicLink : undefined,
+      });
+
+      // res.json({ success: true, message: "Ссылка отправлена" });
     } catch (emailError) {
       console.error("SendGrid error:", emailError);
 
