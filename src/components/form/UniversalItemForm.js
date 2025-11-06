@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import CreatableSelect from "react-select/creatable";
 import { useItemsOperations } from "../../hooks/itemsWithFields/useItemsOperations.js";
 import { useTags } from "../../hooks/tags/useTags.js";
+import dayjs from "dayjs";
 import useSWR from "swr";
 import { Spinner } from "react-bootstrap";
 import {
@@ -131,6 +132,8 @@ const UniversalItemForm = ({ mode = "create" }) => {
             description: data.description,
             customFields: initialCustomFields,
             customId: data.customId,
+            createdAt: data.createdAt,
+            createdBy: data.createdBy,
           };
 
           setValue("name", data.name);
@@ -227,10 +230,12 @@ const UniversalItemForm = ({ mode = "create" }) => {
               type="text"
               className="form-control"
               value={customIdValue || ""}
+              onChange={(e) =>
+                setValue("customId", e.target.value, { shouldDirty: true })
+              }
               placeholder={
                 isGeneratingItemId ? t("generatingId") : t("idWillBeGenerated")
               }
-              readOnly
             />
             {mode === "create" || !itemData?.data?.customId ? (
               <button
@@ -251,6 +256,50 @@ const UniversalItemForm = ({ mode = "create" }) => {
             {mode === "create" ? t("idGenerationHint") : t("customIdHint")}
           </div>
         </div>
+
+        {mode === "edit" && itemData?.data && (
+          <>
+            <div className="mb-3">
+              <label className="form-label">{t("createdAt")}</label>
+              <input
+                type="text"
+                className="form-control"
+                value={dayjs(itemData.data.createdAt).format(
+                  "DD.MM.YYYY HH:mm"
+                )}
+                readOnly
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">{t("createdBy")}</label>
+              <input
+                type="text"
+                className="form-control"
+                value={
+                  itemData.data.inventory?.user?.name ||
+                  itemData.data.inventory?.user?.email ||
+                  itemData.data.inventory?.createdBy ||
+                  t("unknownUser")
+                }
+                readOnly
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">{t("updatedAt")}</label>
+              <input
+                type="text"
+                className="form-control"
+                value={dayjs(itemData.data.updatedAt).format(
+                  "DD.MM.YYYY HH:mm"
+                )}
+                readOnly
+              />
+            </div>
+          </>
+        )}
+
         <div className="mb-3">
           <label className="form-label">{t("itemName")} *</label>
           <input

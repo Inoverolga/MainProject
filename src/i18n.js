@@ -328,10 +328,18 @@ i18n
             'Тег "{{inputValue}}" не найден. Нажмите Enter чтобы создать.',
           enterToSearchTags: "Введите текст для поиска тегов",
           searchingTags: "Поиск тегов...",
+          customId: "Пользовательский ID",
+          createdAt: "Дата создания",
+          createdBy: "Создано пользователем",
+          updatedAt: "Дата обновления",
         },
       },
       en: {
         translation: {
+          customId: "Custom ID",
+          createdAt: "Created At",
+          createdBy: "Created By",
+          updatedAt: "Updated At",
           searchTags: "Searching tags...",
           selectTags: "Select tags",
           createTag: 'Create "{{inputValue}}"',
