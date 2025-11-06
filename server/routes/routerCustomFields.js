@@ -24,11 +24,22 @@ const checkFieldOwnership = async (
   }
 };
 
-// Получить список кастомных полей инвентаря - публичный доступ
 routerCustomFields.get(
   "/inventories/:inventoryId/fields-public",
   async (req, res) => {
     try {
+      const inventory = await prisma.inventory.findUnique({
+        where: { id: req.params.inventoryId },
+        select: { id: true },
+      });
+
+      if (!inventory) {
+        return res.status(404).json({
+          success: false,
+          message: "Инвентарь не найден",
+        });
+      }
+
       const fields = await prisma.inventoryFieldConfig.findMany({
         where: { inventoryId: req.params.inventoryId },
         orderBy: { position: "asc" },
@@ -40,7 +51,6 @@ routerCustomFields.get(
   }
 );
 
-// Создать поле - ТОЛЬКО ДЛЯ ВЛАДЕЛЬЦА
 routerCustomFields.post(
   "/inventories/:inventoryId/fields-create-access",
   checkToken,
@@ -52,7 +62,6 @@ routerCustomFields.post(
 
       await checkFieldOwnership(inventoryId, req.user.userId, req.user.isAdmin);
 
-      // Проверяем лимит полей
       const fieldCount = await prisma.inventoryFieldConfig.count({
         where: { inventoryId, fieldType },
       });
@@ -63,7 +72,6 @@ routerCustomFields.post(
         });
       }
 
-      // Находим свободное поле
       const emptyField = await prisma.inventoryFieldConfig.findMany({
         where: { inventoryId },
         select: { targetField: true },
@@ -79,7 +87,6 @@ routerCustomFields.post(
           .json({ success: false, message: "Нет свободных полей этого типа" });
       }
 
-      // Создаем поле
       const position = await prisma.inventoryFieldConfig.count({
         where: { inventoryId },
       });
@@ -103,7 +110,6 @@ routerCustomFields.post(
   }
 );
 
-// Удалить поле - ТОЛЬКО ДЛЯ ВЛАДЕЛЬЦА
 routerCustomFields.delete(
   "/fields-delete-access/:fieldId",
   checkToken,

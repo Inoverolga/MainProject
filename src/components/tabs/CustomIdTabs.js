@@ -56,7 +56,6 @@ const CustomIdTabs = ({ inventoryId }) => {
   const { formatData, saveFormat, isLoading, isSaving } =
     useCustomIdFormat(inventoryId);
 
-  // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -64,7 +63,6 @@ const CustomIdTabs = ({ inventoryId }) => {
     })
   );
 
-  // Инициализация данных
   useEffect(() => {
     if (formatData?.customIdFormats) {
       const formattedParts = formatData.customIdFormats.map((partOfFormat) => ({

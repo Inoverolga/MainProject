@@ -7,12 +7,13 @@ import { useTranslation } from "react-i18next";
 
 const StatsTabs = ({ inventoryId }) => {
   const { t } = useTranslation();
+
   const {
     data: dataStats,
     error,
     isLoading,
   } = useSWR(
-    inventoryId && `/stats/inventories/${inventoryId}/stats`,
+    inventoryId ? `/stats/inventories/${inventoryId}` : null,
     () => fetchStatsInventory(`/stats/inventories/${inventoryId}`),
     { revalidateOnFocus: false }
   );

@@ -1,6 +1,8 @@
 import { Form } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 
 export const CustomFieldsForm = ({ fields, formData, onFieldChange }) => {
+  const { t } = useTranslation();
   const renderFieldInput = (field) => {
     const value = formData[field.targetField] || "";
 
@@ -43,6 +45,16 @@ export const CustomFieldsForm = ({ fields, formData, onFieldChange }) => {
             onChange={(e) => onFieldChange(field.targetField, e.target.checked)}
           />
         );
+      case "FILE":
+        return (
+          <Form.Control
+            type="url"
+            placeholder={t("imageUrlPlaceholder")}
+            value={value}
+            onChange={(e) => onFieldChange(field.targetField, e.target.value)}
+            required={field.isRequired}
+          />
+        );
       default:
         return null;
     }
@@ -52,7 +64,7 @@ export const CustomFieldsForm = ({ fields, formData, onFieldChange }) => {
 
   return (
     <div className="mt-4">
-      <h5> Дополнительные поля</h5>
+      <h5> {t("additionalFields")}</h5>
       {fields.map((field) => (
         <Form.Group key={field.id} className="mb-3">
           <Form.Label>

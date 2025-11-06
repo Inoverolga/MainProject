@@ -11,9 +11,13 @@ const createAuthResponse = (req, res) => {
     ? { type: "OAUTH_ERROR", error: authError.message }
     : {
         type: "OAUTH_SUCCESS",
-        token: jwt.sign({ userId: user.id }, process.env.JWT_ACCESS_SECRET, {
-          expiresIn: "7d",
-        }),
+        token: jwt.sign(
+          { userId: user.id, isAdmin: user.isAdmin },
+          process.env.JWT_ACCESS_SECRET,
+          {
+            expiresIn: "7d",
+          }
+        ),
         user: user,
         isAdmin: user.isAdmin,
       };
@@ -28,7 +32,6 @@ const createAuthResponse = (req, res) => {
   `);
 };
 
-// Google OAuth
 routerAuthO.get(
   "/google",
   passport.authenticate("google", {
@@ -49,7 +52,6 @@ routerAuthO.get(
   createAuthResponse
 );
 
-// Facebook OAuth
 routerAuthO.get(
   "/facebook",
   passport.authenticate("facebook", {
@@ -61,10 +63,10 @@ routerAuthO.get(
   "/facebook/callback",
   (req, res, next) => {
     passport.authenticate("facebook", { session: false }, (error, user) => {
-      req.authError = error || null; // ← Записываем в req
-      req.user = user || null; // ← Записываем в req
-      next(); // ← Передаем в createAuthResponse
-    })(req, res, next); // ← Вызываем passport с теми же параметрами
+      req.authError = error || null;
+      req.user = user || null;
+      next();
+    })(req, res, next);
   },
   createAuthResponse
 );

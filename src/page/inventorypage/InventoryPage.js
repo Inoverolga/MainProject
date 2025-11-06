@@ -1,7 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import useSWR from "swr";
-import { Container, Card, Tabs, Tab } from "react-bootstrap";
-import ReactMarkdown from "react-markdown";
+import { Container, Tabs, Tab } from "react-bootstrap";
 import Spinner from "../../components/spinner/Spinner";
 import Error from "../../components/error/Error";
 import {
@@ -46,11 +45,7 @@ const InventoryPage = () => {
     }
   );
 
-  const {
-    data: searchData,
-    isLoading: searchLoading,
-    error: searchError,
-  } = useSWR(
+  const { data: searchData, isLoading: searchLoading } = useSWR(
     searchTerm
       ? `/search/items?inventoryId=${id}&q=${encodeURIComponent(searchTerm)}`
       : null,
@@ -64,11 +59,11 @@ const InventoryPage = () => {
   const inventory = dataInventory?.data;
   const items = searchTerm ? searchData?.data || [] : inventory?.items || [];
   const isOwner = inventory?.userId === authUser?.id;
-  const hasWriteAccess = Boolean(isOwner || inventory?.canWrite);
+  const hasWriteAccess = Boolean(isOwner || inventory?.canWrite || isAdmin);
   const hasTotalAccess = isOwner || isAdmin;
 
   const { data: dataConfigFields, mutate: mutateFieldsPublic } = useSWR(
-    isAuthenticated && hasWriteAccess
+    isAuthenticated && hasTotalAccess
       ? `/users/inventories/${id}/fields-public`
       : null,
     fetchFieldsPublic
@@ -87,38 +82,41 @@ const InventoryPage = () => {
   return (
     <Container className="py-4">
       <div className="mb-3">
-        {!isAdmin && (
-          <button
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => navigate("/profile")}
-          >
-            <i className="bi bi-arrow-left me-1"></i>
-            {t("back")}
-          </button>
-        )}
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          onClick={() => navigate("/profile")}
+        >
+          <i className="bi bi-grid me-1"></i>
+          {t("backToInventories")}
+        </button>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="fs-4 mb-0 text-dark fw-bold">
-          {inventory.name || t("newInventory")}
-        </h1>
+      <div className="d-flex gap-3 align-items-start mb-4">
+        <div className="flex-shrink-0">
+          {inventory.imageUrl ? (
+            <img
+              src={inventory.imageUrl}
+              alt={inventory.name}
+              className="rounded"
+              style={{ width: "80px", height: "80px", objectFit: "cover" }}
+            />
+          ) : (
+            <div
+              className="bg-light rounded d-flex align-items-center justify-content-center"
+              style={{ width: "80px", height: "80px" }}
+            >
+              <i className="bi bi-image text-muted"></i>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-grow-1">
+          <h1 className="fs-4 mb-1">{inventory.name}</h1>
+          {inventory.description && (
+            <p className="text-muted mb-0">{inventory.description}</p>
+          )}
+        </div>
       </div>
-
-      <Card className="border-0 shadow-sm mb-4">
-        <Card.Body className="p-4">
-          <Card.Title className="text-muted mb-3 small text-uppercase fw-semibold">
-            📋 {t("inventoryDescriptionTitle")}
-          </Card.Title>
-          <div className="markdown-content" style={{ lineHeight: "1.6" }}>
-            {inventory.description ? (
-              <ReactMarkdown>{inventory.description}</ReactMarkdown>
-            ) : (
-              <p className="text-muted fst-italic mb-0">{t("noDescription")}</p>
-            )}
-          </div>
-        </Card.Body>
-      </Card>
-
       <Tabs
         defaultActiveKey="items"
         className="mb-3"
@@ -164,7 +162,6 @@ const InventoryPage = () => {
               inventoryId={id}
               fields={fields}
               mutateFields={mutateFieldsPublic}
-              isOwner={isOwner}
             />
           </Tab>
         )}
@@ -177,13 +174,13 @@ const InventoryPage = () => {
 
         {hasTotalAccess && (
           <Tab eventKey="stats" title={`📈 ${t("statistics")}`}>
-            <StatsTabs inventoryId={id} isOwner={isOwner} />
+            <StatsTabs inventoryId={id} />
           </Tab>
         )}
 
         {hasTotalAccess && (
           <Tab eventKey="access" title={`👥 ${t("Access")}`}>
-            <AccessTab inventoryId={id} isOwner={isOwner} />
+            <AccessTab inventoryId={id} />
           </Tab>
         )}
       </Tabs>

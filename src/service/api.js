@@ -13,7 +13,6 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-// База
 const getData = (url) => axios.get(`${API_BASE}${url}`).then((res) => res.data);
 const postData = (url, data) =>
   axios.post(`${API_BASE}${url}`, data).then((res) => res.data);
@@ -23,8 +22,6 @@ const deleteData = (url) =>
   axios.delete(`${API_BASE}${url}`).then((res) => res.data);
 const patchData = (url, data) =>
   axios.patch(`${API_BASE}${url}`, data).then((res) => res.data);
-
-// Просмотр инвентаря
 
 // Аутентификация (по ссылке)
 export const fetchMagicLink = async (url, { arg: userFormData }) => {
@@ -119,3 +116,6 @@ export const fetchSearchAll = (url) => getData(url); //api/search?q=${searchTerm
 export const fetchItemsSearch = (url) => getData(url); //api/search/items?q=${searchTerm}
 export const fetchUserSearch = (url) => getData(url); //api/search/users?q=${searchTerm}; (для форм)
 export const fetchAdminSearch = (url) => getData(url); //api/search/users?q=${searchTerm};
+//изображения
+export const fetchImgLoading = (url, formData) => postData(url, formData); //api/img/inventories/:inventoryId/image-loading
+export const fetchImgDelete = (url) => deleteData(url); //api/img/inventories/:inventoryId/image-delete

@@ -33,7 +33,6 @@ export const useLikes = (inventoryId) => {
       ? current.likeCount + 1
       : Math.max(0, current.likeCount - 1);
 
-    // Оптимистичное обновление
     mutate(
       {
         ...data,

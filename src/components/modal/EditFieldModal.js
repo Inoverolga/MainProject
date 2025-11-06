@@ -1,9 +1,10 @@
-// components/EditFieldModal.js
 import { useEffect } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
 const EditFieldModal = ({ show, field, onClose, onSave, isSaving }) => {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -27,17 +28,17 @@ const EditFieldModal = ({ show, field, onClose, onSave, isSaving }) => {
   return (
     <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
-        <Modal.Title>✏️ Редактирование поля</Modal.Title>
+        <Modal.Title>✏️ {t("editField")}</Modal.Title>
       </Modal.Header>
 
       <Form onSubmit={handleSubmit(onSubmit)}>
         <Modal.Body>
           <Form.Group className="mb-3">
-            <Form.Label>Название *</Form.Label>
+            <Form.Label>{t("name")} *</Form.Label>
             <Form.Control
               {...register("name", {
-                required: "Название обязательно",
-                minLength: { value: 2, message: "Минимум 2 символа" },
+                required: t("nameRequired"),
+                minLength: { value: 2, message: t("minLength2") },
               })}
               isInvalid={!!errors.name}
             />
@@ -50,7 +51,7 @@ const EditFieldModal = ({ show, field, onClose, onSave, isSaving }) => {
             <Form.Label>Описание*</Form.Label>
             <Form.Control
               {...register("description")}
-              placeholder="Описание"
+              placeholder={t("description")}
               className="mb-3"
             />
             <Form.Control.Feedback type="invalid">
@@ -60,22 +61,22 @@ const EditFieldModal = ({ show, field, onClose, onSave, isSaving }) => {
 
           <Form.Check
             {...register("isVisibleInTable")}
-            label="Показывать в таблице"
+            label={t("showInTable")}
             className="mb-2"
           />
-          <Form.Check {...register("isRequired")} label="Обязательное поле" />
+          <Form.Check {...register("isRequired")} label={t("requiredField")} />
         </Modal.Body>
 
         <Modal.Footer>
           <Button variant="outline-secondary" onClick={onClose}>
-            Отмена
+            {t("cancel")}
           </Button>
           <Button
             type="submit"
             variant="primary"
             disabled={!isValid || isSaving}
           >
-            {isSaving ? "Сохранение..." : "Сохранить"}
+            {isSaving ? t("saving") : t("save")}
           </Button>
         </Modal.Footer>
       </Form>

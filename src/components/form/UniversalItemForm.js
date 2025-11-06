@@ -38,7 +38,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
   const inventoryId =
     mode === "create" ? urlInventoryId : itemData?.data?.inventoryId;
 
-  // Загружаем данные для мутации
   const { mutate: mutateMyItems } = useSWR(
     inventoryId ? `/users/inventories/${inventoryId}/items-with-access` : null,
     fetchInventoryWithItems,
@@ -48,7 +47,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
     }
   );
 
-  //загружаем кастомные поля
   const { data: fieldsData } = useSWR(
     inventoryId ? `/users/inventories/${inventoryId}/fields-public` : null,
     fetchFieldsPublic
@@ -104,7 +102,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
     );
   };
 
-  // генерация id при создании товара
   useEffect(() => {
     const initializeForm = async () => {
       if (!formInitializedRef.current) {
@@ -160,7 +157,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
       : initialDataRef.current &&
         Object.keys(customFields).some(
           (key) =>
-            //customFields[key] !== initialDataRef.current.customFields[key]
             JSON.stringify(customFields[key]) !==
             JSON.stringify(initialDataRef.current.customFields[key])
         );

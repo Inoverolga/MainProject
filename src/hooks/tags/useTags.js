@@ -52,7 +52,6 @@ export const useTags = (initialTags = [], mode = "create") => {
       : tagsInitializedRef.current &&
         JSON.stringify(selectedTags.map((t) => t.value).sort()) !==
           JSON.stringify(initialTagsRef.current.map((t) => t.value).sort());
-  //Проверка tagsInitializedRef.current гарантирует что изменения отслеживаются только после инициализации
 
   return {
     selectedTags,

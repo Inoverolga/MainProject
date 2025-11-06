@@ -55,9 +55,7 @@ const Header = () => {
               marginRight: "2px",
             }}
           />
-          <span className="navbar-brand  fs-6">
-            {t("appName")} {/* Система управления запасами */}
-          </span>
+          <span className="navbar-brand  fs-6">{t("appName")}</span>
         </div>
 
         {isAuthenticated && !isHomePage ? (

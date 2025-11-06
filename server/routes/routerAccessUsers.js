@@ -6,12 +6,13 @@ import { canManagersInventory } from "../utils/accessUtils.js";
 
 const routerAccessUser = express.Router();
 
-// Общий middleware проверки владельца/admin
 const checkManagers = async (req, res, next) => {
   try {
+    const inventoryId = req.params.inventoryId;
+
     if (
       !(await canManagersInventory(
-        req.params.inventoryId,
+        inventoryId,
         req.user.userId,
         req.user.isAdmin
       ))

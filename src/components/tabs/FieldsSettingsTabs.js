@@ -10,9 +10,10 @@ const FIELD_TYPES = {
   TEXT: { label: "📄 Многострочный", icon: "📄" },
   INTEGER: { label: "🔢 Число", icon: "🔢" },
   BOOLEAN: { label: "✅ Да/Нет", icon: "✅" },
+  FILE: { label: "📎 Файл/Изображение", icon: "📎" },
 };
 
-const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
+const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields }) => {
   const { t } = useTranslation();
   const [editingField, setEditingField] = useState(null);
 
@@ -51,28 +52,6 @@ const FieldsSettingsTabs = ({ inventoryId, fields, mutateFields, isOwner }) => {
     }
     return success;
   };
-
-  if (!isOwner) {
-    return (
-      <Card>
-        <Card.Body>
-          <h6>{t("inventoryFields")}</h6>
-          <div>
-            {fields.map((field) => (
-              <Badge
-                key={field.id}
-                bg="light"
-                text="dark"
-                className="me-2 mb-2"
-              >
-                {FIELD_TYPES[field.fieldType]?.icon} {field.name}
-              </Badge>
-            ))}
-          </div>
-        </Card.Body>
-      </Card>
-    );
-  }
 
   return (
     <Card>

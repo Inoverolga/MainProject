@@ -10,8 +10,10 @@ import {
   fetchAddRoleAdmin,
   fetchDeleteRoleAdmin,
 } from "../../service/api.js";
+import { useTranslation } from "react-i18next";
 
 export const useAdminData = () => {
+  const { t } = useTranslation();
   const { authUser: currentUser } = useContext(AuthContext);
   const isAdmin = currentUser?.isAdmin;
 
@@ -38,7 +40,7 @@ export const useAdminData = () => {
     "/admin/users/block",
     async (url, { arg: { userId, isBlocked } }) => {
       return await fetchBlockAndUnblock(
-        isAdmin ? `/admin/users/${userId}/block` : null,
+        `/admin/users/${userId}/block`,
         isBlocked
       );
     }
@@ -46,10 +48,10 @@ export const useAdminData = () => {
 
   const { trigger: changeAdminRole, isMutating: adminLoading } = useSWRMutation(
     "/admin/users/role",
-    async (url, { arg: { userId, isAdmin } }) => {
+    async (url, { arg: { userId, isAdmin: isAdminRole } }) => {
       return await fetchAddRoleAdmin(
-        isAdmin ? `/admin/users/${userId}/role` : null,
-        isAdmin
+        `/admin/users/${userId}/role`,
+        isAdminRole
       );
     }
   );
@@ -57,21 +59,17 @@ export const useAdminData = () => {
   const { trigger: deleteUser, isMutating: deleteLoading } = useSWRMutation(
     "/admin/users/delete",
     async (url, { arg: userId }) => {
-      return await fetchDeleteRoleAdmin(
-        isAdmin ? `/admin/users/${userId}` : null
-      );
+      return await fetchDeleteRoleAdmin(`/admin/users/${userId}`);
     }
   );
 
   const handleBlock = async (userId, isBlocked) => {
     try {
       await blockUser({ userId, isBlocked });
-      toast.success(
-        `Пользователь ${isBlocked ? "заблокирован" : "разблокирован"}`
-      );
+      toast.success(isBlocked ? t("userBlocked") : t("userUnblocked"));
       mutateAllUsers();
     } catch (error) {
-      toast.error(error.message || "Ошибка при блокировке пользователя");
+      toast.error(error.message || t("blockUserError"));
     }
   };
 
@@ -79,21 +77,21 @@ export const useAdminData = () => {
     try {
       await changeAdminRole({ userId, isAdmin: isAdminRole });
       toast.success(
-        `Права администратора ${isAdminRole ? "назначены" : "сняты"}`
+        isAdminRole ? t("adminRoleGranted") : t("adminRoleRevoked")
       );
       mutateAllUsers();
     } catch (error) {
-      toast.error(error.message || "Ошибка при изменении прав");
+      toast.error(error.message || t("changeRoleError"));
     }
   };
 
   const handleDelete = async (userId) => {
     try {
       await deleteUser(userId);
-      toast.success("Пользователь удален");
+      toast.success(t("userDeleted"));
       mutateAllUsers();
     } catch (error) {
-      toast.error(error.message || "Ошибка при удалении пользователя");
+      toast.error(error.message || t("deleteUserError"));
     }
   };
 

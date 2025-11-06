@@ -7,11 +7,12 @@ import {
   fetchFormatIdUpdate,
   fetchFormatIdGenerate,
 } from "../../service/api.js";
+import { useTranslation } from "react-i18next";
 
 export const useCustomIdFormat = (inventoryId) => {
+  const { t } = useTranslation();
   const { isAuthenticated } = useContext(AuthContext);
 
-  // Загрузка формата
   const { data, isLoading, mutate } = useSWR(
     inventoryId
       ? `/idFormat/inventories/${inventoryId}/custom-id-format`
@@ -19,7 +20,6 @@ export const useCustomIdFormat = (inventoryId) => {
     fetchFormatId
   );
 
-  //Генерация preview и для товаров
   const { trigger: generateId, isMutating: isGenerating } = useSWRMutation(
     inventoryId && isAuthenticated
       ? `/idFormat/inventories/${inventoryId}/generate-id`
@@ -29,7 +29,6 @@ export const useCustomIdFormat = (inventoryId) => {
     }
   );
 
-  //обновление формата
   const { trigger: updateFormat, isMutating: isUpdating } = useSWRMutation(
     inventoryId && isAuthenticated
       ? `/idFormat/inventories/${inventoryId}/custom-id-format-update`
@@ -39,7 +38,6 @@ export const useCustomIdFormat = (inventoryId) => {
     }
   );
 
-  // Общая функция подготовки данных
   const prepareFormatData = (partsOfFormat) =>
     partsOfFormat.map((part, index) => ({
       type: part.type,
@@ -74,7 +72,7 @@ export const useCustomIdFormat = (inventoryId) => {
       });
       return result?.data?.customId;
     } catch (error) {
-      console.error("Ошибка генерации ID для товара:", error);
+      console.error(t("idGenerationError"), error);
       return null;
     }
   };

@@ -7,6 +7,32 @@ export const useInventoryColumns = (data = [], type = "my") => {
   return useMemo(() => {
     const baseColumns = [
       {
+        field: "imageUrl",
+        headerName: t("image"),
+        width: 80,
+        align: "center",
+        headerAlign: "center",
+        renderCell: (params) =>
+          params.value ? (
+            <img
+              src={params.value}
+              alt={params.row.name}
+              style={{
+                width: "40px",
+                height: "40px",
+                objectFit: "cover",
+                borderRadius: "4px",
+              }}
+            />
+          ) : (
+            <span className="text-muted" style={{ fontSize: "12px" }}>
+              <i className="bi bi-image"></i>
+            </span>
+          ),
+        sortable: false,
+        filterable: false,
+      },
+      {
         field: "name",
         headerName: t("inventoryName"),
         width: 250,

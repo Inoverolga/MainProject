@@ -9,7 +9,6 @@ import { checkToken } from "../middleware/checkToken.js";
 
 const routerUserItem = express.Router();
 
-// Функция подготовки данных товара
 const prepareItemData = ({
   tags = [],
   customInt1,
@@ -75,9 +74,29 @@ export const fieldsItemSelect = {
   customId: true,
 };
 
-// Получить все товары инвентаря с кастомными полями
 routerUserItem.get("/inventories/:inventoryId/items", async (req, res) => {
   try {
+    const { inventoryId } = req.params;
+
+    const inventory = await prisma.inventory.findUnique({
+      where: { id: inventoryId },
+      select: { isPublic: true },
+    });
+
+    if (!inventory) {
+      return res.status(404).json({
+        success: false,
+        message: "Инвентарь не найден",
+      });
+    }
+
+    if (!inventory.isPublic && !req.user?.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Нет доступа к инвентарю",
+      });
+    }
+
     const items = await prisma.item.findMany({
       where: { inventoryId: req.params.inventoryId },
       select: fieldsItemSelect,
@@ -90,7 +109,6 @@ routerUserItem.get("/inventories/:inventoryId/items", async (req, res) => {
   }
 });
 
-// Создать товар
 routerUserItem.post(
   "/inventories/:inventoryId/items-create",
   checkToken,
@@ -98,7 +116,11 @@ routerUserItem.post(
     try {
       const { inventoryId } = req.params;
 
-      const canWrite = await hasWriteAccess(inventoryId, req.user.userId);
+      const canWrite = await hasWriteAccess(
+        inventoryId,
+        req.user.userId,
+        req.user.isAdmin
+      );
       if (!canWrite)
         return res.status(403).json({ success: false, message: "Нет прав" });
 
@@ -146,7 +168,6 @@ routerUserItem.post(
   }
 );
 
-// Получить конкретный товар
 routerUserItem.get("/items-edit/:id", checkToken, async (req, res) => {
   try {
     const item = await getItemWithAccessCheck(
@@ -162,7 +183,6 @@ routerUserItem.get("/items-edit/:id", checkToken, async (req, res) => {
   }
 });
 
-// Обновить товар
 routerUserItem.put("/items-update/:id", checkToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -189,7 +209,6 @@ routerUserItem.put("/items-update/:id", checkToken, async (req, res) => {
   }
 });
 
-// Удалить товар
 routerUserItem.delete("/items-delete/:id", checkToken, async (req, res) => {
   try {
     const { id } = req.params;

@@ -46,6 +46,7 @@ routerLogin.post("/login", async (req, res) => {
       {
         userId: chekUser.id,
         email: chekUser.email,
+        isAdmin: chekUser.isAdmin,
       },
       process.env.JWT_ACCESS_SECRET,
       { expiresIn: "24h" }
@@ -60,6 +61,30 @@ routerLogin.post("/login", async (req, res) => {
       },
       token,
       message: "Вход выполнен успешно",
+    });
+  } catch (error) {
+    handleError(error, res);
+  }
+});
+
+routerLogin.get("/debug-check-admin", checkToken, async (req, res) => {
+  try {
+    const userFromDB = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { id: true, email: true, isAdmin: true, name: true },
+    });
+
+    const auth = req.headers["authorization"];
+    const token = auth && auth.split(" ")[1];
+    const decodedToken = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+
+    res.json({
+      dbUser: userFromDB,
+      tokenData: decodedToken,
+      reqUser: req.user,
+      isAdminInDB: userFromDB?.isAdmin,
+      isAdminInToken: decodedToken.isAdmin,
+      isAdminInReq: req.user.isAdmin,
     });
   } catch (error) {
     handleError(error, res);

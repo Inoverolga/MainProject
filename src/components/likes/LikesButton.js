@@ -1,5 +1,6 @@
 import { Heart } from "lucide-react";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 const LikeButton = ({
   itemId,
@@ -10,12 +11,13 @@ const LikeButton = ({
   className = "",
   isAuthenticated,
 }) => {
+  const { t } = useTranslation();
   const { likeCount = 0, isLiked = false } = likeData || {};
 
   const handleClick = (e) => {
     e.stopPropagation();
     if (!isAuthenticated) {
-      toast.info("🔒 Для оценки товаров необходимо войти в систему");
+      toast.info(t("loginRequiredForLikes"));
       return;
     }
     onToggleLike(itemId);

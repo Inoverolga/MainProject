@@ -18,6 +18,7 @@ import routerLikes from "./routes/routerLikes.js";
 import routerIdFormat from "./routes/routerIdFormat.js";
 import routerAdmin from "./routes/routerAdmin.js";
 import routerStats from "./routes/routerStats.js";
+import routerImg from "./routes/routerImg.js";
 
 const app = express();
 
@@ -75,6 +76,7 @@ app.use("/api/likes", routerLikes);
 app.use("/api/idFormat", routerIdFormat);
 app.use("/api/admin", routerAdmin);
 app.use("/api/stats", routerStats);
+app.use("/api/img", routerImg);
 
 setInterval(async () => {
   try {
@@ -110,7 +112,6 @@ app.get("/api/test-db", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-//app.listen(PORT, "0.0.0.0", () => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`✅ HTTP Server running on port ${PORT}`);

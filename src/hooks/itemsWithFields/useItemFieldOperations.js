@@ -6,9 +6,10 @@ import {
   fetchMyFieldDelete,
   fetchMyFieldUpdate,
 } from "../../service/api.js";
+import { useTranslation } from "react-i18next";
 
 export const useItemFieldOperations = (inventoryId, mutateFields) => {
-  // Создание кастомного поля товара
+  const { t } = useTranslation();
   const { trigger: createField, isMutating: isCreating } = useSWRMutation(
     "/users/inventories",
     (url, { arg: { inventoryId, fieldData } }) =>
@@ -18,14 +19,12 @@ export const useItemFieldOperations = (inventoryId, mutateFields) => {
       )
   );
 
-  // Обновление поля
   const { trigger: updateField, isMutating: isUpdating } = useSWRMutation(
     "/users/fields-update-access",
     (url, { arg: { fieldId, fieldData } }) =>
       fetchMyFieldUpdate(`${url}/${fieldId}`, fieldData)
   );
 
-  // Удаление поля
   const { trigger: deleteField, isMutating: isDeleting } = useSWRMutation(
     "/users/fields-delete-access",
     (url, { arg: fieldId }) => fetchMyFieldDelete(`${url}/${fieldId}`)
@@ -33,7 +32,7 @@ export const useItemFieldOperations = (inventoryId, mutateFields) => {
 
   const handleCreateField = async (fieldData) => {
     if (!inventoryId) {
-      toast.error("ID инвентаря не найден");
+      toast.error(t("inventoryIdNotFound"));
       return null;
     }
 
@@ -44,10 +43,10 @@ export const useItemFieldOperations = (inventoryId, mutateFields) => {
 
     if (result.success) {
       mutateFields?.();
-      toast.success("Поле успешно создано");
+      toast.success(t("fieldCreatedSuccess"));
       return result.data;
     }
-    toast.error(result.message || "Ошибка создания поля");
+    toast.error(result.message || t("fieldCreationError"));
     return null;
   };
 
@@ -57,10 +56,10 @@ export const useItemFieldOperations = (inventoryId, mutateFields) => {
 
       if (result.success) {
         mutateFields?.();
-        toast.success("Поле успешно обновлено");
+        toast.success(t("fieldUpdatedSuccess"));
         return true;
       }
-      toast.error(result.message || "Ошибка обновления поля");
+      toast.error(result.message || t("fieldUpdateError"));
       return false;
     },
     [updateField, mutateFields]
@@ -71,10 +70,10 @@ export const useItemFieldOperations = (inventoryId, mutateFields) => {
 
     if (result.success) {
       mutateFields?.();
-      toast.success("Поле удалено");
+      toast.success(t("fieldDeletedSuccess"));
       return true;
     }
-    toast.error(result.message || "Ошибка удаления поля");
+    toast.error(result.message || t("fieldDeletionError"));
     return false;
   };
 

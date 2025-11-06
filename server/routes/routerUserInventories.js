@@ -102,37 +102,59 @@ routerUserInventories.get(
       const limit = parseInt(req.query.limit) || 20;
       const skip = (page - 1) * limit;
 
-      const where = {
-        inventoryAccesses: {
-          some: {
-            userId: req.user.userId,
-            OR: [{ accessLevel: "WRITE" }, { accessLevel: "READ" }],
+      let where = {};
+
+      if (req.user.isAdmin) {
+        where = {
+          userId: { not: req.user.userId },
+          ...(query && {
+            name: { startsWith: query, mode: "insensitive" },
+          }),
+        };
+      } else {
+        where = {
+          inventoryAccesses: {
+            some: {
+              userId: req.user.userId,
+              OR: [{ accessLevel: "WRITE" }, { accessLevel: "READ" }],
+            },
           },
-        },
-        userId: { not: req.user.userId },
-        ...(query && {
-          name: { startsWith: query, mode: "insensitive" },
-        }),
-      };
+          userId: { not: req.user.userId },
+          ...(query && {
+            name: { startsWith: query, mode: "insensitive" },
+          }),
+        };
+      }
 
       const accessible = await prisma.inventory.findMany({
         where,
         include: {
           ...inventoryInclude,
-          inventoryAccesses: {
-            where: { userId: req.user.userId },
-            select: { accessLevel: true },
-          },
+          ...(!req.user.isAdmin && {
+            inventoryAccesses: {
+              where: { userId: req.user.userId },
+              select: { accessLevel: true },
+            },
+          }),
         },
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
       });
 
-      const inventoriesWithAccess = accessible.map((inv) => ({
-        ...inv,
-        accessLevel: inv.inventoryAccesses[0]?.accessLevel || "READ",
-      }));
+      const inventoriesWithAccess = accessible.map((inv) => {
+        if (req.user.isAdmin) {
+          return {
+            ...inv,
+            accessLevel: "ADMIN",
+          };
+        } else {
+          return {
+            ...inv,
+            accessLevel: inv.inventoryAccesses[0]?.accessLevel || "READ",
+          };
+        }
+      });
 
       const total = await prisma.inventory.count({ where });
 
@@ -160,7 +182,7 @@ routerUserInventories.get(
       const { id } = req.params;
       const userId = req.user?.userId;
 
-      const hasAccess = await hasReadAccess(id, userId);
+      const hasAccess = await hasReadAccess(id, userId, req.user.isAdmin);
       if (!hasAccess) {
         return res.status(403).json({
           success: false,
@@ -258,7 +280,6 @@ routerUserInventories.post(
         data: newInventory,
       });
     } catch (error) {
-      console.error("❌ Ошибка в catch:", error);
       handleError(error, res);
     }
   }
@@ -438,7 +459,11 @@ routerUserInventories.get(
   async (req, res) => {
     try {
       const { id } = req.params;
-      const hasAccess = await hasReadAccess(id, req.user.userId);
+      const hasAccess = await hasReadAccess(
+        id,
+        req.user.userId,
+        req.user.isAdmin
+      );
 
       if (!hasAccess) {
         return res.status(403).json({
@@ -489,16 +514,4 @@ routerUserInventories.get(
   }
 );
 
-routerUserInventories.get("/debug/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const inventory = await prisma.inventory.findUnique({
-      where: { id },
-    });
-
-    res.json({ exists: !!inventory, inventory });
-  } catch (error) {
-    handleError(error, res);
-  }
-});
 export default routerUserInventories;

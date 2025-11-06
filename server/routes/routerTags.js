@@ -1,9 +1,9 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
+import { handleError } from "../utils/handleError.js";
 
 const routerTag = express.Router();
 
-//фильтруем на стороне сервера
 routerTag.get("/autocompletion", async (req, res) => {
   try {
     const { q } = req.query;
@@ -27,12 +27,10 @@ routerTag.get("/autocompletion", async (req, res) => {
     const tagNames = tags.map((tag) => tag.name);
     res.json(tagNames);
   } catch (error) {
-    console.error(`Ошибка загрузки suggestions:`, error);
-    res.status(500).json({ error: "Ошибка загрузки тегов" });
+    handleError(error, res);
   }
 });
 
-//если получаем все тэги, и фильтруем  на стороне клиента
 routerTag.get("/", async (req, res) => {
   try {
     const tags = await prisma.tag.findMany({
@@ -44,8 +42,7 @@ routerTag.get("/", async (req, res) => {
 
     res.json(tagNames);
   } catch (error) {
-    console.error(`Ошибка загрузки тегов:`, error);
-    res.status(500).json({ error: "Ошибка загрузки тегов" });
+    handleError(error, res);
   }
 });
 

@@ -6,11 +6,7 @@ import { useUserSearch } from "../../hooks/search/useUserSearch.js";
 import Spinner from "../spinner/Spinner.js";
 import { useTranslation } from "react-i18next";
 
-const AccessTab = ({
-  inventoryId,
-  initialIsPublic = false,
-  isOwner = false,
-}) => {
+const AccessTab = ({ inventoryId, initialIsPublic = false }) => {
   const { t } = useTranslation();
   const {
     accessListUsers,
@@ -23,13 +19,8 @@ const AccessTab = ({
     isToggling,
   } = useInventoryAccess(inventoryId);
 
-  const {
-    searchTerm,
-    setSearchTerm,
-    resultsSearchUsers,
-    isSearching,
-    clearSearch,
-  } = useUserSearch();
+  const { setSearchTerm, resultsSearchUsers, isSearching, clearSearch } =
+    useUserSearch();
   const { watch, setValue, handleSubmit } = useForm({
     defaultValues: { selectedUser: null, isPublic: initialIsPublic },
   });
@@ -64,21 +55,6 @@ const AccessTab = ({
   };
 
   if (isLoading) return <Spinner />;
-
-  if (!isOwner) {
-    return (
-      <div className="card">
-        <div className="card-body text-center py-5">
-          <div className="text-warning mb-3">
-            <i className="bi bi-shield-lock" style={{ fontSize: "3rem" }}></i>
-          </div>
-          <h5 className="card-title">{t("accessRestricted")}</h5>
-          <p className="text-muted">{t("onlyOwnerCanManageAccess")}</p>
-          <small className="text-muted">{t("contactOwnerForAccess")}</small>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="access-tab">

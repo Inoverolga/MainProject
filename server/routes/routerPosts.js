@@ -7,7 +7,6 @@ import { sendMessageToAllUsers } from "../websocket.js";
 
 const routerPosts = express.Router();
 
-// GET /api/posts?inventoryId=xx - Получить сообщения обсуждения
 routerPosts.get("/", async (req, res) => {
   try {
     const { inventoryId } = req.query;
@@ -16,6 +15,25 @@ routerPosts.get("/", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Не указан инвентарь для загрузки сообщений",
+      });
+    }
+
+    const inventory = await prisma.inventory.findUnique({
+      where: { id: inventoryId },
+      select: { isPublic: true },
+    });
+
+    if (!inventory) {
+      return res.status(404).json({
+        success: false,
+        message: "Инвентарь не найден",
+      });
+    }
+
+    if (!inventory.isPublic && !req.user?.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Нет доступа к обсуждению инвентаря",
       });
     }
 
@@ -43,7 +61,6 @@ routerPosts.get("/", async (req, res) => {
   }
 });
 
-//  Создать новое сообщение
 routerPosts.post("/create-post", checkToken, async (req, res) => {
   try {
     const { content, inventoryId } = req.body;
@@ -64,7 +81,11 @@ routerPosts.post("/create-post", checkToken, async (req, res) => {
       });
     }
 
-    const hasAccess = await hasWriteAccess(inventoryId, req.user.userId);
+    const hasAccess = await hasWriteAccess(
+      inventoryId,
+      req.user.userId,
+      req.user.isAdmin
+    );
 
     if (!hasAccess) {
       return res.status(403).json({

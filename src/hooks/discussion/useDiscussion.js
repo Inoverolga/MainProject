@@ -23,16 +23,19 @@ const getWebSocketUrl = (inventoryId) => {
 };
 
 export const useDiscussion = (inventoryId) => {
-  const { lastMessage, readyState } = useWebSocket(
+  const { lastMessage, readyState, lastError } = useWebSocket(
     getWebSocketUrl(inventoryId),
     {
       shouldReconnect: () => true,
     }
   );
 
-  const { data, error, mutate, isLoading } = useSWR(
+  const { data, error, mutate } = useSWR(
     inventoryId ? `/posts?inventoryId=${inventoryId}` : null,
-    fetchPostsGetMessage
+    fetchPostsGetMessage,
+    {
+      revalidateOnFocus: false,
+    }
   );
 
   const { trigger: sendMessage, isMutating: isSending } = useSWRMutation(
@@ -63,7 +66,7 @@ export const useDiscussion = (inventoryId) => {
           }, false);
         }
       } catch (error) {
-        console.error("❌ Ошибка парсинга WebSocket сообщения:", error);
+        console.error("WebSocket error:", lastError);
       }
     }
   }, [lastMessage, mutate]);

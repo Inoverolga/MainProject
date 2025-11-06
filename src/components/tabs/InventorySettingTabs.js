@@ -23,7 +23,7 @@ const InventorySettingsTabs = ({
   return (
     <Card className="border-0 shadow-sm">
       <Card.Body>
-        <h5>⚙️ {t("inventorySettings")}</h5>
+        <h5>⚙️ {t("InventorySettings")}</h5>
         <UniversalInventoryForm
           key={inventory?.version}
           mode="edit"

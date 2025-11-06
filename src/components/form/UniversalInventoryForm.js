@@ -13,6 +13,7 @@ import {
   fetchMyInventories,
   fetchCategories,
 } from "../../service/api";
+import { ImageUploader } from "../imgUpload/ImageUploader.js";
 import { useTranslation } from "react-i18next";
 
 const UniversalInventoryForm = ({ mode = "create", onSave }) => {
@@ -20,7 +21,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
   const navigate = useNavigate();
   const { id: inventoryId } = useParams();
   const [showPreview, setShowPreview] = useState(false);
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
 
   const { mutate: mutateMyInventories } = useSWR(
     "/users/me/inventories",
@@ -63,7 +64,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid, isDirty, isSubmitting },
+    formState: { errors, isDirty, isSubmitting },
     reset,
     setValue,
     getValues,
@@ -86,50 +87,11 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
     tags: tagValues,
     isPublic: formData.isPublic === "true",
     version: inventoryData?.data?.version || formData.version,
+    imageUrl: imageUrl,
   });
 
   const descriptionValue = watch("description");
 
-  //автосохранение
-  //   useEffect(() => {
-  //     if (mode !== "edit") return;
-
-  //     let timeoutId;
-
-  //     if ((isDirty || hasTagChanges) && !isAutoSaving) {
-  //       timeoutId = setTimeout(async () => {
-  //         try {
-  //           setIsAutoSaving(true);
-  //           const formData = getValues();
-  //           await handleUpdate(inventoryId, prepareFormData(formData));
-
-  //           reset(formData);
-  //         } catch (error) {
-  //           if (error?.response?.status === 409) {
-  //              toast.error(t("dataChangedByOther"))
-  //           }
-  //         } finally {
-  //           setIsAutoSaving(false);
-  //         }
-  //       }, 8000);
-  //     }
-
-  //     return () => {
-  //       if (timeoutId) {
-  //         clearTimeout(timeoutId);
-  //       }
-  //     };
-  //   }, [
-  //     mode,
-  //     isDirty,
-  //     hasTagChanges,
-  //     isAutoSaving,
-  //     getValues,
-  //     handleUpdate,
-  //     inventoryId,
-  //   ]);
-
-  // Заполняем форму данными при редактировании
   useEffect(() => {
     if (mode === "edit" && inventoryData?.data) {
       const data = inventoryData.data;
@@ -138,6 +100,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
       setValue("category", data.category?.name || "");
       setValue("isPublic", data.isPublic?.toString() || "true");
       setValue("version", data.version);
+      setImageUrl(data.imageUrl || "");
     }
   }, [mode, inventoryData, setValue]);
 
@@ -157,6 +120,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
           toast.success(t("inventoryCreated"));
           setSelectedTags([]);
           reset();
+          setImageUrl("");
         }
       } else {
         if (onSave) {
@@ -185,22 +149,6 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
   return (
     <div className="container mt-4">
       <h2>{mode === "create" ? t("createInventory") : t("editInventory")}</h2>
-
-      {mode === "edit" && (
-        <div className="mb-3" style={{ height: "24px" }}>
-          {isAutoSaving && (
-            <div className="d-flex align-items-center text-primary">
-              <div
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-              >
-                <span className="visually-hidden">{t("savingStatus")}</span>
-              </div>
-              <span className="small">{t("autoSaving")}</span>
-            </div>
-          )}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-3">
@@ -249,6 +197,13 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
             <div className="text-danger">{errors.description.message}</div>
           )}
         </div>
+
+        <ImageUploader
+          inventoryId={inventoryId}
+          currentImage={imageUrl}
+          onImageChange={setImageUrl}
+          mode={mode}
+        />
 
         <div className="mb-3">
           <label className="form-label">{t("category")}</label>
@@ -320,16 +275,6 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
             />
             <label className="form-check-label">{t("private")}</label>
           </div>
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">{t("imageUrl")}</label>
-          <input
-            type="url"
-            className="form-control"
-            placeholder="https://example.com/image.jpg"
-            {...register("imageUrl")}
-          />
         </div>
 
         <div className="d-flex gap-2 mb-5">

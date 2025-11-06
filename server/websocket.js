@@ -104,7 +104,7 @@ export function initializeWebSocket(server) {
   return websocket;
 }
 
-//функция для рассылки сообщений (если используется в routerPosts)
+//функция для рассылки сообщений
 export function sendMessageToAllUsers(inventoryId, message) {
   const room = connections.get(inventoryId);
   if (!room) {

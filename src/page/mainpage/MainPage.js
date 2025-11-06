@@ -26,6 +26,7 @@ const InventoryTable = ({
       <table className="table table-hover">
         <thead>
           <tr>
+            <th style={{ width: "60px" }}>{t("image")}</th>
             <th>{t("inventoryName")}</th>
             <th>{t("description")}</th>
             <th>{t("creator")}</th>
@@ -41,6 +42,27 @@ const InventoryTable = ({
               onClick={() => navigate(`/inventory/${item.id}`)}
               style={{ cursor: "pointer" }}
             >
+              <td>
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="img-thumbnail"
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <div
+                    className="bg-light rounded d-flex align-items-center justify-content-center text-muted"
+                    style={{ width: "50px", height: "50px" }}
+                  >
+                    <i className="bi bi-image"></i>
+                  </div>
+                )}
+              </td>
               <td className="fw-semibold">{item.name}</td>
               <td>{item.description || "-"}</td>
               <td>{item.user?.name || "-"}</td>
@@ -136,10 +158,7 @@ const MainPage = () => {
                 </span>
               )}
             </h5>
-            <p className="card-text text-center">
-              {t("youAreOnMainPage")}{" "}
-              {/* Вы находитесь на главной странице системы */}
-            </p>
+            <p className="card-text text-center">{t("youAreOnMainPage")} </p>
           </div>
         </div>
       )}

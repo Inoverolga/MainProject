@@ -6,10 +6,12 @@ import {
   fetchTogglePublicAccess,
   fetchUserAditAccess,
   fetchUserDeleteAccess,
-  //fetchUserSearch,
 } from "../../service/api.js";
+import { useTranslation } from "react-i18next";
 
 export const useInventoryAccess = (inventoryId) => {
+  const { t } = useTranslation();
+
   const {
     data: accessDataUsers,
     error,
@@ -27,20 +29,17 @@ export const useInventoryAccess = (inventoryId) => {
     }
   );
 
-  // Мутация(добавление доступа)
   const { trigger: addAccess, isMutating: isAdding } = useSWRMutation(
     `/access/user/${inventoryId}/edit-access`,
     (url, { arg: userId }) => fetchUserAditAccess(url, { userId })
   );
 
-  // Мутация (удаления доступа)
   const { trigger: removeAccess, isMutating: isDeleting } = useSWRMutation(
     `/access/user/${inventoryId}`,
     (url, { arg: userId }) =>
       fetchUserDeleteAccess(`${url}/${userId}/delete-access`)
   );
 
-  // Мутация для переключения публичного доступа
   const { trigger: togglePublicAccess, isMutating: isToggling } =
     useSWRMutation(
       `/access/user/${inventoryId}/public-access`,
@@ -51,9 +50,9 @@ export const useInventoryAccess = (inventoryId) => {
     try {
       await addAccess(userId);
       mutate();
-      toast.success("Доступ предоставлен");
+      toast.success(t("accessGranted"));
     } catch (error) {
-      toast.error("Ошибка при добавлении доступа");
+      toast.error(t("addAccessError"));
       throw error;
     }
   };
@@ -62,9 +61,9 @@ export const useInventoryAccess = (inventoryId) => {
     try {
       await removeAccess(userId);
       mutate();
-      toast.success("Доступ удален");
+      toast.success(t("accessRemoved"));
     } catch (error) {
-      toast.error("Ошибка при удалении доступа");
+      toast.error(t("removeAccessError"));
       throw error;
     }
   };
@@ -73,9 +72,11 @@ export const useInventoryAccess = (inventoryId) => {
     try {
       await togglePublicAccess(isPublic);
       mutate();
-      toast.success(`Инвентарь теперь ${isPublic ? "публичный" : "приватный"}`);
+      toast.success(
+        isPublic ? t("inventoryNowPublic") : t("inventoryNowPrivate")
+      );
     } catch (error) {
-      toast.error("Ошибка при изменении настроек доступа");
+      toast.error(t("toggleAccessError"));
       throw error;
     }
   };

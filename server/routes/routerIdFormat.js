@@ -9,12 +9,10 @@ import { format } from "date-fns";
 
 const routerIdFormat = express.Router();
 
-//добавляем нули слева
 function formatNumber(number, formatPattern) {
   return number.toString().padStart(formatPattern.length, "0");
 }
 
-// функции для sequence
 async function getSequenceValue(inventoryId, sequenceKey, increment = false) {
   if (increment) {
     const sequence = await prisma.inventorySequence.upsert({
@@ -31,7 +29,6 @@ async function getSequenceValue(inventoryId, sequenceKey, increment = false) {
   }
 }
 
-// функция генерации ID
 export async function generateCustomId(
   customIdFormats,
   inventoryId,
@@ -95,9 +92,9 @@ export async function generateCustomId(
   }
 }
 
-// эндпоинт получения формата
 routerIdFormat.get(
   "/inventories/:inventoryId/custom-id-format",
+  checkToken,
   async (req, res) => {
     try {
       const inventory = await prisma.inventory.findUnique({
@@ -108,6 +105,20 @@ routerIdFormat.get(
         return res
           .status(404)
           .json({ success: false, message: "Инвентарь не найден" });
+      }
+
+      const canManage = await canManagersInventory(
+        req.params.inventoryId,
+        req.user.userId,
+        req.user.isAdmin
+      );
+
+      if (!canManage) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Только владелец или администратор может просматривать формат ID",
+        });
       }
 
       const customIdFormats = await prisma.customIdFormat.findMany({
@@ -125,7 +136,6 @@ routerIdFormat.get(
   }
 );
 
-// эндпоинт обновления формата
 routerIdFormat.put(
   "/inventories/:inventoryId/custom-id-format-update",
   checkToken,
@@ -152,7 +162,6 @@ routerIdFormat.put(
           .json({ success: false, message: "Неверный формат данных" });
       }
 
-      // Проверка дубликатов позиций
       const positions = customIdFormats.map((f) => f.position);
       if (new Set(positions).size !== positions.length) {
         return res
@@ -185,7 +194,6 @@ routerIdFormat.put(
   }
 );
 
-//эндпоинт генерации ID
 routerIdFormat.post(
   "/inventories/:inventoryId/generate-id",
   checkToken,
@@ -194,7 +202,11 @@ routerIdFormat.post(
       const { customIdFormats, forItem = false } = req.body;
       const userId = req.user.userId;
 
-      const hasAccess = await hasWriteAccess(req.params.inventoryId, userId);
+      const hasAccess = await hasWriteAccess(
+        req.params.inventoryId,
+        userId,
+        req.user.isAdmin
+      );
       if (!hasAccess) {
         return res
           .status(403)
@@ -203,7 +215,6 @@ routerIdFormat.post(
 
       let formatsToUse = customIdFormats;
 
-      // Если форматы не переданы, берем из БД
       if (!formatsToUse) {
         formatsToUse = await prisma.customIdFormat.findMany({
           where: { inventoryId: req.params.inventoryId },

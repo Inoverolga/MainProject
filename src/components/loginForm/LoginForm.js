@@ -6,9 +6,11 @@ import { fetchLoginUser } from "../../service/api";
 import { useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 export const LoginForm = () => {
-  const { login, openOAuthPopup, isAdmin } = useContext(AuthContext);
+  const { t } = useTranslation();
+  const { login, openOAuthPopup } = useContext(AuthContext);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const navigate = useNavigate();
 
@@ -17,7 +19,7 @@ export const LoginForm = () => {
     handleSubmit,
     formState: { errors, isValid },
     reset: resetForm,
-  } = useForm({ mode: "onChange" }); // валидация при изменении
+  } = useForm({ mode: "onChange" });
 
   const {
     trigger,
@@ -31,7 +33,7 @@ export const LoginForm = () => {
       const result = await trigger(formData);
 
       if (result) {
-        toast.success(`${result.user.name}, добро пожаловать в систему!`);
+        toast.success(t("welcomeMessage", { name: result.user.name }));
         login(result.user, result.token);
         resetForm();
         const userIsAdmin = result.user.isAdmin;
@@ -43,7 +45,7 @@ export const LoginForm = () => {
   useEffect(() => {
     const handleOAuthMessage = (event) => {
       if (event.data.type === "OAUTH_SUCCESS") {
-        toast.success(`${event.data.user.name}, добро пожаловать в систему!`);
+        toast.success(t("welcomeMessage", { name: event.data.user.name }));
         login(event.data.user, event.data.token);
         const userIsAdmin = event.data.user.isAdmin;
         navigate(userIsAdmin ? "/" : "/profile");
@@ -61,21 +63,21 @@ export const LoginForm = () => {
     <>
       <div className="card mb-4">
         <div className="card-body">
-          <h5 className="card-title">🔐 Вход в систему</h5>
+          <h5 className="card-title">🔐 {t("loginToSystem")}</h5>
 
           <LoginFormAouth openOAuthPopup={openOAuthPopup} />
 
           <div className="text-center my-3 position-relative">
             <hr />
-            <span className="bg-white px-3 text-muted position-absolute top-50 start-50 translate-middle">
-              или
+            <span className="bg-body px-3 text-muted position-absolute top-50 start-50 translate-middle">
+              {t("or")}
             </span>
           </div>
 
           {!showEmailForm ? (
             <div className="text-center">
               <button
-                className="btn btn-outline-dark btn-sm"
+                className="btn btn-outline-secondary btn-sm"
                 onClick={() => setShowEmailForm(true)}
                 disabled={isMutating}
               >
@@ -86,10 +88,10 @@ export const LoginForm = () => {
                       className="spinner-border spinner-border-sm me-2"
                       role="status"
                     ></span>
-                    Выполняется вход...
+                    {t("loggingIn")}
                   </>
                 ) : (
-                  "Войти по email и паролю"
+                  t("loginWithEmail")
                 )}
               </button>
             </div>
@@ -106,9 +108,9 @@ export const LoginForm = () => {
                   type="email"
                   className={`form-control ${errors.email && "is-invalid"}`}
                   id="email"
-                  placeholder="example@mail.ru"
+                  placeholder={t("emailPlaceholder")}
                   {...register("email", {
-                    required: "Обязательное поле",
+                    required: t("fieldRequired"),
                   })}
                 />
                 {errors.email && (
@@ -118,15 +120,15 @@ export const LoginForm = () => {
 
               <div className="col-md-4">
                 <label htmlFor="password" className="form-label">
-                  Пароль
+                  {t("password")}
                 </label>
                 <input
                   type="password"
                   className={`form-control ${errors.password && "is-invalid"}`}
                   id="password"
-                  placeholder="Введите пароль"
+                  placeholder={t("passwordPlaceholder")}
                   {...register("password", {
-                    required: "Обязательное поле",
+                    required: t("fieldRequired"),
                   })}
                 />
                 {errors.password && (
@@ -143,7 +145,7 @@ export const LoginForm = () => {
                     className="btn btn-primary flex-grow-1"
                     disabled={!isValid || isMutating}
                   >
-                    {isMutating ? "Вход..." : "Войти"}
+                    {isMutating ? t("loggingIn") : t("login")}
                   </button>
                   <button
                     type="button"
@@ -166,12 +168,12 @@ export const LoginForm = () => {
 
           <div className="mt-3">
             <small>
-              Нет аккаунта?{" "}
+              {t("noAccount")}{" "}
               <Link
                 to={"/auth/register"}
                 className="text-decoration-none fw-medium"
               >
-                Зарегистрироваться
+                {t("register")}
               </Link>
             </small>
           </div>
@@ -182,19 +184,20 @@ export const LoginForm = () => {
 };
 
 export const LoginFormAouth = ({ openOAuthPopup }) => {
+  const { t } = useTranslation();
   return (
     <div className="mt-3 d-flex gap-2">
       <button
         className="btn btn-outline-danger btn-sm flex-fill"
         onClick={() => openOAuthPopup("google")}
       >
-        <i className="bi bi-google"></i> Войти через Google
+        <i className="bi bi-google"></i> {t("loginWithGoogle")}
       </button>
       <button
         className="btn btn-outline-primary btn-sm flex-fill"
         onClick={() => openOAuthPopup("facebook")}
       >
-        <i className="bi bi-facebook"></i> Войти через Facebook
+        <i className="bi bi-facebook"></i> {t("loginWithFacebook")}
       </button>
     </div>
   );

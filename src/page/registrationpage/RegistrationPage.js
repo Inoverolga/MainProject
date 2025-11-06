@@ -3,8 +3,11 @@ import { useForm } from "react-hook-form";
 import useSWRMutation from "swr/mutation";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const RegistrationPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const {
     register,
@@ -21,7 +24,6 @@ const RegistrationPage = () => {
 
   const onSubmit = async (formData) => {
     try {
-      console.log("📤 Отправляемые данные:", formData);
       await magicTrigger({
         email: formData.email,
         name: formData.name,
@@ -31,23 +33,14 @@ const RegistrationPage = () => {
 
       resetForm();
 
-      toast.success(
-        `Регистрация успешна!
-         Ссылка для входа
-         отправлена на
-         ${formData.email}`
-      );
+      toast.success(t("registrationSuccess", { email: formData.email }));
       navigate("/");
     } catch (error) {
       if (error.response?.status === 400) {
-        toast.error(
-          error.response.data.error ||
-            "Пользователь с таким email уже существует"
-        );
+        toast.error(error.response.data.error || t("userAlreadyExists"));
         setTimeout(() => navigate("/"), 2000);
       } else {
-        toast.error("Ошибка отправки ссылки");
-        console.error("Ошибка регистрации:", error);
+        toast.error(t("linkSendError"));
       }
     }
   };
@@ -56,17 +49,17 @@ const RegistrationPage = () => {
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-6">
-          <h2 className="mb-4">📋 Регистрация нового пользователя</h2>
+          <h2 className="mb-4">📋 {t("registration")}</h2>
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="mb-3">
               <input
                 type="text"
                 className={`form-control ${errors.name && "is-invalid"}`}
-                placeholder="Имя пользователя"
+                placeholder={t("username")}
                 {...register("name", {
-                  required: "Обязательное поле",
-                  minLength: { value: 2, message: "Минимум 2 символа" },
+                  required: t("fieldRequired"),
+                  minLength: { value: 2, message: t("minLength2") },
                 })}
               />
               {errors.name && (
@@ -80,10 +73,10 @@ const RegistrationPage = () => {
                 className={`form-control ${errors.email && "is-invalid"}`}
                 placeholder="Email"
                 {...register("email", {
-                  required: "Обязательное поле",
+                  required: t("fieldRequired"),
                   pattern: {
                     value: /^\S+@\S+$/i,
-                    message: "Некорректный email",
+                    message: t("invalidEmail"),
                   },
                 })}
               />
@@ -96,10 +89,10 @@ const RegistrationPage = () => {
               <input
                 type="password"
                 className={`form-control ${errors.password && "is-invalid"}`}
-                placeholder="Пароль"
+                placeholder={t("password")}
                 {...register("password", {
-                  required: "Обязательное поле",
-                  minLength: { value: 1, message: "Минимум 1 символ" },
+                  required: t("fieldRequired"),
+                  minLength: { value: 1, message: t("minLength1") },
                 })}
               />
               {errors.password && (
@@ -111,7 +104,7 @@ const RegistrationPage = () => {
 
             {magicError && (
               <div className="alert alert-danger">
-                {magicError.response?.data?.error || "Ошибка регистрации"}
+                {magicError.response?.data?.error || t("registrationError")}
               </div>
             )}
 
@@ -120,8 +113,13 @@ const RegistrationPage = () => {
               className="btn btn-primary w-100"
               disabled={!isValid || isSendingMagicLink}
             >
-              📝 {isSendingMagicLink ? "Регистрация..." : "Зарегистрироваться"}
+              📝 {isSendingMagicLink ? t("registering") : t("register")}
             </button>
+            <div className="mt-3 text-center">
+              <Link to="/" className="btn btn-outline-secondary btn-sm">
+                ← {t("backToHome")}
+              </Link>
+            </div>
           </form>
         </div>
       </div>

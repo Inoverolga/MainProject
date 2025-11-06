@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 import useSWRMutation from "swr/mutation";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import {
   fetchDeleteInventories,
@@ -15,22 +16,20 @@ export const useInventoryOperations = (
   mutateAccessInventories = null,
   mutateCurrentInventory = null
 ) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // Удаление
   const { trigger: deleteInventory } = useSWRMutation(
     "/users/inventories-delete",
     (url, { arg: { inventoryId, version } }) =>
       fetchDeleteInventories(`${url}/${inventoryId}`, version)
   );
 
-  //Создание
   const { trigger: createInventory, isMutating: isCreating } = useSWRMutation(
     "/users/inventories-create",
     fetchCreateInventories
   );
 
-  // Обновление
   const { trigger: updateInventory, isMutating: isUpdating } = useSWRMutation(
     "/users/inventories-update",
     (url, { arg: { inventoryId, formData } }) =>
@@ -44,7 +43,7 @@ export const useInventoryOperations = (
       navigate(`/inventory/${result.data.id}`);
       return result.data;
     }
-    toast.error(result.message || "Ошибка создания инвентаря");
+    toast.error(result.message || t("inventoryCreationError"));
     return null;
   };
 
@@ -55,38 +54,38 @@ export const useInventoryOperations = (
   ) => {
     if (selectedRows.length === 0) return;
 
-    if (!window.confirm(`Удалить ${selectedRows.length} инвентарей?`)) return;
+    if (
+      !window.confirm(
+        t("deleteInventoriesConfirmation", { count: selectedRows.length })
+      )
+    )
+      return;
 
     try {
       for (const id of selectedRows) {
         const inventory = inventories.find((i) => i.id === id);
 
         if (!inventory?.version) {
-          console.error(
-            "Не удалось выполнить удаление. Пожалуйста, обновите страницу"
-          );
+          console.error(t("deleteVersionError"));
           return;
         }
         await deleteInventory({ inventoryId: id, version: inventory.version });
       }
-      toast.success(`Инвентарь удален`);
+      toast.success(t("inventoryDeletedSuccess"));
       mutateMyInventories?.();
       mutateAccessInventories?.();
       setSelectedRows([]);
     } catch (error) {
       if (error?.response?.status === 409) {
-        toast.error(
-          "Данные были изменены другим пользователем. Пожалуйста, обновите страницу."
-        );
+        toast.error(t("dataChangedError"));
       } else {
-        toast.error("Ошибка при удалении");
+        toast.error(t("deleteError"));
       }
     }
   };
 
   const handleEdit = (selectedRows) => {
     if (selectedRows.length !== 1) {
-      //toast.info("Выберите один инвентарь для редактирования");
       return;
     }
     navigate(`/inventory-edit/${selectedRows[0]}`);
@@ -94,7 +93,7 @@ export const useInventoryOperations = (
 
   const handleUpdate = async (inventoryId, formData) => {
     if (!inventoryId) {
-      toast.error("ID инвентаря не найден");
+      toast.error(t("inventoryIdNotFound"));
       return false;
     }
 
@@ -107,14 +106,14 @@ export const useInventoryOperations = (
       return true;
     }
 
-    toast.error(result.message || "Ошибка обновления инвентаря");
+    toast.error(result.message || t("inventoryUpdateError"));
 
     return false;
   };
 
   const handleExport = async (selectedRows) => {
     if (selectedRows.length !== 1) {
-      toast.info("Выберите один инвентарь для экспорта");
+      toast.info(t("selectOneInventoryToExport"));
       return;
     }
     try {
@@ -125,9 +124,9 @@ export const useInventoryOperations = (
         type: "text/csv;charset=utf-8",
       });
       saveAs(blob, `inventory-${selectedRows[0]}-${Date.now()}.csv`);
-      toast.success("Экспорт завершен");
+      toast.success(t("exportCompleted"));
     } catch (error) {
-      toast.error("Ошибка при экспорте");
+      toast.error(t("exportError"));
     }
   };
 

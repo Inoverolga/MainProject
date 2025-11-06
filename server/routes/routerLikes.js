@@ -2,49 +2,55 @@ import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { handleError } from "../utils/handleError.js";
 import { checkToken, optionalAuth } from "../middleware/checkToken.js";
+import { getItemWithAccessCheck } from "../utils/accessUtils.js";
 
 const routerLikes = express.Router();
 
-//Добавление лайков
-routerLikes.post("/:itemId/like-create", checkToken, async (req, res) => {
+const handleLikeAction = (action) => async (req, res) => {
   try {
     const { itemId } = req.params;
     const userId = req.user.userId;
 
-    const item = await prisma.item.findUnique({ where: { id: itemId } });
-    if (!item) throw new Error("Товар не найден");
+    await getItemWithAccessCheck(itemId, userId, false, req.user.isAdmin);
 
-    const existingLike = await prisma.like.findUnique({
-      where: { userId_itemId: { userId, itemId } },
-    });
-    if (existingLike) throw new Error("Лайк уже поставлен");
+    if (action === "create") {
+      const existingLike = await prisma.like.findUnique({
+        where: { userId_itemId: { userId, itemId } },
+      });
+      if (existingLike) throw new Error("Лайк уже поставлен");
 
-    const like = await prisma.like.create({
-      data: { userId, itemId },
-      include: { user: { select: { id: true, name: true, email: true } } },
-    });
+      await prisma.like.create({ data: { userId, itemId } });
+    } else {
+      await prisma.like.delete({
+        where: { userId_itemId: { userId, itemId } },
+      });
+    }
 
     const likeCount = await prisma.like.count({ where: { itemId } });
 
-    res.json({ success: true, data: { likeCount, isLiked: true, like } });
+    res.json({
+      success: true,
+      data: {
+        likeCount,
+        isLiked: action === "create",
+      },
+    });
   } catch (error) {
     handleError(error, res);
   }
-});
+};
 
-routerLikes.delete("/:itemId/like-delete", checkToken, async (req, res) => {
-  try {
-    const { itemId } = req.params;
-    const userId = req.user.userId;
+routerLikes.post(
+  "/:itemId/like-create",
+  checkToken,
+  handleLikeAction("create")
+);
 
-    await prisma.like.delete({ where: { userId_itemId: { userId, itemId } } });
-    const likeCount = await prisma.like.count({ where: { itemId } });
-
-    res.json({ success: true, data: { likeCount, isLiked: false } });
-  } catch (error) {
-    handleError(error, res);
-  }
-});
+routerLikes.delete(
+  "/:itemId/like-delete",
+  checkToken,
+  handleLikeAction("delete")
+);
 
 routerLikes.get(
   "/inventory/:inventoryId/likes-publicInfo",
@@ -54,7 +60,25 @@ routerLikes.get(
       const { inventoryId } = req.params;
       const userId = req.user?.userId;
 
-      // Проверяем инвентарь и загружаем лайки в одном запросе
+      const inventory = await prisma.inventory.findUnique({
+        where: { id: inventoryId },
+        select: { isPublic: true },
+      });
+
+      if (!inventory) {
+        return res.status(404).json({
+          success: false,
+          message: "Инвентарь не найден",
+        });
+      }
+
+      if (!inventory.isPublic && !userId) {
+        return res.status(403).json({
+          success: false,
+          message: "Нет доступа к инвентарю",
+        });
+      }
+
       const items = await prisma.item.findMany({
         where: { inventoryId },
         select: {
@@ -66,7 +90,6 @@ routerLikes.get(
         },
       });
 
-      // Создаем объект лайков
       const likes = {};
       items.forEach((item) => {
         likes[item.id] = {

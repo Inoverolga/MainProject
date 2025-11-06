@@ -44,7 +44,12 @@ export const hasWriteAccess = async (
   );
 };
 
-export const hasReadAccess = async (inventoryId, userId) => {
+export const hasReadAccess = async (
+  inventoryId,
+  userId,
+  userIsAdmin = false
+) => {
+  if (userIsAdmin) return true;
   const inventory = await prisma.inventory.findUnique({
     where: { id: inventoryId },
   });

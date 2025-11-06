@@ -4,7 +4,6 @@ import { prisma } from "../lib/prisma.js";
 
 const routerInventories = express.Router();
 
-//получение инвентарей для публичного доступа(в т.ч. популярных)
 routerInventories.get("/public", async (req, res) => {
   try {
     const { type = "recent", page = 1 } = req.query;
@@ -43,7 +42,6 @@ routerInventories.get("/public", async (req, res) => {
   }
 });
 
-//инвентарь+товар публичный
 routerInventories.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;

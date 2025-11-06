@@ -10,7 +10,11 @@ export const checkToken = (req, res, next) => {
 
   try {
     const user = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    req.user = user;
+    //req.user = user;
+    req.user = {
+      ...user,
+      isAdmin: user.isAdmin || false,
+    };
 
     next();
   } catch (error) {
@@ -29,7 +33,12 @@ export const optionalAuth = (req, res, next) => {
 
   try {
     const user = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    req.user = user;
+    //req.user = user;
+
+    req.user = {
+      ...user,
+      isAdmin: user.isAdmin || false,
+    };
     next();
   } catch (error) {
     req.user = null;
