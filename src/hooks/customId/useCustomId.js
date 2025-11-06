@@ -1,13 +1,13 @@
-import { useContext } from "react";
-import { AuthContext } from "../../contexts/AuthContext.js";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
+import { useTranslation } from "react-i18next";
+import { useContext } from "react";
+import { AuthContext } from "../../contexts/AuthContext.js";
 import {
   fetchFormatId,
   fetchFormatIdUpdate,
   fetchFormatIdGenerate,
 } from "../../service/api.js";
-import { useTranslation } from "react-i18next";
 
 export const useCustomIdFormat = (inventoryId) => {
   const { t } = useTranslation();

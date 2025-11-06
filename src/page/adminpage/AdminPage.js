@@ -1,14 +1,14 @@
 import { toast } from "react-toastify";
 import { useContext, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import Spinner from "../../components/spinner/Spinner.js";
 import { AuthContext } from "../../contexts/AuthContext.js";
-import { SearchContext } from "../../contexts/SearchContext.js"; // ✅ Добавить
-import { useGlobalSearch } from "../../hooks/search/useGlobalSearch.js";
+import { SearchContext } from "../../contexts/SearchContext.js";
 import AdminStats from "../../components/admin/AdminStats.js";
 import AdminUsersTable from "../../components/admin/AdminUsersTable.js";
 import { useAdminData } from "../../hooks/admin/useAdmin.js";
-import Spinner from "../../components/spinner/Spinner.js";
-import { useTranslation } from "react-i18next";
+import { useGlobalSearch } from "../../hooks/search/useGlobalSearch.js";
 
 const AdminPage = () => {
   const { t } = useTranslation();

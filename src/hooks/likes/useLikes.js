@@ -1,11 +1,11 @@
 import useSWR from "swr";
+import { useContext, useState } from "react"; // Добавляем useState
+import { AuthContext } from "../../contexts/AuthContext";
 import {
   fetchLikePublicInfo,
   fetchLikesCreate,
   fetchLikesDelete,
 } from "../../service/api";
-import { useContext, useState } from "react"; // Добавляем useState
-import { AuthContext } from "../../contexts/AuthContext";
 
 export const useLikes = (inventoryId) => {
   const { isAuthenticated } = useContext(AuthContext);

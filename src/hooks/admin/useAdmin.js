@@ -1,6 +1,7 @@
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import { useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext.js";
 import {
@@ -10,7 +11,6 @@ import {
   fetchAddRoleAdmin,
   fetchDeleteRoleAdmin,
 } from "../../service/api.js";
-import { useTranslation } from "react-i18next";
 
 export const useAdminData = () => {
   const { t } = useTranslation();

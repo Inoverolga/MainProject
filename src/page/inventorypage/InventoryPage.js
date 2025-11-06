@@ -1,15 +1,17 @@
 import { useNavigate, useParams } from "react-router-dom";
 import useSWR from "swr";
 import { Container, Tabs, Tab } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
+import { useContext, useState } from "react";
 import Spinner from "../../components/spinner/Spinner";
 import Error from "../../components/error/Error";
+import ReactMarkdown from "react-markdown";
 import {
   fetchInventoryWithItems,
   fetchFieldsPublic,
   fetchInventoryWithAccessCheck,
   fetchItemsSearch,
 } from "../../service/api";
-import { useContext, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import { SearchContext } from "../../contexts/SearchContext.js";
 import ItemsTabs from "../../components/tabs/ItemsTabs.js";
@@ -19,7 +21,6 @@ import AccessTab from "../../components/tabs/AccessTabs.js";
 import DiscussionTab from "../../components/tabs/DiscussionTabs.js";
 import CustomIdTabs from "../../components/tabs/CustomIdTabs.js";
 import StatsTabs from "../../components/tabs/StatsTabs.js";
-import { useTranslation } from "react-i18next";
 
 const InventoryPage = () => {
   const { t } = useTranslation();
@@ -113,7 +114,9 @@ const InventoryPage = () => {
         <div className="flex-grow-1">
           <h1 className="fs-4 mb-1">{inventory.name}</h1>
           {inventory.description && (
-            <p className="text-muted mb-0">{inventory.description}</p>
+            <p className="text-muted mb-0">
+              <ReactMarkdown>{inventory.description}</ReactMarkdown>
+            </p>
           )}
         </div>
       </div>

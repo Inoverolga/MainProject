@@ -2,18 +2,17 @@ import useSWR from "swr";
 import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { Container, Button } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
+import Error from "../../components/error/Error.js";
+import Spinner from "../../components/spinner/Spinner.js";
+import { SearchContext } from "../../contexts/SearchContext.js";
+import { InventorySection } from "../../components/table/ToolbarForProfilePage.js";
+import { useInventoryColumns } from "../../hooks/inventories/useInventoryColumns.js";
+import { useInventoryOperations } from "../../hooks/inventories/useInventoryOperations.js";
 import {
   fetchMyInventories,
   fetchAccessibleInventories,
 } from "../../service/api.js";
-import Error from "../../components/error/Error.js";
-import Spinner from "../../components/spinner/Spinner.js";
-import { useInventoryColumns } from "../../hooks/inventories/useInventoryColumns.js";
-
-import { SearchContext } from "../../contexts/SearchContext.js";
-import { InventorySection } from "../../components/table/ToolbarForProfilePage.js";
-import { useInventoryOperations } from "../../hooks/inventories/useInventoryOperations.js";
-import { useTranslation } from "react-i18next";
 
 const ProfilePage = () => {
   const { t } = useTranslation();

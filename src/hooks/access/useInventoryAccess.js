@@ -1,13 +1,13 @@
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import {
   fetchUserListAccess,
   fetchTogglePublicAccess,
   fetchUserAditAccess,
   fetchUserDeleteAccess,
 } from "../../service/api.js";
-import { useTranslation } from "react-i18next";
 
 export const useInventoryAccess = (inventoryId) => {
   const { t } = useTranslation();

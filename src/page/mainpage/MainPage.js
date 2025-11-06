@@ -1,13 +1,13 @@
 import useSWR from "swr";
-import { fetchInventoriesPublic, fetchTags } from "../../service/api";
-import { useContext, useState, useEffect } from "react";
-import { SearchContext } from "../../contexts/SearchContext";
 import { useNavigate } from "react-router-dom";
-import { useGlobalSearch } from "../../hooks/search/useGlobalSearch.js";
-import { AuthContext } from "../../contexts/AuthContext.js";
-import { LoginForm } from "../../components/loginForm/LoginForm.js";
-import Error from "../../components/error/Error.js";
+import { useContext, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import Error from "../../components/error/Error.js";
+import { LoginForm } from "../../components/loginForm/LoginForm.js";
+import { SearchContext } from "../../contexts/SearchContext";
+import { AuthContext } from "../../contexts/AuthContext.js";
+import { useGlobalSearch } from "../../hooks/search/useGlobalSearch.js";
+import { fetchInventoriesPublic, fetchTags } from "../../service/api";
 
 const InventoryTable = ({
   title,
