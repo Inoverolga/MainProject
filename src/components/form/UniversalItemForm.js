@@ -105,6 +105,9 @@ const UniversalItemForm = ({ mode = "create" }) => {
 
   useEffect(() => {
     const initializeForm = async () => {
+      if (mode === "edit" && !itemData?.data) return;
+      if (fields.length === 0) return;
+
       if (!formInitializedRef.current) {
         if (mode === "create" && inventoryId) {
           const id = await generateIdForNewItem();
@@ -305,7 +308,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
             }
             noOptionsMessage={({ inputValue }) =>
               inputValue
-                ? t("tagNotFound", { inputValue })
+                ? t("tagNotFoundCreate", { inputValue })
                 : t("enterToSearchTags")
             }
             loadingMessage={() => t("searchingTags")}

@@ -20,20 +20,13 @@ routerPosts.get("/", async (req, res) => {
 
     const inventory = await prisma.inventory.findUnique({
       where: { id: inventoryId },
-      select: { isPublic: true },
+      select: { id: true, isPublic: true },
     });
 
     if (!inventory) {
       return res.status(404).json({
         success: false,
         message: "Инвентарь не найден",
-      });
-    }
-
-    if (!inventory.isPublic && !req.user?.userId) {
-      return res.status(403).json({
-        success: false,
-        message: "Нет доступа к обсуждению инвентаря",
       });
     }
 
