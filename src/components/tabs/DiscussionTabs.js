@@ -1,8 +1,11 @@
 import { useEffect, useState, useRef } from "react";
-import Error from "../error/Error.js";
-import { useDiscussion } from "../../hooks/discussion/useDiscussion.js";
-import Spinner from "../../components/spinner/Spinner.js";
+import ReactMarkdown from "react-markdown";
+import dayjs from "dayjs";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
+import Error from "../error/Error.js";
+import Spinner from "../../components/spinner/Spinner.js";
+import { useDiscussion } from "../../hooks/discussion/useDiscussion.js";
 import { useTranslation } from "react-i18next";
 import { Card, Badge, Form, Button, Alert } from "react-bootstrap";
 
@@ -101,14 +104,16 @@ const DiscussionTab = ({
                           <small className="fw-bold">
                             {user?.name || t("unknownUser")}
                           </small>
+
                           <small className="ms-2 text-body-secondary">
                             {post?.createdAt
-                              ? new Date(post.createdAt).toLocaleTimeString()
+                              ? dayjs(post.createdAt).format("DD.MM.YYYY HH:mm")
                               : ""}
                           </small>
                         </div>
+
                         <div className="message-content">
-                          {post?.content || ""}
+                          <ReactMarkdown>{post?.content || ""}</ReactMarkdown>
                         </div>
                       </Card.Body>
                     </Card>
