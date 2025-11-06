@@ -65,22 +65,22 @@ routerUserInventories.get("/me/inventories", checkToken, async (req, res) => {
 
     const where = {
       userId: req.user.userId,
-      ...(query && {
-        name: { startsWith: query, mode: "insensitive" },
-      }),
+      ...(query &&
+        query.length >= 2 && {
+          name: { startsWith: query, mode: "insensitive" },
+        }),
     };
 
-    const inventories = await prisma.inventory.findMany({
-      where,
-      include: inventoryInclude,
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    });
-
-    inventories.forEach((inv) => console.log("    -", inv.name));
-
-    const total = await prisma.inventory.count({ where });
+    const [inventories, total] = await Promise.all([
+      prisma.inventory.findMany({
+        where,
+        include: inventoryInclude,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.inventory.count({ where }),
+    ]);
 
     res.json({
       success: true,
@@ -107,40 +107,50 @@ routerUserInventories.get(
       if (req.user.isAdmin) {
         where = {
           userId: { not: req.user.userId },
-          ...(query && {
-            name: { startsWith: query, mode: "insensitive" },
-          }),
+          ...(query &&
+            query.length >= 2 && {
+              name: { startsWith: query, mode: "insensitive" },
+            }),
         };
       } else {
-        where = {
-          inventoryAccesses: {
-            some: {
-              userId: req.user.userId,
-              OR: [{ accessLevel: "WRITE" }, { accessLevel: "READ" }],
-            },
+        const accessibleIds = await prisma.inventoryAccess.findMany({
+          where: {
+            userId: req.user.userId,
+            OR: [{ accessLevel: "WRITE" }, { accessLevel: "READ" }],
           },
+          select: { inventoryId: true },
+        });
+
+        const inventoryIds = accessibleIds.map((acc) => acc.inventoryId);
+
+        where = {
+          id: { in: inventoryIds },
           userId: { not: req.user.userId },
-          ...(query && {
-            name: { startsWith: query, mode: "insensitive" },
-          }),
+          ...(query &&
+            query.length >= 2 && {
+              name: { startsWith: query, mode: "insensitive" },
+            }),
         };
       }
 
-      const accessible = await prisma.inventory.findMany({
-        where,
-        include: {
-          ...inventoryInclude,
-          ...(!req.user.isAdmin && {
-            inventoryAccesses: {
-              where: { userId: req.user.userId },
-              select: { accessLevel: true },
-            },
-          }),
-        },
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-      });
+      const [accessible, total] = await Promise.all([
+        prisma.inventory.findMany({
+          where,
+          include: {
+            ...inventoryInclude,
+            ...(!req.user.isAdmin && {
+              inventoryAccesses: {
+                where: { userId: req.user.userId },
+                select: { accessLevel: true },
+              },
+            }),
+          },
+          skip,
+          take: limit,
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.inventory.count({ where }),
+      ]);
 
       const inventoriesWithAccess = accessible.map((inv) => {
         if (req.user.isAdmin) {
@@ -155,9 +165,6 @@ routerUserInventories.get(
           };
         }
       });
-
-      const total = await prisma.inventory.count({ where });
-
       res.json({
         success: true,
         data: inventoriesWithAccess,
@@ -190,21 +197,24 @@ routerUserInventories.get(
         });
       }
 
-      const inventoryItem = await prisma.inventory.findUnique({
-        where: { id },
-        select: {
-          ...inventorySelect,
-          userId: true,
-          user: { select: { name: true, email: true, id: true } },
-          category: true,
-          tags: true,
-          items: {
-            select: fieldsItemSelect,
-            orderBy: { createdAt: "desc" },
+      const [inventoryItem, items] = await Promise.all([
+        prisma.inventory.findUnique({
+          where: { id },
+          select: {
+            ...inventorySelect,
+            userId: true,
+            user: { select: { name: true, email: true, id: true } },
+            category: true,
+            tags: true,
           },
-        },
-      });
-
+        }),
+        prisma.item.findMany({
+          where: { inventoryId: id },
+          select: fieldsItemSelect,
+          orderBy: { createdAt: "desc" },
+          take: 1000,
+        }),
+      ]);
       if (!inventoryItem) {
         return res
           .status(404)
@@ -216,7 +226,7 @@ routerUserInventories.get(
       res.json({
         success: true,
         message: "Инвентарь загружен",
-        data: { ...inventoryItem, canWrite },
+        data: { ...inventoryItem, items, canWrite },
       });
     } catch (error) {
       handleError(error, res);

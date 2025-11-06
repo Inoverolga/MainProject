@@ -27,6 +27,7 @@ model User {
   likes             Like[]
   posts             Post[]
 
+  @@index([name, email])
   @@map("users")
 }
 
@@ -58,7 +59,11 @@ model Inventory {
   @@index([userId])        
   @@index([isPublic])      
   @@index([createdAt])  
-  @@index([name])    
+  @@index([name])  
+  @@index([isPublic, createdAt])  
+  @@index([name, description], type: Gin)
+  @@index([userId, isPublic])      
+  @@index([isPublic, userId])       
   @@map("inventories")
 }
 
@@ -93,8 +98,15 @@ model Item {
 
   @@index([inventoryId])   
   @@index([createdAt])    
+  @@index([name])
+  @@index([customId])
+  @@index([name, description], type: Gin) 
   @@unique([inventoryId, customId])
   @@unique([inventoryId, id])
+  @@index([inventoryId, name])      
+  @@index([inventoryId, createdAt])  
+ 
+
   @@map("items")
 }
 
@@ -126,6 +138,9 @@ model InventoryAccess {
   inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+
+  @@index([inventoryId]) 
+  @@index([userId])      
   @@unique([userId, inventoryId])
   @@map("inventory_accesses")
 }
@@ -137,7 +152,8 @@ model Tag {
   inventories Inventory[] @relation("InventoryToTag")
   items       Item[]      @relation("ItemToTag")
 
-  @@index([name])          
+  @@index([name]) 
+  @@index([isPublic, name])         
   @@map("tags")
  
 }
@@ -149,6 +165,7 @@ model Category {
   createdAt   DateTime    @default(now())
   inventories Inventory[]
 
+  @@index([name])
   @@map("categories")
 }
 

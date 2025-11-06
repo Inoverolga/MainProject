@@ -1,31 +1,27 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
-import { hasReadAccess } from "../utils/accessUtils.js";
 import { checkToken } from "../middleware/checkToken.js";
 import { checkAdmin } from "../middleware/checkAdmin.js";
 import { handleError } from "../utils/handleError.js";
 
 const routerSearch = express.Router();
 
-export const searchConditions = (query) => ({
-  OR: [
-    { name: { contains: query, mode: "insensitive" } },
-    { description: { contains: query, mode: "insensitive" } },
-    { tags: { some: { name: { contains: query, mode: "insensitive" } } } },
-    {
-      items: {
-        some: {
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { customId: { contains: query, mode: "insensitive" } },
-          ],
+export const searchConditions = (query) => {
+  const searchTerm = query.trim();
+  if (!searchTerm || searchTerm.length < 2) return {};
+
+  return {
+    OR: [
+      { name: { startsWith: searchTerm, mode: "insensitive" } },
+      { description: { startsWith: searchTerm, mode: "insensitive" } },
+      {
+        tags: {
+          some: { name: { startsWith: searchTerm, mode: "insensitive" } },
         },
       },
-    },
-    { category: { name: { contains: query, mode: "insensitive" } } },
-    { user: { name: { contains: query, mode: "insensitive" } } },
-  ],
-});
+    ],
+  };
+};
 
 export const inventoryInclude = {
   user: { select: { name: true, email: true } },
@@ -41,35 +37,48 @@ routerSearch.get("/", async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    if (!query) {
+    if (!query || query.length < 2) {
       return res.json({
         data: [],
         pagination: { page, limit, total: 0, totalPages: 0 },
       });
     }
 
-    const baseConditions = req.user
-      ? searchConditions(query)
-      : { isPublic: true, ...searchConditions(query) };
-
-    let inventories = await prisma.inventory.findMany({
-      where: baseConditions,
-      include: inventoryInclude,
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    });
-
-    const total = await prisma.inventory.count({ where: baseConditions });
+    let accessibleInventoryIds = [];
 
     if (req.user) {
-      const accessibleInventories = [];
-      for (const inventory of inventories) {
-        const hasAccess = await hasReadAccess(inventory.id, req.user.userId);
-        if (hasAccess) accessibleInventories.push(inventory);
-      }
-      inventories = accessibleInventories;
+      const accesses = await prisma.inventoryAccess.findMany({
+        where: { userId: req.user.userId },
+        select: { inventoryId: true },
+      });
+      accessibleInventoryIds = accesses.map((acc) => acc.inventoryId);
     }
+
+    const baseConditions = {
+      AND: [
+        searchConditions(query),
+        req.user
+          ? {
+              OR: [
+                { isPublic: true },
+                { id: { in: accessibleInventoryIds } },
+                { userId: req.user.userId },
+              ],
+            }
+          : { isPublic: true },
+      ],
+    };
+
+    const [inventories, total] = await Promise.all([
+      prisma.inventory.findMany({
+        where: baseConditions,
+        include: inventoryInclude,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.inventory.count({ where: baseConditions }),
+    ]);
 
     res.json({
       data: inventories,
@@ -87,7 +96,7 @@ routerSearch.get("/items", async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    if (!query.trim()) {
+    if (!query.trim() || query.length < 2) {
       return res.json({
         data: [],
         pagination: { page, limit, total: 0, totalPages: 0 },
@@ -97,54 +106,41 @@ routerSearch.get("/items", async (req, res) => {
     if (inventoryId) {
       const inventory = await prisma.inventory.findUnique({
         where: { id: inventoryId },
-        select: { isPublic: true },
+        select: { id: true },
       });
 
-      if (!inventory?.isPublic && !req.user) {
-        return res.status(403).json({
-          success: false,
-          message: "Для просмотра этого инвентаря требуется авторизация",
-        });
-      }
-
-      if (!inventory?.isPublic && req.user) {
-        const hasAccess = await hasReadAccess(inventoryId, req.user.userId);
-        if (!hasAccess) {
-          return res.status(403).json({
-            success: false,
-            message: "Нет доступа к этому инвентарю",
-          });
-        }
+      if (!inventory) {
+        throw new Error("Инвентарь не найден");
       }
     }
-
     const where = {
       OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        { customId: { contains: query, mode: "insensitive" } },
-        { description: { contains: query, mode: "insensitive" } },
+        { name: { startsWith: query, mode: "insensitive" } },
+        { customId: { startsWith: query, mode: "insensitive" } },
+        { description: { startsWith: query, mode: "insensitive" } },
       ],
       ...(inventoryId && { inventoryId }),
     };
 
-    const items = await prisma.item.findMany({
-      where,
-      include: {
-        inventory: {
-          select: {
-            id: true,
-            name: true,
-            isPublic: true,
-            user: { select: { name: true } },
+    const [items, total] = await Promise.all([
+      prisma.item.findMany({
+        where,
+        include: {
+          inventory: {
+            select: {
+              id: true,
+              name: true,
+              isPublic: true,
+              user: { select: { name: true } },
+            },
           },
         },
-      },
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    });
-
-    const total = await prisma.item.count({ where });
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.item.count({ where }),
+    ]);
 
     res.json({
       data: items,
@@ -163,8 +159,8 @@ routerSearch.get("/users", checkToken, async (req, res) => {
     const users = await prisma.user.findMany({
       where: {
         OR: [
-          { email: { contains: q, mode: "insensitive" } },
-          { name: { contains: q, mode: "insensitive" } },
+          { email: { startsWith: q, mode: "insensitive" } },
+          { name: { startsWith: q, mode: "insensitive" } },
         ],
       },
       select: { id: true, name: true, email: true },
@@ -199,7 +195,7 @@ routerSearch.get("/admin", checkToken, checkAdmin, async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    if (!query) {
+    if (!query || query.length < 2) {
       return res.json({
         data: [],
         pagination: { page, limit, total: 0, totalPages: 0 },
@@ -208,41 +204,35 @@ routerSearch.get("/admin", checkToken, checkAdmin, async (req, res) => {
 
     const where = {
       OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        { email: { contains: query, mode: "insensitive" } },
-        {
-          inventories: {
-            some: {
-              name: { contains: query, mode: "insensitive" },
-            },
-          },
-        },
+        { name: { startsWith: query, mode: "insensitive" } },
+        { email: { startsWith: query, mode: "insensitive" } },
       ],
     };
 
-    const users = await prisma.user.findMany({
-      where,
-      include: {
-        inventories: {
-          select: {
-            id: true,
-            name: true,
-            isPublic: true,
-            createdAt: true,
-            _count: { select: { items: true } },
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        include: {
+          inventories: {
+            select: {
+              id: true,
+              name: true,
+              isPublic: true,
+              createdAt: true,
+              _count: { select: { items: true } },
+            },
+            take: 5,
           },
-          take: 5,
+          _count: {
+            select: { inventories: true },
+          },
         },
-        _count: {
-          select: { inventories: true },
-        },
-      },
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    });
-
-    const total = await prisma.user.count({ where });
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.user.count({ where }),
+    ]);
 
     res.json({
       data: users,

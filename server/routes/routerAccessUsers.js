@@ -27,7 +27,6 @@ const checkManagers = async (req, res, next) => {
   }
 };
 
-// Получить список пользователей с доступом к инвентарю
 routerAccessUser.get(
   "/inventories/:inventoryId/user-list-access",
   checkToken,
@@ -46,7 +45,6 @@ routerAccessUser.get(
   }
 );
 
-// Добавить пользователю доступ
 routerAccessUser.post(
   "/:inventoryId/edit-access",
   checkToken,
@@ -80,7 +78,6 @@ routerAccessUser.post(
   }
 );
 
-// Удалить доступ пользователя
 routerAccessUser.delete(
   "/:inventoryId/:userId/delete-access",
   checkToken,
@@ -102,7 +99,6 @@ routerAccessUser.delete(
   }
 );
 
-// Переключить публичный доступ
 routerAccessUser.patch(
   "/:inventoryId/public-access",
   checkToken,

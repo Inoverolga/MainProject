@@ -4,6 +4,7 @@ import { handleError } from "../utils/handleError.js";
 import {
   hasWriteAccess,
   getItemWithAccessCheck,
+  hasReadAccess,
 } from "../utils/accessUtils.js";
 import { checkToken } from "../middleware/checkToken.js";
 
@@ -77,33 +78,44 @@ export const fieldsItemSelect = {
 routerUserItem.get("/inventories/:inventoryId/items", async (req, res) => {
   try {
     const { inventoryId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
 
-    const inventory = await prisma.inventory.findUnique({
-      where: { id: inventoryId },
-      select: { isPublic: true },
-    });
+    const hasAccess = await hasReadAccess(
+      inventoryId,
+      req.user?.userId,
+      req.user?.isAdmin
+    );
 
-    if (!inventory) {
-      return res.status(404).json({
-        success: false,
-        message: "Инвентарь не найден",
-      });
-    }
-
-    if (!inventory.isPublic && !req.user?.userId) {
+    if (!hasAccess) {
       return res.status(403).json({
         success: false,
         message: "Нет доступа к инвентарю",
       });
     }
 
-    const items = await prisma.item.findMany({
-      where: { inventoryId: req.params.inventoryId },
-      select: fieldsItemSelect,
-      orderBy: { createdAt: "desc" },
-    });
+    const [items, total] = await Promise.all([
+      prisma.item.findMany({
+        where: { inventoryId },
+        select: fieldsItemSelect,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.item.count({ where: { inventoryId } }),
+    ]);
 
-    res.json({ success: true, data: items });
+    res.json({
+      success: true,
+      data: items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     handleError(error, res);
   }

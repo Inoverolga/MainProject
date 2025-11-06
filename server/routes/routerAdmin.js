@@ -6,7 +6,6 @@ import { checkAdmin } from "../middleware/checkAdmin.js";
 
 const routerAdmin = express.Router();
 
-//список пользователей
 routerAdmin.get("/users", checkToken, checkAdmin, async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "" } = req.query;
@@ -15,30 +14,31 @@ routerAdmin.get("/users", checkToken, checkAdmin, async (req, res) => {
     const where = search
       ? {
           OR: [
-            { email: { contains: search, mode: "insensitive" } },
-            { name: { contains: search, mode: "insensitive" } },
+            { email: { startsWith: search, mode: "insensitive" } },
+            { name: { startsWith: search, mode: "insensitive" } },
           ],
         }
       : {};
 
-    const users = await prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        isAdmin: true,
-        isBlocked: true,
-        createdAt: true,
-        lastLoginAt: true,
-        _count: { select: { inventories: true, posts: true, likes: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-    });
-
-    const total = await prisma.user.count({ where });
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          isAdmin: true,
+          isBlocked: true,
+          createdAt: true,
+          lastLoginAt: true,
+          _count: { select: { inventories: true, posts: true, likes: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
+    ]);
 
     res.json({
       success: true,
@@ -204,18 +204,25 @@ routerAdmin.delete(
   }
 );
 
-// Эндпоинты для статистики
 routerAdmin.get("/stats", checkToken, checkAdmin, async (req, res) => {
   try {
-    const totalUsers = await prisma.user.count();
-    const totalAdmins = await prisma.user.count({ where: { isAdmin: true } });
-    const totalBlockedUsers = await prisma.user.count({
-      where: { isBlocked: true },
-    });
-    const totalInventories = await prisma.inventory.count();
-    const totalItems = await prisma.item.count();
-    const totalPosts = await prisma.post.count();
-    const totalLikes = await prisma.like.count();
+    const [
+      totalUsers,
+      totalAdmins,
+      totalBlockedUsers,
+      totalInventories,
+      totalItems,
+      totalPosts,
+      totalLikes,
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { isAdmin: true } }),
+      prisma.user.count({ where: { isBlocked: true } }),
+      prisma.inventory.count(),
+      prisma.item.count(),
+      prisma.post.count(),
+      prisma.like.count(),
+    ]);
 
     res.json({
       success: true,

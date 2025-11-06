@@ -13,11 +13,7 @@ routerInventories.get("/public", async (req, res) => {
     let skip = undefined;
 
     if (type === "popular") {
-      orderBy = [
-        { views: "desc" },
-        { items: { _count: "desc" } },
-        { updatedAt: "desc" },
-      ];
+      orderBy = { views: "desc" };
       take = 5;
     } else {
       orderBy = { createdAt: "desc" };
@@ -45,25 +41,30 @@ routerInventories.get("/public", async (req, res) => {
 routerInventories.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const inventoryItem = await prisma.inventory.findUnique({
-      where: { id },
-      include: {
-        user: {
-          select: { name: true, email: true },
-        },
-        category: true,
-        tags: true,
-        items: {
-          include: { tags: true },
-          orderBy: { createdAt: "desc" },
-        },
-        _count: {
-          select: {
-            items: true,
+
+    const [inventoryItem, items] = await Promise.all([
+      prisma.inventory.findUnique({
+        where: { id },
+        include: {
+          user: {
+            select: { name: true, email: true },
+          },
+          category: true,
+          tags: true,
+          _count: {
+            select: {
+              items: true,
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.item.findMany({
+        where: { inventoryId: id },
+        include: { tags: true },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      }),
+    ]);
 
     if (!inventoryItem) {
       return res.status(404).json({
@@ -82,7 +83,7 @@ routerInventories.get("/:id", async (req, res) => {
     res.json({
       success: true,
       message: "Инвентарь загружен",
-      data: inventoryItem,
+      data: { ...inventoryItem, items },
     });
   } catch (error) {
     handleError(error, res);
