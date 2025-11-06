@@ -84,8 +84,9 @@ const UniversalItemForm = ({ mode = "create" }) => {
   const { handleCreate, handleUpdate, isCreating, isUpdating } =
     useItemsOperations(mutateMyItems, inventoryId);
 
-  const { generateIdForNewItem, isGeneratingItemId } =
-    useCustomIdFormat(inventoryId);
+  const { generateIdForNewItem, isGeneratingItemId } = useCustomIdFormat(
+    mode === "create" ? inventoryId : null
+  );
 
   const handleCustomFieldChange = (fieldName, value) => {
     setCustomFields((prev) => ({ ...prev, [fieldName]: value }));
