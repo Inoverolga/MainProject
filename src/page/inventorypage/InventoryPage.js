@@ -64,7 +64,7 @@ const InventoryPage = () => {
   const hasTotalAccess = isOwner || isAdmin;
 
   const { data: dataConfigFields, mutate: mutateFieldsPublic } = useSWR(
-    isAuthenticated && hasTotalAccess
+    isAuthenticated && hasWriteAccess
       ? `/users/inventories/${id}/fields-public`
       : null,
     fetchFieldsPublic
