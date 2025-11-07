@@ -114,9 +114,9 @@ const InventoryPage = () => {
         <div className="flex-grow-1">
           <h1 className="fs-4 mb-1">{inventory.name}</h1>
           {inventory.description && (
-            <p className="text-muted mb-0">
+            <div className="text-muted mb-0">
               <ReactMarkdown>{inventory.description}</ReactMarkdown>
-            </p>
+            </div>
           )}
         </div>
       </div>
