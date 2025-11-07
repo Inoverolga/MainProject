@@ -115,6 +115,7 @@ export const useItemColumns = (
         field: field.targetField,
         headerName: field.name.charAt(0).toUpperCase() + field.name.slice(1),
         width: 150,
+        flex: 1,
         align: "center",
         headerAlign: "center",
         valueFormatter: (value) => {
@@ -122,6 +123,19 @@ export const useItemColumns = (
           if (field.fieldType === "BOOLEAN") return value ? "✅" : "❌";
           return String(value);
         },
+        renderHeader: (params) => (
+          <div
+            style={{
+              whiteSpace: "normal",
+              fontWeight: "normal",
+              lineHeight: "1.2",
+              textAlign: "center",
+              wordBreak: "break-word",
+            }}
+          >
+            {params.colDef.headerName}
+          </div>
+        ),
       }));
 
     return [...baseColumns, ...customColumns];
