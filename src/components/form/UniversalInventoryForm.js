@@ -75,7 +75,7 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
     defaultValues: { isPublic: "true" },
   });
 
-  const { handleCreate, isCreating } =
+  const { handleCreate, handleUpdate, isCreating } =
     useInventoryOperations(mutateMyInventories);
 
   const isMutating = isCreating;
@@ -128,6 +128,12 @@ const UniversalInventoryForm = ({ mode = "create", onSave }) => {
           if (success) {
             toast.success(t("inventoryUpdated"));
             window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        } else {
+          const success = await handleUpdate(inventoryId, dataWithTags);
+          if (success) {
+            toast.success(t("inventoryUpdated"));
+            navigate("/profile");
           }
         }
       }

@@ -1,5 +1,5 @@
 import { Card } from "react-bootstrap";
-import UniversalInventoryForm from "../form/UniversalInventoryForm";
+import UniversalInventoryForm from "../form/UniversalInventoryForm.js";
 import { useInventoryOperations } from "../../hooks/inventories/useInventoryOperations";
 import { useTranslation } from "react-i18next";
 
