@@ -198,7 +198,7 @@ routerUserItem.get("/items-edit/:id", checkToken, async (req, res) => {
 routerUserItem.put("/items-update/:id", checkToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { version } = req.body;
+    const { version, tags = [] } = req.body;
 
     await getItemWithAccessCheck(id, req.user.userId, true, req.user.isAdmin);
 
@@ -207,6 +207,13 @@ routerUserItem.put("/items-update/:id", checkToken, async (req, res) => {
       data: {
         ...prepareItemData(req.body),
         version: { increment: 1 },
+        tags: {
+          set: [],
+          connectOrCreate: tags.map((tagName) => ({
+            where: { name: tagName },
+            create: { name: tagName },
+          })),
+        },
       },
       include: { tags: true },
     });

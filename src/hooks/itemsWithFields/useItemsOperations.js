@@ -92,9 +92,7 @@ export const useItemsOperations = (mutateMyItems, inventoryId = null) => {
         toast.error(t("itemIdNotFound"));
         return false;
       }
-
       const result = await updateItem({ itemId, formData });
-
       if (result.success) {
         await mutateMyItems?.();
         return true;

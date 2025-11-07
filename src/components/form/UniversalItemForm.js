@@ -70,6 +70,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
     formState: { errors, isDirty },
     reset,
     setValue,
+    getValues,
     watch,
     control,
   } = useForm({
@@ -107,7 +108,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
   useEffect(() => {
     const initializeForm = async () => {
       if (mode === "edit" && !itemData?.data) return;
-
       if (!formInitializedRef.current) {
         if (mode === "create" && inventoryId) {
           const id = await generateIdForNewItem();
@@ -174,7 +174,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
         (isDirty || hasCustomFieldsChanges || hasTagChanges);
 
   const isMutating = isCreating || isUpdating;
-
   const canSubmit = !isMutating && (mode === "create" || hasFormChanges);
 
   const onSubmit = async (formData) => {
@@ -186,7 +185,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
         tags: tagValues,
         version: itemData?.data?.version,
       };
-
+      console.log(dataWithTags);
       if (mode === "create") {
         const result = await handleCreate(dataWithTags, inventoryId);
         if (result) {

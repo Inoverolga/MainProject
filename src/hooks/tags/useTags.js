@@ -22,11 +22,7 @@ export const useTags = (initialTags = [], mode = "create") => {
   );
 
   useEffect(() => {
-    if (
-      mode === "edit" &&
-      initialTags.length > 0 &&
-      !tagsInitializedRef.current
-    ) {
+    if (initialTags.length > 0) {
       const formattedTags = initialTags.map((tag) => {
         if (typeof tag === "object" && tag.name) {
           return { value: tag.name, label: tag.name };
@@ -38,7 +34,7 @@ export const useTags = (initialTags = [], mode = "create") => {
       initialTagsRef.current = formattedTags.map((tag) => tag.value);
       tagsInitializedRef.current = true;
     }
-  }, [mode, initialTags]);
+  }, [initialTags]);
 
   const tagOptions = tagSearchInput
     ? searchedTags.map((tag) => ({ value: tag, label: tag }))
@@ -49,9 +45,8 @@ export const useTags = (initialTags = [], mode = "create") => {
   const hasTagChanges =
     mode === "create"
       ? selectedTags.length > 0
-      : tagsInitializedRef.current &&
-        JSON.stringify(selectedTags.map((t) => t.value).sort()) !==
-          JSON.stringify(initialTagsRef.current.map((t) => t.value).sort());
+      : JSON.stringify(selectedTags.map((t) => t.value).sort()) !==
+        JSON.stringify(initialTagsRef.current.map((t) => t.value).sort());
 
   return {
     selectedTags,
