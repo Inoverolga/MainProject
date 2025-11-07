@@ -107,7 +107,6 @@ const UniversalItemForm = ({ mode = "create" }) => {
   useEffect(() => {
     const initializeForm = async () => {
       if (mode === "edit" && !itemData?.data) return;
-      if (fields.length === 0) return;
 
       if (!formInitializedRef.current) {
         if (mode === "create" && inventoryId) {
