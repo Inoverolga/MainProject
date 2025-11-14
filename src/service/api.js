@@ -40,12 +40,12 @@ export const fetchLoginUser = async (url, { arg: userFormData }) => {
 };
 
 // Главная страница - публичные инвентари, поиск, теги
-export const fetchInventoriesPublic = (url) => getData(url); //api/inventories/public/popular
-export const fetchInventoriesPublicPopular = (url) => getData(url); //api/inventories/public
+export const fetchInventoriesPublic = (url) => getData(url); //api/inventories/public
+//export const fetchInventoriesPublicPopular = (url) => getData(url); //api/inventories/public
 export const fetchInventoryWithItems = (url) => getData(url); //api/inventories/:id (публичный доступ)
 
 export const fetchTags = (url) => getData(url); //api/tags - без query-парметра
-//api/tags/auto/autocompletion?q=${encodeURIComponent(tagSearchInput)}` - с query-парметров (для автодополнения)
+//api/tags/autocompletion?q=${encodeURIComponent(tagSearchInput)}` - с query-парметров (для автодополнения)
 
 // Личный кабинет - инвентари пользователя
 export const fetchCategories = (url) => getData(url);
@@ -63,7 +63,7 @@ export const fetchExportInventories = (url) =>
   axios.get(`${API_BASE}${url}`, { responseType: "blob" }); //api/users/inventories-export/${selectedRows[0]}
 
 //товары пользователя
-export const fetchItemsWithFieldsPublic = (url) => getData(url); //api/users/inventories/:inventoryId/items
+export const fetchItemsWithFieldsPublic = (url) => getData(url); //(не использую)//api/users/inventories/:inventoryId/items
 export const fetchItem = (url) => getData(url); //api/users/items-edit/:id
 export const fetchCreateItem = (url, formData) => postData(url, formData); //api/users/inventories/:inventoryId/items-create
 export const fetchDeleteItem = (url, version = null) => {
@@ -119,3 +119,6 @@ export const fetchAdminSearch = (url) => getData(url); //api/search/users?q=${se
 //изображения
 export const fetchImgLoading = (url, formData) => postData(url, formData); //api/img/inventories/:inventoryId/image-loading
 export const fetchImgDelete = (url) => deleteData(url); //api/img/inventories/:inventoryId/image-delete
+//интеграция Salesforce
+export const fetchSalesforceCreateContact = (url, formData) =>
+  postData(url, formData); //api/salesforce/create-contact

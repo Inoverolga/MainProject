@@ -1,6 +1,6 @@
 import multer from "multer";
-import fetch from "node-fetch"; // ← ДОБАВЬ ЭТО
-import FormData from "form-data"; // ← ДОБАВЬ ЭТО
+import fetch from "node-fetch";
+import FormData from "form-data";
 
 export const upload = multer({
   storage: multer.memoryStorage(),

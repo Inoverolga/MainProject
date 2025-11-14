@@ -80,10 +80,9 @@ const Header = () => {
               onChange={handleSearch}
             />
           </div>
-          <LanguageToggle />
-          <ThemeToggle />
         </form>
-
+        <LanguageToggle />
+        <ThemeToggle />
         <div className="d-flex gap-2">
           {isAuthenticated &&
             !isAdminPage &&

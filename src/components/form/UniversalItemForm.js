@@ -185,7 +185,7 @@ const UniversalItemForm = ({ mode = "create" }) => {
         tags: tagValues,
         version: itemData?.data?.version,
       };
-
+      console.log(formData);
       if (mode === "create") {
         const result = await handleCreate(dataWithTags, inventoryId);
         if (result) {

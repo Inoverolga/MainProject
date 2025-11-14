@@ -1,5 +1,4 @@
 import useSWR from "swr";
-import { useNavigate } from "react-router-dom";
 import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { Container, Button } from "react-bootstrap";
@@ -10,6 +9,7 @@ import { SearchContext } from "../../contexts/SearchContext.js";
 import { InventorySection } from "../../components/table/ToolbarForProfilePage.js";
 import { useInventoryColumns } from "../../hooks/inventories/useInventoryColumns.js";
 import { useInventoryOperations } from "../../hooks/inventories/useInventoryOperations.js";
+import SalesforceFormModal from "../../components/modal/salesforcemodal.js";
 import {
   fetchMyInventories,
   fetchAccessibleInventories,
@@ -21,6 +21,7 @@ const ProfilePage = () => {
 
   const [selectedMyRows, setSelectedMyRows] = useState([]);
   const [selectedAccessRows, setSelectedAccessRows] = useState([]);
+  const [showSalesforceModal, setShowSalesforceModal] = useState(false);
 
   const {
     data: myData,
@@ -70,12 +71,27 @@ const ProfilePage = () => {
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="mb-4 fs-5"> {t("personalAccount")}</h1>
-        <Link to="/inventory-create">
-          <Button variant="secondary" size="sm">
-            {t("createInventory")}
+        <div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="me-2"
+            onClick={() => setShowSalesforceModal(true)}
+          >
+            🔗 {t("createInSalesforce")}
           </Button>
-        </Link>
+          <Link to="/inventory-create">
+            <Button variant="secondary" size="sm">
+              {t("createInventory")}
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      <SalesforceFormModal
+        show={showSalesforceModal}
+        onClose={() => setShowSalesforceModal(false)}
+      />
 
       <InventorySection
         title={t("myInventories")}

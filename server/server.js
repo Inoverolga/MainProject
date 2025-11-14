@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
@@ -19,7 +21,9 @@ import routerIdFormat from "./routes/routerIdFormat.js";
 import routerAdmin from "./routes/routerAdmin.js";
 import routerStats from "./routes/routerStats.js";
 import routerImg from "./routes/routerImg.js";
+import routerSalesforce from "./routes/routerSalesforce.js";
 
+dotenv.config();
 const app = express();
 
 const server = createServer(app);
@@ -49,6 +53,7 @@ app.get("/ping", (req, res) => {
     uptime: process.uptime(),
   });
 });
+
 app.get("/health", (req, res) => {
   res.json({
     status: "healthy",
@@ -77,6 +82,8 @@ app.use("/api/idFormat", routerIdFormat);
 app.use("/api/admin", routerAdmin);
 app.use("/api/stats", routerStats);
 app.use("/api/img", routerImg);
+
+app.use("/api/salesforce", routerSalesforce);
 
 setInterval(async () => {
   try {
@@ -112,6 +119,11 @@ app.get("/api/test-db", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
+
+if (process.env.SALESFORCE_CLIENT_ID) {
+  console.log("🔧 Salesforce: Checking configuration...");
+}
+
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`✅ HTTP Server running on port ${PORT}`);

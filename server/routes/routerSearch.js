@@ -173,6 +173,7 @@ routerSearch.get("/users", checkToken, async (req, res) => {
   }
 });
 
+//не использовала
 routerSearch.get("/tags", async (req, res) => {
   try {
     const tags = await prisma.tag.findMany({
