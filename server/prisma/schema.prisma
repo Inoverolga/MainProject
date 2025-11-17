@@ -54,7 +54,7 @@ model Inventory {
   items             Item[]
   posts             Post[]
   tags              Tag[]                  @relation("InventoryToTag")
-
+  odooTokens        OdooInventoryToken[]
 
   @@index([userId])        
   @@index([isPublic])      
@@ -219,4 +219,24 @@ model InventorySequence {
 
   @@unique([inventoryId, sequenceKey])
   @@map("inventory_sequences")
+}
+
+
+model OdooInventoryToken {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  name        String? 
+  inventoryId String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  expiresAt   DateTime?  
+  lastUsedAt  DateTime? 
+  
+  
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryId])
+  @@index([token])
+  @@map("odooInventoryToken")
 }

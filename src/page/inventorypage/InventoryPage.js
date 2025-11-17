@@ -21,6 +21,7 @@ import AccessTab from "../../components/tabs/AccessTabs.js";
 import DiscussionTab from "../../components/tabs/DiscussionTabs.js";
 import CustomIdTabs from "../../components/tabs/CustomIdTabs.js";
 import StatsTabs from "../../components/tabs/StatsTabs.js";
+import OdooIntegrationTabs from "../../components/tabs/OdooIntegrationTabs.js";
 
 const InventoryPage = () => {
   const { t } = useTranslation();
@@ -172,6 +173,12 @@ const InventoryPage = () => {
         {hasTotalAccess && (
           <Tab eventKey="custom-id" title={`#️⃣ ${t("idFormat")}`}>
             <CustomIdTabs inventoryId={id} />
+          </Tab>
+        )}
+
+        {hasTotalAccess && (
+          <Tab eventKey="odoo" title={`🔗 ${t("integration")}`}>
+            <OdooIntegrationTabs inventoryId={id} />
           </Tab>
         )}
 

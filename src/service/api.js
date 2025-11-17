@@ -122,3 +122,9 @@ export const fetchImgDelete = (url) => deleteData(url); //api/img/inventories/:i
 //интеграция Salesforce
 export const fetchSalesforceCreateContact = (url, formData) =>
   postData(url, formData); //api/salesforce/create-contact
+//интеграция Odoo
+export const fetchOdooGenerateToken = (url) => getData(url); //api/odoo/:inventoryId/generate-token?name="..."
+export const fetchOdooAggregateData = (url) => getData(url); //api/odoo/:token/aggregateddata
+export const fetchOdooUpdateToken = (url, name) => patchData(url, { name }); //api/odoo/:inventoryId/refresh-token
+export const fetchOdooImport = (url, odooApiToken) =>
+  postData(url, { odooApiToken });
