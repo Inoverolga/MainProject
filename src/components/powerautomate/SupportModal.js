@@ -2,18 +2,33 @@ import { useState, useEffect } from "react";
 import { Modal, Button, Form, Card } from "react-bootstrap";
 import useSWRMutation from "swr/mutation";
 import { toast } from "react-toastify";
-import { fetchCreateSupportRequest } from "../../service/api.js";
+import {
+  fetchCreateSupportRequest,
+  fetchInventoryWithAccessCheck,
+} from "../../service/api.js";
+import useSWR from "swr";
 import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 
 const SupportModal = ({ show, onHide, currentInventory, currentPage }) => {
   const { t } = useTranslation();
   const [problem, setProblem] = useState("");
   const [priority, setPriority] = useState("medium");
   const [currentPageUrl, setCurrentPageUrl] = useState("");
+  const { id: inventoryId } = useParams();
 
   useEffect(() => {
     setCurrentPageUrl(window.location.href);
   }, [currentPage, currentInventory]);
+
+  const { data: inventoryData } = useSWR(
+    inventoryId ? `/users/inventories/${inventoryId}/items-with-access` : null,
+    fetchInventoryWithAccessCheck,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // Кэшируем на 1 минуту
+    }
+  );
 
   const { trigger, isMutating } = useSWRMutation(
     "/request/support",
@@ -27,7 +42,7 @@ const SupportModal = ({ show, onHide, currentInventory, currentPage }) => {
       const result = await trigger({
         problem: problem.trim(),
         priority,
-        inventoryId: currentInventory?.id || null,
+        inventoryId: inventoryData?.data?.name || null,
         pageUrl: currentPageUrl,
       });
       if (result.success) {
@@ -75,9 +90,10 @@ const SupportModal = ({ show, onHide, currentInventory, currentPage }) => {
                 <div>
                   <strong>{t("page")}:</strong> {currentPageUrl}
                 </div>
-                {currentInventory && (
+                {inventoryData?.data?.name && (
                   <div>
-                    <strong>{t("inventory")}:</strong> {currentInventory.name}
+                    <strong>{t("inventory")}:</strong>{" "}
+                    {inventoryData?.data?.name}
                   </div>
                 )}
                 <div>
@@ -135,7 +151,7 @@ const SupportModal = ({ show, onHide, currentInventory, currentPage }) => {
             {t("cancel")}
           </Button>
           <Button
-            variant="primary"
+            variant="seconady"
             type="submit"
             disabled={isMutating || !problem.trim() || problem.length < 10}
           >

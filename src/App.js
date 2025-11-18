@@ -4,7 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { SearchProvider } from "./contexts/SearchContext";
 import { AuthProvider } from "./contexts/AuthContext.js";
 import { ToastContainer } from "react-toastify";
@@ -20,6 +20,7 @@ import AdminPage from "./page/adminpage/AdminPage.js";
 import { useTranslation } from "react-i18next";
 import { ThemeProvider } from "./contexts/ThemeContext.js";
 import SupportModal from "./components/powerautomate/SupportModal.js";
+import { AuthContext } from "./contexts/AuthContext.js";
 import "./i18n.js";
 
 function App() {
@@ -122,26 +123,30 @@ function App() {
 
 function WithHeaderLayout({ children }) {
   const [showSupport, setShowSupport] = useState(false);
+  const { isAuthenticated } = useContext(AuthContext);
   const { t } = useTranslation();
+
   return (
     <>
       <Header />
       {children}
 
-      <div className="position-fixed bottom-0 end-0 m-3">
-        <button
-          className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
-          onClick={() => setShowSupport(true)}
-          style={{
-            borderRadius: "20px",
-            padding: "8px 16px",
-            fontSize: "14px",
-          }}
-        >
-          <span>❓</span>
-          {t("createSupportRequest")}
-        </button>
-      </div>
+      {isAuthenticated && (
+        <div className="position-fixed bottom-0 end-0 m-3">
+          <button
+            className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+            onClick={() => setShowSupport(true)}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 16px",
+              fontSize: "14px",
+            }}
+          >
+            <span>❓</span>
+            {t("createSupportRequest")}
+          </button>
+        </div>
+      )}
 
       <SupportModal
         show={showSupport}
