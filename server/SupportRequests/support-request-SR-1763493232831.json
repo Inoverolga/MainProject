@@ -1,0 +1,17 @@
+{
+  "requestId": "SR-1763493232831",
+  "reportedBy": {
+    "userId": "cmhjcevpu0000jd0vbamg5hh6",
+    "email": "kuzma-inoverolga@mail.ru",
+    "name": "Olga Inover"
+  },
+  "problem": "Проблема не решана",
+  "priority": "Средний",
+  "pageUrl": "http://localhost:3000/profile",
+  "inventory": null,
+  "timestamp": "2025-11-18T19:13:52.832Z",
+  "status": "new",
+  "adminEmails": [
+    "admin@example.com"
+  ]
+}

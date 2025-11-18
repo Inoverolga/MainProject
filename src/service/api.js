@@ -127,4 +127,10 @@ export const fetchOdooGenerateToken = (url) => getData(url); //api/odoo/:invento
 export const fetchOdooAggregateData = (url) => getData(url); //api/odoo/:token/aggregateddata
 export const fetchOdooUpdateToken = (url, name) => patchData(url, { name }); //api/odoo/:inventoryId/refresh-token
 export const fetchOdooImport = (url, odooApiToken) =>
-  postData(url, { odooApiToken });
+  postData(url, { odooApiToken }); //api/odoo/:inventoryId/import-to-odoo
+//интеграция POWER AUTOMATE
+export const fetchCreateSupportRequest = (url, { arg: requestData }) =>
+  postData(url, requestData); //api/request/support
+export const fetchMySupportRequests = (url) => getData(url); //api/request/support-my
+export const fetchAllSupportRequests = (url) => getData(url); //api/request/list-support
+export const fetchUpdateSupportStatus = (url, name) => patchData(url, { name }); //api/request/support/:id/status

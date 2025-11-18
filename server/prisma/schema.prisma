@@ -26,6 +26,7 @@ model User {
   inventoryAccesses InventoryAccess[]
   likes             Like[]
   posts             Post[]
+  supportRequests   SupportRequest[]
 
   @@index([name, email])
   @@map("users")
@@ -55,6 +56,7 @@ model Inventory {
   posts             Post[]
   tags              Tag[]                  @relation("InventoryToTag")
   odooTokens        OdooInventoryToken[]
+  supportRequests   SupportRequest[]
 
   @@index([userId])        
   @@index([isPublic])      
@@ -239,4 +241,30 @@ model OdooInventoryToken {
   @@index([inventoryId])
   @@index([token])
   @@map("odooInventoryToken")
+}
+
+
+
+model SupportRequest {
+  id          String   @id @default(cuid())
+  problem    String  
+  priority    String   // "high", "medium", "low"
+  reportedBy  String    
+  inventoryId String?  
+  pageUrl     String   
+  status      String   @default("pending") // "pending", "processed", "resolved"
+  fileUrl     String?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  
+  user      User       @relation(fields: [reportedBy], references: [id], onDelete: Cascade)
+  inventory Inventory? @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@index([reportedBy])
+  @@index([inventoryId])
+  @@index([createdAt])
+  @@index([status])
+  @@index([priority])
+  @@map("support_requests")
 }

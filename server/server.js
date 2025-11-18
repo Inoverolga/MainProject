@@ -24,6 +24,7 @@ import routerImg from "./routes/routerImg.js";
 import routerSalesforce from "./routes/routerSalesforce.js";
 import routerOdoo from "./routes/routerOdoo.js";
 import routerOdooImport from "./routes/routerOdooImport.js";
+import routerRequest from "./routes/routerRequest.js";
 
 dotenv.config();
 const app = express();
@@ -88,6 +89,7 @@ app.use("/api/img", routerImg);
 app.use("/api/salesforce", routerSalesforce);
 app.use("/api/odoo", routerOdoo);
 app.use("/api/odoo/import", routerOdooImport);
+app.use("/api/request", routerRequest);
 
 setInterval(async () => {
   try {
