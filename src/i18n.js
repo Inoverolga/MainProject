@@ -876,7 +876,6 @@ i18n
           loginWithFacebook: "Login with Facebook",
           welcomeMessage: "{{name}}, welcome to the system!",
           loginRequiredForLikes: "🔒 You need to log in to like items",
-          aggregateData: "Aggregated Data",
           loadingData: "Loading data...",
           documentation: "Documentation",
           odooIntegration: "Integration with Odoo",
