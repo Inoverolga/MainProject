@@ -13,14 +13,6 @@ export const useOdooToken = (inventoryId) => {
   const [currentToken, setCurrentToken] = useState(undefined);
   const getStorageKey = (inventoryId) => `odoo_token_${inventoryId}`;
 
-  // ДОБАВЬТЕ ОТЛАДКУ
-  console.log("DEBUG useOdooToken:", {
-    inventoryId,
-    currentToken,
-    hasApiToken: !!currentToken?.api_token,
-    apiToken: currentToken?.api_token,
-    storedToken: localStorage.getItem(getStorageKey(inventoryId)),
-  });
   const { trigger: generateToken, isMutating: isGenerating } = useSWRMutation(
     "/odoo/generate-token",
     (url, { arg: name }) =>
@@ -47,14 +39,6 @@ export const useOdooToken = (inventoryId) => {
     }
   );
 
-  const swrKey = currentToken?.api_token
-    ? `/odoo/${currentToken.api_token}/aggregateddata`
-    : null;
-  console.log("🔍 DEBUG useSWR:", {
-    swrKey,
-    currentTokenApiToken: currentToken?.api_token,
-    fullUrl: swrKey ? `http://localhost:3001/api${swrKey}` : null,
-  });
   const { trigger: importToOdoo, isMutating: isImporting } = useSWRMutation(
     `/odoo/import/${inventoryId}/import-to-odoo`,
     (url, { arg: odooApiToken }) => fetchOdooImport(url, odooApiToken)

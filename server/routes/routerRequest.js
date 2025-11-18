@@ -68,13 +68,18 @@ routerRequest.post("/support", checkToken, async (req, res) => {
           }
         : null,
       timestamp: new Date().toISOString(),
-      status: "new",
+      status: "pending",
       adminEmails: process.env.ADMIN_EMAILS
         ? process.env.ADMIN_EMAILS.split(",")
         : ["admin@example.com"],
     };
 
-    const fileUrl = await uploadToCloud(supportData);
+    let fileUrl = null;
+    try {
+      fileUrl = await uploadToCloud(supportData);
+    } catch (uploadError) {
+      console.error("Cloud upload failed:", uploadError);
+    }
 
     const supportRequest = await prisma.supportRequest.create({
       data: {
@@ -83,7 +88,7 @@ routerRequest.post("/support", checkToken, async (req, res) => {
         reportedBy: userId,
         inventoryId,
         pageUrl,
-        fileUrl: fileUrl?.webUrl || null,
+        fileUrl: fileUrl,
       },
       include: {
         user: { select: { email: true, name: true } },
@@ -95,7 +100,7 @@ routerRequest.post("/support", checkToken, async (req, res) => {
       success: true,
       data: {
         requestId: supportRequest.id,
-        fileUrl: fileUrl?.webUrl,
+        fileUrl: fileUrl,
         jsonData: supportData,
         createdAt: supportRequest.createdAt,
       },
