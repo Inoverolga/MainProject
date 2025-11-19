@@ -6,47 +6,6 @@ import { calculateAggregations } from "../utils/integration/odooAggregations.js"
 import { checkToken } from "../middleware/checkToken.js";
 
 const routerOdoo = express.Router();
-routerOdoo.get("/debug/check-token/:token", async (req, res) => {
-  try {
-    const { token } = req.params;
-    console.log(`🔍 Checking token in database: ${token}`);
-
-    const tokenRecord = await prisma.odooInventoryToken.findFirst({
-      where: { token: token },
-      include: {
-        inventory: { select: { id: true, name: true } },
-      },
-    });
-
-    if (!tokenRecord) {
-      console.log(`❌ Token NOT FOUND in database: ${token}`);
-      return res.status(404).json({
-        error: "Token not found in database",
-        token: token,
-      });
-    }
-
-    console.log(`✅ Token FOUND:`, {
-      token: tokenRecord.token,
-      isActive: tokenRecord.isActive,
-      expiresAt: tokenRecord.expiresAt,
-      inventory: tokenRecord.inventory.name,
-    });
-
-    res.json({
-      token: tokenRecord.token,
-      isActive: tokenRecord.isActive,
-      expiresAt: tokenRecord.expiresAt,
-      inventory: tokenRecord.inventory,
-      isValid:
-        tokenRecord.isActive &&
-        (!tokenRecord.expiresAt || tokenRecord.expiresAt > new Date()),
-    });
-  } catch (error) {
-    console.error("❌ Check token error:", error);
-    handleError(error, res);
-  }
-});
 
 routerOdoo.get("/:inventoryId/generate-token", checkToken, async (req, res) => {
   try {
@@ -143,11 +102,6 @@ routerOdoo.get("/token/:token/aggregateddata", async (req, res) => {
   try {
     const { token } = req.params;
 
-    console.log(`🔐 AGGREGATEDDATA CALLED with token: ${token}`);
-
-    // Добавьте логирование запроса к базе
-    console.log(`🔍 Querying database for token: ${token}`);
-
     const tokenRecord = await prisma.odooInventoryToken.findFirst({
       where: {
         token: token,
@@ -164,14 +118,11 @@ routerOdoo.get("/token/:token/aggregateddata", async (req, res) => {
       },
     });
 
-    console.log(`🔍 Token query result:`, tokenRecord ? "FOUND" : "NOT FOUND");
     if (!tokenRecord) {
       return res.status(404).json({
         error: "Токен не найден",
       });
     }
-
-    console.log(`✅ Processing inventory: ${tokenRecord.inventory.name}`);
 
     await prisma.odooInventoryToken.update({
       where: { id: tokenRecord.id },
@@ -189,7 +140,7 @@ routerOdoo.get("/token/:token/aggregateddata", async (req, res) => {
       }));
 
     const aggregations = calculateAggregations(items, inventory.fieldConfigs);
-    console.log(`📊 Sending aggregated data: ${items.length} items`);
+
     res.json({
       inventory: {
         id: inventory.id,

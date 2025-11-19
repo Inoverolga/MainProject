@@ -20,10 +20,40 @@ export const useOdooToken = (inventoryId) => {
         `/odoo/${inventoryId}/generate-token?name=${encodeURIComponent(name)}`
       )
   );
+
   const { trigger: updateToken, isMutating: isUpdating } = useSWRMutation(
     `/odoo/${inventoryId}/refresh-token`,
     (url, { arg: name }) => fetchOdooUpdateToken(url, name)
   );
+
+  useEffect(() => {
+    if (!inventoryId) return;
+
+    const initializeToken = async () => {
+      try {
+        const stored = localStorage.getItem(getStorageKey(inventoryId));
+
+        if (stored) {
+          const tokenData = JSON.parse(stored);
+          setCurrentToken(tokenData);
+        } else {
+          try {
+            const result = await generateToken("Автоматический токен");
+            setCurrentToken(result);
+          } catch (error) {
+            console.error("Auto-generation failed:", error);
+            setCurrentToken(null);
+          }
+        }
+      } catch (error) {
+        console.error("Token initialization failed:", error);
+        localStorage.removeItem(getStorageKey(inventoryId));
+        setCurrentToken(null);
+      }
+    };
+
+    initializeToken();
+  }, [inventoryId]);
 
   const {
     data: aggregateData,
@@ -83,23 +113,6 @@ export const useOdooToken = (inventoryId) => {
       throw error;
     }
   };
-
-  useEffect(() => {
-    if (!inventoryId) return;
-
-    try {
-      const stored = localStorage.getItem(getStorageKey(inventoryId));
-      if (stored) {
-        const tokenData = JSON.parse(stored);
-        setCurrentToken(tokenData);
-      } else {
-        setCurrentToken(null);
-      }
-    } catch (error) {
-      localStorage.removeItem(getStorageKey(inventoryId));
-      setCurrentToken(null);
-    }
-  }, [inventoryId]);
 
   useEffect(() => {
     if (!inventoryId || currentToken === undefined) return;
