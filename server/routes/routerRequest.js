@@ -23,7 +23,7 @@ routerRequest.post("/support", checkToken, async (req, res) => {
     console.log("=== SUPPORT REQUEST START ===");
     console.log("Body:", JSON.stringify(req.body, null, 2));
     console.log("User:", req.user);
-    const { problem, priority, pageUrl } = req.body;
+    const { problem, priority, inventoryId, pageUrl } = req.body;
     const userId = req.user.userId;
 
     if (!problem || !priority || !pageUrl) {
@@ -98,7 +98,6 @@ routerRequest.post("/support", checkToken, async (req, res) => {
         problem,
         priority,
         reportedBy: userId,
-        inventoryId,
         pageUrl,
         fileUrl: fileUrl,
       },
