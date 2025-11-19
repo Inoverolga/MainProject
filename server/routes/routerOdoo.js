@@ -145,6 +145,9 @@ routerOdoo.get("/token/:token/aggregateddata", async (req, res) => {
 
     console.log(`🔐 AGGREGATEDDATA CALLED with token: ${token}`);
 
+    // Добавьте логирование запроса к базе
+    console.log(`🔍 Querying database for token: ${token}`);
+
     const tokenRecord = await prisma.odooInventoryToken.findFirst({
       where: {
         token: token,
@@ -161,13 +164,14 @@ routerOdoo.get("/token/:token/aggregateddata", async (req, res) => {
       },
     });
 
+    console.log(`🔍 Token query result:`, tokenRecord ? "FOUND" : "NOT FOUND");
     if (!tokenRecord) {
       return res.status(404).json({
         error: "Токен не найден",
       });
     }
 
-    console.log(`✅ TOKEN FOUND for inventory: ${tokenRecord.inventory.name}`);
+    console.log(`✅ Processing inventory: ${tokenRecord.inventory.name}`);
 
     await prisma.odooInventoryToken.update({
       where: { id: tokenRecord.id },
@@ -185,7 +189,7 @@ routerOdoo.get("/token/:token/aggregateddata", async (req, res) => {
       }));
 
     const aggregations = calculateAggregations(items, inventory.fieldConfigs);
-
+    console.log(`📊 Sending aggregated data: ${items.length} items`);
     res.json({
       inventory: {
         id: inventory.id,
