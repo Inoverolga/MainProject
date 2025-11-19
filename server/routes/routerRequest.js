@@ -1,7 +1,6 @@
 import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { checkToken } from "../middleware/checkToken.js";
-import { checkAdmin } from "../middleware/checkAdmin.js";
 import { handleError } from "../utils/handleError.js";
 import { uploadToOneDrive } from "../utils/integration/cloudStorage.js";
 
@@ -20,9 +19,6 @@ const uploadToCloud = async (data) => {
 
 routerRequest.post("/support", checkToken, async (req, res) => {
   try {
-    console.log("=== SUPPORT REQUEST START ===");
-    console.log("Body:", JSON.stringify(req.body, null, 2));
-    console.log("User:", req.user);
     const { problem, priority, inventoryId, pageUrl } = req.body;
     const userId = req.user.userId;
 
@@ -40,17 +36,11 @@ routerRequest.post("/support", checkToken, async (req, res) => {
       });
     }
 
-    console.log("✅ Validation passed");
-
-    // Получаем пользователя
-    console.log("👤 Fetching user...");
-
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { email: true, name: true },
     });
 
-    console.log("✅ User found");
     let inventoryName = null;
     if (inventoryId) {
       const inventory = await prisma.inventory.findUnique({
@@ -59,7 +49,7 @@ routerRequest.post("/support", checkToken, async (req, res) => {
       });
       inventoryName = inventory?.name;
     }
-    console.log("📄 Preparing support data...");
+
     const supportData = {
       requestId: `SR-${Date.now()}`,
       reportedBy: {
@@ -86,13 +76,11 @@ routerRequest.post("/support", checkToken, async (req, res) => {
     let fileUrl = null;
 
     try {
-      console.log("☁️ Starting cloud upload...");
       fileUrl = await uploadToCloud(supportData);
     } catch (uploadError) {
       console.error("Cloud upload failed:", uploadError);
     }
 
-    console.log("💾 Creating database record...");
     const supportRequest = await prisma.supportRequest.create({
       data: {
         problem,
@@ -107,7 +95,6 @@ routerRequest.post("/support", checkToken, async (req, res) => {
       },
     });
 
-    console.log("✅ Support request created, ID:", supportRequest.id);
     res.json({
       success: true,
       data: {
@@ -118,24 +105,7 @@ routerRequest.post("/support", checkToken, async (req, res) => {
       },
       message: "Запрос в поддержку успешно создан",
     });
-    console.log("🎉 SUPPORT REQUEST COMPLETED");
   } catch (error) {
-    console.error("💥 SUPPORT REQUEST ERROR:");
-    console.error("Message:", error.message);
-    console.error("Stack:", error.stack);
-    console.error("Code:", error.code);
-    console.error("Meta:", error.meta);
-
-    // Детальная обработка Prisma ошибок
-    if (error.code === "P2002") {
-      console.error("Unique constraint violation");
-    }
-    if (error.code === "P2003") {
-      console.error("Foreign key constraint violation");
-    }
-    if (error.code === "P2025") {
-      console.error("Record not found");
-    }
     handleError(error, res);
   }
 });
