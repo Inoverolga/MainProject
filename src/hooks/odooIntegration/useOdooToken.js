@@ -31,7 +31,7 @@ export const useOdooToken = (inventoryId) => {
     mutate: mutateAggregate,
   } = useSWR(
     currentToken?.api_token
-      ? `/odoo/${currentToken.api_token}/aggregateddata`
+      ? `/odoo/token/${currentToken.api_token}/aggregateddata`
       : null,
     fetchOdooAggregateData,
     {

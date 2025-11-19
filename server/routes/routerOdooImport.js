@@ -183,7 +183,7 @@ routerOdooImport.post(
         return res.status(400).json({ error: "API токен Odoo обязателен" });
       }
 
-      const apiUrl = `${BASE_URL}/api/odoo/${odooApiToken}/aggregateddata`;
+      const apiUrl = `${BASE_URL}/api/odoo/token/${odooApiToken}/aggregateddata`;
       const { data } = await axios.get(apiUrl, { timeout: 30000 });
 
       const outhClient = createOdooClient();

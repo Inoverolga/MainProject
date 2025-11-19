@@ -98,7 +98,7 @@ routerOdoo.patch(
   }
 );
 
-routerOdoo.get("/:token/aggregateddata", async (req, res) => {
+routerOdoo.get("/token/:token/aggregateddata", async (req, res) => {
   try {
     const { token } = req.params;
 
