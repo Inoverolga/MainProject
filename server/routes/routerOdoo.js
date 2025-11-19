@@ -6,17 +6,46 @@ import { calculateAggregations } from "../utils/integration/odooAggregations.js"
 import { checkToken } from "../middleware/checkToken.js";
 
 const routerOdoo = express.Router();
-routerOdoo.get("/debug/routes", (req, res) => {
-  console.log("✅ Odoo debug routes called");
-  res.json({
-    message: "Odoo router is working",
-    availableRoutes: [
-      "GET /:inventoryId/generate-token",
-      "PATCH /:inventoryId/refresh-token",
-      "GET /token/:token/aggregateddata",
-    ],
-    timestamp: new Date().toISOString(),
-  });
+routerOdoo.get("/debug/check-token/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    console.log(`🔍 Checking token in database: ${token}`);
+
+    const tokenRecord = await prisma.odooInventoryToken.findFirst({
+      where: { token: token },
+      include: {
+        inventory: { select: { id: true, name: true } },
+      },
+    });
+
+    if (!tokenRecord) {
+      console.log(`❌ Token NOT FOUND in database: ${token}`);
+      return res.status(404).json({
+        error: "Token not found in database",
+        token: token,
+      });
+    }
+
+    console.log(`✅ Token FOUND:`, {
+      token: tokenRecord.token,
+      isActive: tokenRecord.isActive,
+      expiresAt: tokenRecord.expiresAt,
+      inventory: tokenRecord.inventory.name,
+    });
+
+    res.json({
+      token: tokenRecord.token,
+      isActive: tokenRecord.isActive,
+      expiresAt: tokenRecord.expiresAt,
+      inventory: tokenRecord.inventory,
+      isValid:
+        tokenRecord.isActive &&
+        (!tokenRecord.expiresAt || tokenRecord.expiresAt > new Date()),
+    });
+  } catch (error) {
+    console.error("❌ Check token error:", error);
+    handleError(error, res);
+  }
 });
 
 routerOdoo.get("/:inventoryId/generate-token", checkToken, async (req, res) => {
