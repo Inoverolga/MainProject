@@ -114,6 +114,8 @@ routerOdoo.get("/token/:token/aggregateddata", async (req, res) => {
   try {
     const { token } = req.params;
 
+    console.log(`🔐 AGGREGATEDDATA CALLED with token: ${token}`);
+
     const tokenRecord = await prisma.odooInventoryToken.findFirst({
       where: {
         token: token,
@@ -135,6 +137,8 @@ routerOdoo.get("/token/:token/aggregateddata", async (req, res) => {
         error: "Токен не найден",
       });
     }
+
+    console.log(`✅ TOKEN FOUND for inventory: ${tokenRecord.inventory.name}`);
 
     await prisma.odooInventoryToken.update({
       where: { id: tokenRecord.id },
