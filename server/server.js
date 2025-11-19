@@ -87,8 +87,8 @@ app.use("/api/stats", routerStats);
 app.use("/api/img", routerImg);
 
 app.use("/api/salesforce", routerSalesforce);
-app.use("/api/odoo/import", routerOdooImport);
 app.use("/api/odoo", routerOdoo);
+app.use("/api/odoo/import", routerOdooImport);
 app.use("/api/request", routerRequest);
 
 setInterval(async () => {

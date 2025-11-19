@@ -6,6 +6,18 @@ import { calculateAggregations } from "../utils/integration/odooAggregations.js"
 import { checkToken } from "../middleware/checkToken.js";
 
 const routerOdoo = express.Router();
+routerOdoo.get("/debug/routes", (req, res) => {
+  console.log("✅ Odoo debug routes called");
+  res.json({
+    message: "Odoo router is working",
+    availableRoutes: [
+      "GET /:inventoryId/generate-token",
+      "PATCH /:inventoryId/refresh-token",
+      "GET /token/:token/aggregateddata",
+    ],
+    timestamp: new Date().toISOString(),
+  });
+});
 
 routerOdoo.get("/:inventoryId/generate-token", checkToken, async (req, res) => {
   try {
