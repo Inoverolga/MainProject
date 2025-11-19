@@ -9,5 +9,12 @@ export const uploadToOneDrive = async (fileName, fileContent) => {
       dataForOneDrive: jsonData,
       fileName: fileName,
     };
-  } catch (error) {}
+  } catch (error) {
+    console.error("OneDrive upload error:", error);
+    return {
+      success: false,
+      error: error.message,
+      demo: true,
+    };
+  }
 };
