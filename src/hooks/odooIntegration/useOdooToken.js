@@ -66,6 +66,7 @@ export const useOdooToken = (inventoryId) => {
     fetchOdooAggregateData,
     {
       revalidateOnFocus: false,
+      shouldRetryOnError: false,
     }
   );
 
